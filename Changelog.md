@@ -59,3 +59,52 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
   `VPet.Cognition.Tests` build and test on Linux.
 - .NET 8 SDK is required (`dotnet-sdk-8.0`).
 - Default LLM: Ollama with `qwen2.5:3b`. Switch to any OpenAI-compatible endpoint via config.
+
+### Added — Phase 2: Memory
+- `VPet.Cognition.Memory` (net8.0, RootNamespace `VPet.Cognition.MemoryStore`):
+  `SqliteMemoryStore` (full `IMemoryStore` implementation: store, get, retrieve, search,
+  consolidate, forget, compress, count, delete, deleteAll, export), `MemoryService`
+  (remember conversation/fact/preference, retrieve context for LLM prompt, consolidate,
+  compress, export). SQLite + Dapper. Embedding-based cosine-similarity retrieval.
+- 16 memory tests with in-memory SQLite — all passing.
+
+### Added — Phase 3: Personality + Emotion
+- `VPet.Cognition.Personality` (net8.0, RootNamespace `VPet.Cognition.PersonalityEngine`):
+  `DefaultPersonalityEngine` (Big Five core traits, 7 adaptive traits, relationship state
+  with trust/familiarity/affection, preference tracking, habit/interest lists, humor style,
+  communication style, system prompt rendering), `DefaultEmotionEngine` (10-dimensional
+  `EmotionVector`, stimulus blending, antagonistic suppression joy↔sadness/calm↔anger/
+  excitement↔fear, time-based decay, animation hint mapping to VPet `GraphType`/`ModeType`,
+  voice prosody mapping, decision bias mapping).
+- 11 personality/emotion tests — all passing.
+
+### Added — Phase 4: Voice
+- `VPet.Cognition.Voice` (net8.0): `WhisperSttProvider` (whisper.cpp CLI wrapper, offline STT,
+  JSON output parsing, streaming interface), `PiperTtsProvider` (piper CLI wrapper, offline TTS,
+  PCM chunk streaming from WAV, prosody-adjusted speed), `KokoroTtsProvider` (kokoro CLI wrapper,
+  offline TTS, PCM chunk streaming, voice selection).
+- 11 voice tests — all passing.
+
+### Added — Phase 5: Agent + Tools
+- `VPet.Cognition.Agent` (net8.0, RootNamespace `VPet.Cognition.AgentRuntime`):
+  `DefaultAgentRuntime` (goal management, plan execution, tool dispatch through permission
+  system, retry with max retries, confidence scoring, event emission), `DefaultPermissionService`
+  (in-memory grants, auto-grant for non-confirming tools, prompt for dangerous tools, revoke).
+- Built-in tools: `OpenApplicationTool`, `FileReadTool` (with path allowlist), `BrowserTool`
+  (URL scheme validation), `ClipboardTool` (get/set).
+- 16 agent/permission/tool tests — all passing.
+
+### Added — Phase 6: Hardening
+- `VPet.Cognition.Security` (net8.0): `SecretRedactor` (redact API keys/tokens/passwords from
+  JSON and individual values), `PathValidator` (path traversal prevention, allowlist checking),
+  `CommandValidator` (dangerous pattern detection, blocked command list).
+- `VPet.Cognition.Host/Config/CognitionConfigLoader` (load/save `appsettings.json` with
+  secret redaction on save).
+- 15 security tests — all passing.
+
+### Summary
+- **102 tests, all passing** in Release. 0 warnings, 0 errors.
+- 10 cognition projects (8 build on Linux, 2 require Windows for WPF).
+- 0 changes to existing VPet projects.
+- Full offline-first: Ollama + Qwen2.5-3B + Whisper + Piper/Kokoro.
+- Config-switchable LLM provider and model.

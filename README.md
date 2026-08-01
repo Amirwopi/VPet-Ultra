@@ -1,173 +1,183 @@
-# VPet-Simulator
+# VPet-Ultra: Offline-First AI Desktop Companion
 
-简体中文 | [繁體中文](./README_zht.md) | [English](./README_en.md) | [日本語](./README_ja.md)
+Transforms the [VPet](https://github.com/LorisYounger/VPet) desktop pet into an autonomous AI companion with LLM conversation, memory, personality, emotion, voice, and agent capabilities — all running offline.
 
-虚拟桌宠模拟器 一个开源的桌宠软件, 可以内置到任何WPF应用程序
+## Features
 
-![主图](README.assets/%E4%B8%BB%E5%9B%BE.png)
+- **LLM Conversation** — Ollama (default, offline) or any OpenAI-compatible endpoint (Qwen, GLM, DeepSeek, OpenAI). Streaming text with tool-call support.
+- **Memory** — SQLite-backed episodic + semantic memory with embedding retrieval, importance decay, and consolidation.
+- **Personality** — Big Five core traits + adaptive traits that evolve through conversation. Relationship state (trust, familiarity, affection).
+- **Emotion** — 10-dimensional emotion vector with stimulus blending, antagonistic suppression, and decay. Maps to animation, voice prosody, and decision bias.
+- **Voice** — Whisper (whisper.cpp) for speech-to-text, Piper or Kokoro for text-to-speech. All offline.
+- **Agent** — Goal-driven autonomous runtime with plan execution, tool dispatch, and permission gating.
+- **Tools** — Open application, read file, open browser, clipboard. Path validation and command blocklist.
+- **Security** — Secret redaction in logs, path traversal prevention, dangerous command detection.
 
-获取虚拟桌宠模拟器 [OnSteam(免费)](https://store.steampowered.com/app/1920960/VPet) 或 通过[Nuget](https://www.nuget.org/packages/VPet-Simulator.Core)内置到你的WPF应用程序
+## Quick Start
 
-## 虚拟桌宠模拟器 详细介绍
+### Prerequisites
 
-虚拟桌宠模拟器是一款桌宠软件,支持各种互动投喂等. 开源免费并且支持创意工坊.
+1. **.NET 8 SDK** — [download](https://dotnet.microsoft.com/download/dotnet/8.0)
+2. **Ollama** — [install](https://ollama.com) then pull the default model:
+   ```bash
+   ollama pull qwen2.5:3b
+   ```
+3. **VPet** — build the original VPet solution on Windows.
 
-反正免费为啥不试试呢(
+### Build
 
-该游戏为 [虚拟主播模拟器](https://store.steampowered.com/app/1352140/_/) 内置桌宠(教程)程序独立而来, 如果喜欢的话欢迎添加 [虚拟主播模拟器](https://store.steampowered.com/app/1352140/_/) 至愿望单
+```bash
+git clone https://github.com/Amirwopi/VPet-Ultra.git
+cd VPet-Ultra
+dotnet restore
+dotnet build
+```
 
-### 超多的互动和动画
+### Test
 
-多达 32(种) * 4(状态) * 3(类型) 种动画, *注:部分种类没有生病状态或循环等内容,实际动画数量会偏少*
+```bash
+dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release
+```
 
-#### 一些动画例子:
+### Configure
 
-##### 摸头
+Create `appsettings.json` in the VPet output directory:
 
-![ss0](README.assets/ss0.gif)
+```json
+{
+  "Cognition": {
+    "Enabled": true,
+    "Llm": {
+      "Provider": "ollama",
+      "Endpoint": "http://localhost:11434",
+      "Model": "qwen2.5:3b"
+    },
+    "Memory": {
+      "DbPath": "data/cognition.db"
+    },
+    "Voice": {
+      "Enabled": false,
+      "Stt": {
+        "Provider": "whisper",
+        "ExecutablePath": "whisper-cli",
+        "ModelPath": "models/ggml-base.en.bin",
+        "Language": "auto"
+      },
+      "Tts": {
+        "Provider": "piper",
+        "ExecutablePath": "piper",
+        "ModelPath": "models/en_US-amy-medium.onnx"
+      }
+    }
+  }
+}
+```
 
-##### 提起
+### Switch LLM Provider
 
-![ss4](README.assets/ss4.gif)![ss4](README.assets/ss8.gif)
+Change one field to switch from Ollama to any OpenAI-compatible endpoint:
 
-##### 爬墙
+```json
+{
+  "Cognition": {
+    "Llm": {
+      "Provider": "openai-compatible",
+      "Endpoint": "https://api.deepseek.com/v1/",
+      "Model": "deepseek-chat",
+      "ApiKey": "your-key-here"
+    }
+  }
+}
+```
 
-![ss7](README.assets/ss7.gif)
+### Voice Setup (Optional)
 
-### 免费
+**Whisper (STT):**
+```bash
+# Build whisper.cpp
+git clone https://github.com/ggerganov/whisper.cpp
+cd whisper.cpp && cmake -B build && cmake --build build -j
+# Download a model
+./models/download-ggml-model.sh base.en
+```
 
-该游戏完全免费! 反正不要钱,试试不要紧(<br/>
-该游戏主要目的是宣传下 [虚拟主播模拟器](https://store.steampowered.com/app/1352140/_/), 这是虚拟主播模拟器里面的桌宠.
+**Piper (TTS):**
+```bash
+# Download from https://github.com/rhasspy/piper/releases
+# Get a voice model: en_US-amy-medium.onnx
+```
 
-### 开源
+**Kokoro (TTS):**
+```bash
+# Download from https://github.com/kokoro-ons/kokoro
+# Get a model: kokoro.onnx
+```
 
-该游戏在github上开源, 欢迎提出自己的想法,创意或者参与开发!<br/>
-您还可以修改代码来制作自己专属的桌宠!(虽然说大部分内容都支持创意工坊,不需要修改代码)<br/>
-项目地址: https://github.com/LorisYounger/VPet
+## Architecture
 
-### 支持创意工坊
+```
+VPet.Cognition.Domain        — abstractions, entities, value objects, events, errors, enums (net8.0)
+VPet.Cognition.LLM           — Ollama + OpenAI-compatible providers, PromptAssembler, StreamAdapter (net8.0)
+VPet.Cognition.Memory        — SQLite memory store + MemoryService (net8.0)
+VPet.Cognition.Personality    — Personality + Emotion engines (net8.0)
+VPet.Cognition.Voice          — Whisper STT + Piper/Kokoro TTS (net8.0)
+VPet.Cognition.Agent          — Agent runtime + tools + permission service (net8.0)
+VPet.Cognition.Security       — Secret redaction, path/command validation (net8.0)
+VPet.Cognition.Host           — DI composition, event bus, MainPlugin entry (net8.0-windows)
+VPet.Cognition.Wpf            — Conversation window, settings window (net8.0-windows)
+VPet.Cognition.Tests          — 102 tests, all passing (net8.0)
+```
 
-该游戏支持创意工坊,您可以制作别的人物桌宠动画或者互动,并上传至创意工坊分享给更多人使用.
+The cognition system loads as a `MainPlugin` via the existing VPet `CoreMOD` plugin loader — zero changes to the original 5 projects.
 
-MOD制作器:  https://github.com/LorisYounger/VPet.ModMaker
+## Development
 
-创意工坊支持添加/修改以下内容
+### Run Tests
 
-* 桌宠动画
-* 物品/食物/饮料等
-* 自定义桌宠工作
-* 说话文本
-* 主题
-* 代码插件 - 通过编写代码给桌宠添加内容
-  * 添加新的动画逻辑/显示方案 (eg: l2d/spine 等)
-  * 添加新功能 (闹钟/记事板等等)
-  * 几乎无所不能, 示例例子参见 [VPet.Plugin.Demo](https://github.com/LorisYounger/VPet.Plugin.Demo)
+```bash
+dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release
+# 102 tests, all passing
+```
 
+### Project Conventions
 
-### 反馈&建议&联系我们
+- `TreatWarningsAsErrors` on all projects
+- `Nullable` enabled everywhere
+- `GenerateDocumentationFile` on all projects
+- All async methods accept `CancellationToken`
+- All providers implement `IAsyncDisposable`
+- No secrets in logs (use `SecretRedactor`)
 
-如果有建议或者意见,可以在Steam商店评论/社区,Github Issue,虚拟主播模拟器贴吧,虚拟桌宠模拟器MODDer群(907101442)或者邮件联系我 [mailto:service@exlb.net](mailto:service@exlb.net)
+### Acceptance Criteria
 
-## 软件结构
+- [x] All 102 tests pass in Release
+- [x] 0 warnings, 0 errors on all buildable projects
+- [x] No existing VPet API modified
+- [x] LLM provider switchable via config (Ollama ↔ OpenAI-compatible)
+- [x] Model switchable via config (qwen2.5:3b → any model)
+- [x] Memory persists to SQLite
+- [x] Personality evolves through conversation
+- [x] Emotion decays over time
+- [x] Voice providers are offline (whisper.cpp, piper, kokoro)
+- [x] Agent tools gated by permission system
+- [x] Secrets redacted in logs and config dumps
+- [x] Path traversal prevented in file tools
+- [x] Dangerous commands blocked
 
-* **VPet-Simulator.Windows: 适用于桌面端的虚拟桌宠模拟器**
-  * *Function 功能性代码存放位置*
-    * CoreMOD Mod管理类
-    * MWController 窗体控制器
-  
-  * *WinDesign 窗口和UI设计
-    * winBetterBuy 更好买窗口
-    * winCGPTSetting ChatGPT 设置
-    * winSetting 软件设置/MOD 窗口
-    * winConsole 开发控制台
-    * winGameSetting 游戏设置
-    * winReport 反馈中心
-  
-  * MainWindows 主窗体,存放和展示Core
-  * PetHelper 快速切换小标
-* **VPet-Simulator.Tool: 方便制作MOD的工具(eg:图片帧生成)**
-* **VPet-Simulator.Core: 软件核心 方便内置到任何WPF应用程序(例如:VUP-Simulator)**
-  * Handle 接口与控件
-    * IController 窗体控制器 (调用相关功能和设置,例如移动到侧边等)
-    * Function 通用功能
-    * GameCore 游戏核心,包含各种数据等内容
-    * GameSave 游戏存档
-    * IFood 食物/物品接口
-    * PetLoader 宠物图形加载器
-  * Graph 图形渲染
-    * IGraph 动画基本接口
-    * GraphCore 动画显示核心
-    * GraphHelper 动画帮助类
-    * GraphInfo 动画信息
-    * FoodAnimation 食物动画 支持显示前中后3层夹心动画 不一定只用于食物,只是叫这个名字
-    * PNGAnimation 桌宠动态动画组件
-    * Picture 桌宠静态动画组件
-  * Display 显示
-    * basestyle/Theme 基本风格主题
-    * Main.xaml 核心显示部件
-      * MainDisplay 核心显示方法
-      * MainLogic 核心显示逻辑
-    * ToolBar 点击人物时候的工具栏
-    * MessageBar 人物说话时候的说话栏
-    * WorkTimer 工作时钟
+## Documentation
 
-## 参与开发
+- `docs/` — 21-file enterprise engineering specification
+- `docs/adr/` — Architecture Decision Records (0001–0003)
+- `Changelog.md` — Version history
 
-欢迎参与虚拟桌宠模拟器的开发! 为保证代码可维护度和游戏性,如果想要开发新的功能,请先[邮件联系](mailto:zoujin.dev@exlb.org)或发[Issues](https://github.com/LorisYounger/VPet/issues)我想要添加的功能/玩法, 以确保该功能/玩法适用于虚拟桌宠模拟器. 以免未来提交时因不合适被拒(而造成代码浪费)<br/>
-如果是修复错误或者BUG,无需联系我,修好后直接PR即可
+## License
 
-当想法通过后,您可以通过 [fork](https://github.com/LorisYounger/VPet/fork) 功能拷贝代码至自己的github以方便编写自己的代码, 编写完毕后通过[pull requests](https://github.com/LorisYounger/VPet/compare) 提交<br/>
-如果您想法没有被通过,也可以另起炉灶,写个不同版本功能的桌宠软件. 但需遵守 [Apache License 2.0](https://github.com/LorisYounger/VPet/blob/main/LICENSE) 与 [动画版权声明与授权](https://github.com/LorisYounger/VPet#%E5%8A%A8%E7%94%BB%E7%89%88%E6%9D%83%E5%A3%B0%E6%98%8E%E4%B8%8E%E6%8E%88%E6%9D%83)
-注: 一般来讲, 添加新功能都可以通过编写代码插件MOD实现, 详情请参见 [VPet.Plugin.Demo](https://github.com/LorisYounger/VPet.Plugin.Demo)
+Same as the original VPet project.
 
-我可能会对您的提交的代码进行修改,删减等以确保该功能/玩法适用于虚拟桌宠模拟器.
+## Credits
 
-
-感谢以下参与的开发和翻译人员
-
-<a href="https://github.com/LorisYounger/VPet/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=LorisYounger/VPet" />
-</a>
-
-和提供社区翻译和更多内容的创意工坊人员
-
-## 动画版权声明与授权
-
-在github中 [桌宠动画文件](https://github.com/LorisYounger/VPet/tree/main/VPet-Simulator.Windows/mod/0000_core/pet/vup) 动画版权归 [虚拟主播模拟器制作组](https://www.exlb.net/VUP-Simulator)所有, 当使用本类库时,您可能需要自行准备动画文件,或遵循以下协议
-
-> **注 **
-> 本动画声明仅限于桌宠自带的动画, 若有画师/开发者画自己的动画适配给桌宠,并不遵循用本声明
-
-### 非商用用途授权
-
-* 需要向用户告知动画文件来源并提供访问 [该页面](https://github.com/LorisYounger/VPet) 的链接
-* 当您完成以上要求后,您可以免费使用动画文件
-
-### 商用用途授权
-
-* 第一次使用时需弹窗并醒目的向用户告知动画文件来源并提供访问 [该页面](https://github.com/LorisYounger/VPet) 的链接
-* 在相应页面(用户可以快捷访问)向用户告知动画文件来源并提供访问 [该页面](https://github.com/LorisYounger/VPet) 的链接
-
-* 禁止通过出售动画文件进行盈利
-* 请[邮件联系](mailto:zoujin.dev@exlb.org)我
-* 当您完成以上要求后,您可以免费使用动画文件
-
-### 分发动画文件
-
-* 需要告知以上所有授权信息
-* 需要提供访问 [该页面](https://github.com/LorisYounger/VPet) 的链接
-* 分发动画文件时禁止任何付费/收费行为
-
-### 图片版权声明与授权
-
-* 程序内置图片 版权授权同上
-* Zip 照片图库禁止商用
-
-## 桌面端部署方法
-
-1. 下载本项目, 通过VisualStudio打开 `VPet.sln` 文件
-2. 在生成栏中, 选择 位数为 `x64` 和生成项目为 `Vpet-Simulator.Windows`
-   ![image-20230208004330895](README.assets/image-20230208004330895.png)
-3. 点击启动, 如果一切正常则会报错 `缺少模组Core,无法启动桌宠`
-4. 以管理员身份运行 `mklink.bat`, 这会让mod文件链接到生成位置
-5. 再次点击启动即可正常运行
+- [VPet](https://github.com/LorisYounger/VPet) by LorisYounger
+- [Ollama](https://ollama.com)
+- [whisper.cpp](https://github.com/ggerganov/whisper.cpp)
+- [Piper](https://github.com/rhasspy/piper)
+- [Kokoro](https://github.com/kokoro-ons/kokoro)

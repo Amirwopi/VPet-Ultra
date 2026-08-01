@@ -27,6 +27,8 @@
     <ProjectReference Include="..\VPet.Cognition.Memory\VPet.Cognition.Memory.csproj" />
     <ProjectReference Include="..\VPet.Cognition.Voice\VPet.Cognition.Voice.csproj" />
     <ProjectReference Include="..\VPet.Cognition.Personality\VPet.Cognition.Personality.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.Agent\VPet.Cognition.Agent.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.Security\VPet.Cognition.Security.csproj" />
   </ItemGroup>
 
 </Project>
