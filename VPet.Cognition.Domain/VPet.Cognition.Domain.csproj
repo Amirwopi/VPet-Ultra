@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>VPet.Cognition.Domain</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyTitle>VPet.Cognition.Domain</AssemblyTitle>
+    <Description>Domain abstractions for the VPet cognitive architecture.</Description>
+    <Product>VPet.Cognition.Domain</Product>
+    <Copyright>Copyright (c) 2026</Copyright>
+  </PropertyGroup>
+
+</Project>
