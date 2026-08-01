@@ -7,6 +7,9 @@ using VPet.Cognition.Host.Options;
 using VPet.Cognition.LLM;
 using VPet.Cognition.LLM.Ollama;
 using VPet.Cognition.LLM.OpenAICompatible;
+using VPet.Cognition.MemoryStore;
+using VPet.Cognition.Voice.Stt;
+using VPet.Cognition.Voice.Tts;
 using VPet_Simulator.Windows.Interface;
 
 namespace VPet.Cognition.Host;
@@ -168,6 +171,47 @@ public static class CognitionHostBuilder
         services.AddSingleton<PromptAssembler>();
         services.AddSingleton<StreamAdapter>();
         services.AddSingleton<ConversationService>();
+
+        // Memory store
+        services.AddSingleton<IMemoryStore>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var logger = sp.GetRequiredService<ILogger<SqliteMemoryStore>>();
+            var dir = Path.GetDirectoryName(opts.Memory.DbPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+            return new SqliteMemoryStore(opts.Memory.DbPath, logger);
+        });
+        services.AddSingleton<MemoryService>();
+
+        // Voice providers (STT)
+        services.AddSingleton<ISttProvider>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var stt = opts.Voice.Stt;
+            var logger = sp.GetRequiredService<ILogger<WhisperSttProvider>>();
+            return new WhisperSttProvider(stt.ExecutablePath, stt.ModelPath, stt.Language, stt.Threads, logger);
+        });
+
+        // Voice providers (TTS) — select by config
+        services.AddSingleton<ITtsProvider>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var tts = opts.Voice.Tts;
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+
+            return tts.Provider.ToLowerInvariant() switch
+            {
+                "kokoro" => new KokoroTtsProvider(
+                    tts.ExecutablePath, tts.ModelPath, tts.KokoroVoice, tts.KokoroSpeed,
+                    TimeSpan.FromSeconds(15), loggerFactory.CreateLogger<KokoroTtsProvider>()),
+
+                _ => new PiperTtsProvider(
+                    tts.ExecutablePath, tts.ModelPath, tts.SpeakerId,
+                    tts.LengthScale, tts.NoiseScale, tts.NoiseW,
+                    TimeSpan.FromSeconds(15), loggerFactory.CreateLogger<PiperTtsProvider>()),
+            };
+        });
 
         // Cognition host
         services.AddSingleton<CognitionHost>();

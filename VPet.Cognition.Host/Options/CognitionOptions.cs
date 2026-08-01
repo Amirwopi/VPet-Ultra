@@ -89,16 +89,25 @@ public sealed class WakeWordOptions
 
 public sealed class SttOptions
 {
-    public string Provider { get; set; } = "faster-whisper";
-    public string Model { get; set; } = "base";
+    public string Provider { get; set; } = "whisper";
+    public string ExecutablePath { get; set; } = "whisper-cli";
+    public string ModelPath { get; set; } = "models/ggml-base.en.bin";
     public string Language { get; set; } = "auto";
+    public int Threads { get; set; } = 4;
     public string Device { get; set; } = "cpu";
 }
 
 public sealed class TtsOptions
 {
     public string Provider { get; set; } = "piper";
-    public string Model { get; set; } = "en_US-amy-medium.onnx";
+    public string ExecutablePath { get; set; } = "piper";
+    public string ModelPath { get; set; } = "models/en_US-amy-medium.onnx";
+    public int? SpeakerId { get; set; }
+    public double LengthScale { get; set; } = 1.0;
+    public double NoiseScale { get; set; } = 0.667;
+    public double NoiseW { get; set; } = 0.8;
+    public string KokoroVoice { get; set; } = "af_heart";
+    public float KokoroSpeed { get; set; } = 1.0f;
     public string Device { get; set; } = "cpu";
 }
 
