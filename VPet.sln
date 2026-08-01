@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VPet.Cognition.Domain", "VP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VPet.Cognition.Tests", "VPet.Cognition.Tests\VPet.Cognition.Tests.csproj", "{C0DD91BF-5ED5-4963-950A-2C7F38091BB0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VPet.Cognition.LLM", "VPet.Cognition.LLM\VPet.Cognition.LLM.csproj", "{28F111FF-4319-435B-A469-8522AC3C71DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -116,6 +118,18 @@ Global
 		{C0DD91BF-5ED5-4963-950A-2C7F38091BB0}.Release|x64.Build.0 = Release|Any CPU
 		{C0DD91BF-5ED5-4963-950A-2C7F38091BB0}.Release|x86.ActiveCfg = Release|Any CPU
 		{C0DD91BF-5ED5-4963-950A-2C7F38091BB0}.Release|x86.Build.0 = Release|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Debug|x64.Build.0 = Debug|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Debug|x86.Build.0 = Debug|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Release|x64.ActiveCfg = Release|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Release|x64.Build.0 = Release|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Release|x86.ActiveCfg = Release|Any CPU
+		{28F111FF-4319-435B-A469-8522AC3C71DA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

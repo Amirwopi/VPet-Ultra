@@ -18,10 +18,12 @@
     <PackageReference Include="FluentAssertions" Version="6.12.1" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="WireMock.Net" Version="1.6.7" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\VPet.Cognition.Domain\VPet.Cognition.Domain.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.LLM\VPet.Cognition.LLM.csproj" />
   </ItemGroup>
 
 </Project>

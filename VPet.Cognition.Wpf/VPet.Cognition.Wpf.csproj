@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>VPet.Cognition.Wpf</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
+    <AssemblyTitle>VPet.Cognition.Wpf</AssemblyTitle>
+    <Description>WPF UI for VPet cognition: conversation window, settings, inspectors.</Description>
+    <Product>VPet.Cognition.Wpf</Product>
+    <Copyright>Copyright (c) 2026</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+    <PackageReference Include="Panuon.WPF.UI" Version="1.2.4.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VPet.Cognition.Domain\VPet.Cognition.Domain.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.LLM\VPet.Cognition.LLM.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.Host\VPet.Cognition.Host.csproj" />
+    <ProjectReference Include="..\VPet-Simulator.Windows.Interface\VPet-Simulator.Windows.Interface.csproj" />
+  </ItemGroup>
+
+</Project>
