@@ -166,15 +166,28 @@ public sealed class SqliteMemoryStore : IMemoryStore
         await using var conn = new SqliteConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
 
+        // 1. Decay importance of all non-forgotten memories (time-based decay)
         await conn.ExecuteAsync(new CommandDefinition(
-            "UPDATE memories SET importance = importance * 0.95 WHERE forgotten = 0",
+            "UPDATE memories SET importance = importance * 0.97 WHERE forgotten = 0",
             cancellationToken: cancellationToken));
 
+        // 2. Boost importance of recently accessed memories (spaced repetition)
+        var recentlyAccessed = DateTimeOffset.UtcNow.AddHours(-1);
+        await conn.ExecuteAsync(new CommandDefinition(
+            "UPDATE memories SET importance = MIN(1.0, importance * 1.05) WHERE forgotten = 0 AND last_accessed_at > @cutoff",
+            new { cutoff = recentlyAccessed }, cancellationToken: cancellationToken));
+
+        // 3. Prune very low importance memories
         var pruned = await conn.ExecuteAsync(new CommandDefinition(
             "UPDATE memories SET forgotten = 1, forgotten_at = @now WHERE importance < 0.01 AND forgotten = 0",
             new { now = DateTimeOffset.UtcNow }, cancellationToken: cancellationToken));
 
-        _logger.LogInformation("Consolidated: pruned {Pruned} low-importance memories", pruned);
+        // 4. Promote high-importance episodic memories to semantic (consolidation)
+        var promoted = await conn.ExecuteAsync(new CommandDefinition(
+            "UPDATE memories SET type = 'Semantic' WHERE type = 'Episodic' AND importance > 0.8 AND access_count > 3 AND forgotten = 0",
+            cancellationToken: cancellationToken));
+
+        _logger.LogInformation("Consolidated: pruned {Pruned}, promoted {Promoted} memories", pruned, promoted);
     }
 
     public async Task ForgetAsync(CancellationToken cancellationToken = default)
@@ -184,11 +197,23 @@ public sealed class SqliteMemoryStore : IMemoryStore
         await using var conn = new SqliteConnection(_connectionString);
         await conn.OpenAsync(cancellationToken);
 
-        var count = await conn.ExecuteAsync(new CommandDefinition(
-            "UPDATE memories SET forgotten = 1, forgotten_at = @now WHERE forgotten = 0",
-            new { now = DateTimeOffset.UtcNow }, cancellationToken: cancellationToken));
+        // Mark memories as forgotten if: importance < 0.05 AND older than 1 day
+        // OR importance < 0.1 AND older than 7 days
+        var now = DateTimeOffset.UtcNow;
+        var oneDayAgo = now.AddDays(-1);
+        var sevenDaysAgo = now.AddDays(-7);
 
-        _logger.LogInformation("Forgot {Count} memories", count);
+        var count = await conn.ExecuteAsync(new CommandDefinition(
+            """
+            UPDATE memories SET forgotten = 1, forgotten_at = @now
+            WHERE forgotten = 0 AND (
+                (importance < 0.05 AND created_at < @oneDayAgo)
+                OR (importance < 0.1 AND created_at < @sevenDaysAgo)
+            )
+            """,
+            new { now, oneDayAgo, sevenDaysAgo }, cancellationToken: cancellationToken));
+
+        _logger.LogInformation("Forgot {Count} low-importance memories", count);
     }
 
     public async Task CompressAsync(CancellationToken cancellationToken = default)

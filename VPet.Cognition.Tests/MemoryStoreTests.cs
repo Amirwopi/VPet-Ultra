@@ -146,8 +146,9 @@ public class MemoryStoreTests : IDisposable
 
         var memories = await _store.RetrieveAsync(new MemoryQuery { TopK = 10 });
         memories.Should().HaveCount(1);
-        // 0.8 * 0.95 = 0.76
-        memories[0].Importance.Value.Should().BeApproximately(0.76, 0.01);
+        // 0.8 * 0.97 = 0.776 (decay), then * 1.05 = 0.8148 (recent access boost)
+        // Since the memory was just stored, last_accessed_at is recent → boost applies
+        memories[0].Importance.Value.Should().BeApproximately(0.815, 0.02);
     }
 
     [Fact]
@@ -162,15 +163,26 @@ public class MemoryStoreTests : IDisposable
     }
 
     [Fact]
-    public async Task ForgetAsync_ShouldMarkAllAsForgotten()
+    public async Task ForgetAsync_ShouldMarkLowImportanceAsForgotten()
     {
-        await _store.StoreAsync(new Memory { Id = MemoryId.New(), Type = MemoryType.Episodic, Content = "a", Importance = new Importance(0.9) });
-        await _store.StoreAsync(new Memory { Id = MemoryId.New(), Type = MemoryType.Episodic, Content = "b", Importance = new Importance(0.9) });
+        // High importance memory should NOT be forgotten
+        await _store.StoreAsync(new Memory { Id = MemoryId.New(), Type = MemoryType.Episodic, Content = "important", Importance = new Importance(0.9) });
+        // Low importance, old memory SHOULD be forgotten
+        var oldMemory = new Memory
+        {
+            Id = MemoryId.New(),
+            Type = MemoryType.Episodic,
+            Content = "trivial",
+            Importance = new Importance(0.03),
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-2),
+        };
+        await _store.StoreAsync(oldMemory);
 
         await _store.ForgetAsync();
 
+        // High importance should still be counted
         var count = await _store.CountAsync();
-        count.Should().Be(0);
+        count.Should().Be(1);
     }
 
     [Fact]
