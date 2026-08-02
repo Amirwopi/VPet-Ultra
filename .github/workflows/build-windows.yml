@@ -29,28 +29,36 @@ jobs:
       - name: Test
         run: dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release --no-build --logger "console;verbosity=minimal"
 
-      - name: Publish VPet-Simulator.Windows (Release)
-        run: dotnet publish VPet-Simulator.Windows/VPet-Simulator.Windows.csproj -c Release -r win-x64 --self-contained false -o publish/vpet-windows
+      - name: Build cognition Host DLL (Release)
+        run: dotnet build VPet.Cognition.Host/VPet.Cognition.Host.csproj -c Release --no-restore
 
-      - name: Install zip tool
+      - name: Package cognition plugin
         shell: pwsh
         run: |
           # Create the cognition mod folder structure
-          $modPath = "publish/vpet-windows/mod/0000_cognition"
+          $modPath = "publish/vpet-cognition/mod/0000_cognition"
           New-Item -ItemType Directory -Force -Path $modPath
 
           # Copy all cognition DLLs into the mod folder
-          $cognitionDlls = Get-ChildItem -Path "VPet.Cognition.Host/bin/Release/net8.0-windows" -Filter "VPet.Cognition.*.dll" -Recurse
+          $hostBin = "VPet.Cognition.Host/bin/Release/net8.0-windows"
+          $cognitionDlls = Get-ChildItem -Path $hostBin -Filter "VPet.Cognition.*.dll" -Recurse
           foreach ($dll in $cognitionDlls) {
             Copy-Item $dll.FullName -Destination $modPath -Force
             Write-Host "Copied: $($dll.Name)"
           }
 
           # Also copy dependency DLLs
-          $depDlls = Get-ChildItem -Path "VPet.Cognition.Host/bin/Release/net8.0-windows" -Filter "*.dll" -Recurse | Where-Object { $_.Name -notlike "VPet.Cognition.*" -and $_.Name -notlike "VPet-Simulator.*" }
+          $depDlls = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse | Where-Object { $_.Name -notlike "VPet.Cognition.*" -and $_.Name -notlike "VPet-Simulator.*" }
           foreach ($dll in $depDlls) {
             Copy-Item $dll.FullName -Destination $modPath -Force
             Write-Host "Copied dep: $($dll.Name)"
+          }
+
+          # Copy LLamaSharp native libraries
+          $nativeLibs = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse | Where-Object { $_.Name -like "llama.dll" -or $_.Name -like "ggml*.dll" -or $_.Name -like "cuda*.dll" }
+          foreach ($lib in $nativeLibs) {
+            Copy-Item $lib.FullName -Destination $modPath -Force
+            Write-Host "Copied native: $($lib.Name)"
           }
 
       - name: Create appsettings.json template
@@ -61,133 +69,80 @@ jobs:
             "Cognition": {
               "Enabled": true,
               "Llm": {
-                "Provider": "ollama",
-                "Endpoint": "http://localhost:11434",
-                "Model": "qwen2.5:3b",
-                "ApiKey": "",
-                "Timeout": "00:01:00",
+                "Provider": "local",
+                "Model": "qwen2.5-3b-instruct-q4_k_m",
+                "ModelsDirectory": "models",
+                "GpuLayerCount": 0,
+                "ContextSize": 4096,
+                "EnableVision": false,
                 "MaxTokens": 1024,
-                "Temperature": 0.7
+                "Temperature": 0.7,
+                "Endpoint": "http://localhost:11434",
+                "ApiKey": ""
               },
               "Memory": {
-                "DbPath": "data/cognition.db",
-                "Encrypt": false,
-                "VectorDimensions": 768,
-                "ConsolidationInterval": "00:05:00",
-                "ForgettingInterval": "1.00:00:00",
-                "MaxDbSizeMb": 500
-              },
-              "Personality": {
-                "Seed": {
-                  "Name": "Vpet",
-                  "Description": "A desktop companion."
-                },
-                "EvolutionRate": 0.02,
-                "ReflectionIntervalTurns": 10,
-                "EvaluationIntervalTurns": 5,
-                "CoreTraitMaxDrift": 0.1
-              },
-              "Emotion": {
-                "BlendFactor": 0.3,
-                "DecayRatePerSec": 0.01,
-                "PersistInterval": "00:01:00",
-                "AntagonisticSuppression": 0.5,
-                "SentimentMethod": "rule"
+                "DbPath": "data/cognition.db"
               },
               "Voice": {
                 "Enabled": false,
-                "BargeIn": true,
-                "ContinuousMode": false,
-                "SilenceTimeoutSec": 3,
-                "WakeWord": {
-                  "Provider": "openwakeword",
-                  "Model": "hey_vpet.onnx",
-                  "Threshold": 0.5
-                },
                 "Stt": {
                   "Provider": "whisper",
-                  "ExecutablePath": "whisper-cli",
-                  "ModelPath": "models/ggml-base.en.bin",
+                  "ExecutablePath": "whisper-cli.exe",
+                  "ModelPath": "models/ggml-base.bin",
                   "Language": "auto",
-                  "Threads": 4,
-                  "Device": "cpu"
+                  "Threads": 4
                 },
                 "Tts": {
                   "Provider": "piper",
-                  "ExecutablePath": "piper",
-                  "ModelPath": "models/en_US-amy-medium.onnx",
-                  "SpeakerId": null,
-                  "LengthScale": 1.0,
-                  "NoiseScale": 0.667,
-                  "NoiseW": 0.8,
-                  "KokoroVoice": "af_heart",
-                  "KokoroSpeed": 1.0,
-                  "Device": "cpu"
+                  "ExecutablePath": "piper.exe",
+                  "ModelPath": "models/en_US-amy-medium.onnx"
                 }
-              },
-              "Tools": {
-                "Enabled": true,
-                "TimeoutSec": 30,
-                "AllowedPaths": [],
-                "BlockedCommands": [],
-                "DangerousPatterns": [],
-                "Win32Allowlist": [],
-                "PromptTimeoutSec": 30
-              },
-              "Agent": {
-                "Enabled": true,
-                "MaxStepsPerPlan": 10,
-                "MaxRetries": 3,
-                "ConfidenceThreshold": 0.5,
-                "MinConfidence": 0.3,
-                "MaxConcurrentGoals": 3
-              },
-              "Animation": {
-                "EmotionBiasEnabled": true,
-                "EmotionOverrideThreshold": 0.6,
-                "LipSyncEnabled": true,
-                "LipSyncVisemeCount": 5
-              },
-              "Logging": {
-                "Level": "Information",
-                "File": "logs/cognition-.log",
-                "Console": true,
-                "RedactKeys": ["apiKey", "fallbackApiKey"]
               }
             }
           }
           '@
-          $template | Out-File -FilePath "publish/vpet-windows/appsettings.json" -Encoding UTF8
+          $template | Out-File -FilePath "publish/vpet-cognition/appsettings.json" -Encoding UTF8
+
+      - name: Create models directory
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path "publish/vpet-cognition/models"
+
+      - name: Copy documentation
+        shell: pwsh
+        run: |
+          Copy-Item "INSTALL.md" -Destination "publish/vpet-cognition/" -Force
+          Copy-Item "TESTING.md" -Destination "publish/vpet-cognition/" -Force
+          Copy-Item "docs/MODELS.md" -Destination "publish/vpet-cognition/" -Force
 
       - name: Zip publish folder
         shell: pwsh
         run: |
-          Compress-Archive -Path "publish/vpet-windows/*" -DestinationPath "VPet-Ultra-Windows.zip" -Force
+          Compress-Archive -Path "publish/vpet-cognition/*" -DestinationPath "VPet-Ultra-Cognition.zip" -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VPet-Ultra-Windows
-          path: VPet-Ultra-Windows.zip
+          name: VPet-Ultra-Cognition
+          path: VPet-Ultra-Cognition.zip
           retention-days: 30
 
       - name: Upload to Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: VPet-Ultra-Windows.zip
+          files: VPet-Ultra-Cognition.zip
           name: VPet-Ultra ${{ github.ref_name }}
           body: |
             ## VPet-Ultra ${{ github.ref_name }}
 
             ### Installation
-            1. Download and extract this zip
-            2. Follow the instructions in `INSTALL.md` (included in the repo)
-            3. Download AI models as described in `docs/MODELS.md`
+            1. Download and extract this zip into your VPet folder
+            2. Follow the instructions in `INSTALL.md`
+            3. Download AI models as described in `MODELS.md`
 
             ### What's Included
-            - VPet-Simulator.Windows (the pet application)
             - VPet.Cognition plugin DLLs (in `mod/0000_cognition/`)
-            - `appsettings.json` template (pre-configured for Ollama + qwen2.5:3b)
+            - `appsettings.json` template (pre-configured for local LLamaSharp + Qwen2.5-3B)
+            - Documentation: INSTALL.md, TESTING.md, MODELS.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
