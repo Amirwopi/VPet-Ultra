@@ -40,6 +40,7 @@ public sealed class CognitionPlugin : MainPlugin
     private ServiceProvider? _services;
     private CognitionHost? _host;
     private ILogger<CognitionPlugin>? _logger;
+    private List<Microsoft.Extensions.Hosting.IHostedService>? _backgroundServices;
 
     public CognitionPlugin(IMainWindow mainwin) : base(mainwin)
     {
@@ -54,6 +55,13 @@ public sealed class CognitionPlugin : MainPlugin
         _logger.LogInformation("CognitionPlugin loaded. LLM provider={Provider}, model={Model}",
             _services.GetRequiredService<IOptions<CognitionOptions>>().Value.Llm.Provider,
             _services.GetRequiredService<IOptions<CognitionOptions>>().Value.Llm.Model);
+
+        // Start background services
+        _backgroundServices = _services.GetServices<Microsoft.Extensions.Hosting.IHostedService>().ToList();
+        foreach (var svc in _backgroundServices)
+        {
+            _ = svc.StartAsync(CancellationToken.None);
+        }
     }
 
     public override void GameLoaded()
@@ -71,6 +79,17 @@ public sealed class CognitionPlugin : MainPlugin
     {
         _logger?.LogInformation("CognitionPlugin EndGame — disposing.");
         _host?.DetachFromPet();
+
+        // Stop background services
+        if (_backgroundServices is not null)
+        {
+            foreach (var svc in _backgroundServices)
+            {
+                try { _ = svc.StopAsync(CancellationToken.None); }
+                catch { /* ignore */ }
+            }
+        }
+
         _services?.DisposeAsync().AsTask().GetAwaiter().GetResult();
     }
 
@@ -598,6 +617,11 @@ public static class CognitionHostBuilder
             return new CognitionStore(opts.Memory.DbPath, logger);
         });
 
+        // ── Background services (memory maintenance, emotion persistence, personality evaluation) ──
+        services.AddHostedService<VPet.Cognition.Host.Services.MemoryMaintenanceService>();
+        services.AddHostedService<VPet.Cognition.Host.Services.EmotionPersistenceService>();
+        services.AddHostedService<VPet.Cognition.Host.Services.PersonalityEvaluationService>();
+
         // ── Voice providers (STT) ──
         services.AddSingleton<ISttProvider>(sp =>
         {
@@ -635,9 +659,23 @@ public static class CognitionHostBuilder
         {
             var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
             var logger = sp.GetRequiredService<ILogger<DefaultPersonalityEngine>>();
-            return new DefaultPersonalityEngine(
+            var llm = sp.GetService<ILLMProvider>();
+            var eventBus = sp.GetRequiredService<IEventBus>();
+            var store = sp.GetService<CognitionStore>();
+
+            var engine = new DefaultPersonalityEngine(
                 new PersonalitySeed { Name = opts.Personality.Seed.Name, Description = opts.Personality.Seed.Description },
-                opts.Personality.EvolutionRate, opts.Personality.CoreTraitMaxDrift, logger);
+                opts.Personality.EvolutionRate, opts.Personality.CoreTraitMaxDrift, logger)
+            { LlmProvider = llm, EventBus = eventBus };
+
+            // Wire persistence
+            if (store is not null)
+            {
+                engine.LoadAsync = async () => await store.LoadPersonalityAsync();
+                engine.PersistAsync = async (json) => await store.SavePersonalityAsync(json);
+            }
+
+            return engine;
         });
         services.AddSingleton<IEmotionEngine>(sp =>
         {
