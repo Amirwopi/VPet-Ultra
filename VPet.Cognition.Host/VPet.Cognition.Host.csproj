@@ -29,6 +29,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VPet.Cognition.Domain\VPet.Cognition.Domain.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.LLM\VPet.Cognition.LLM.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.Memory\VPet.Cognition.Memory.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.Personality\VPet.Cognition.Personality.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.Voice\VPet.Cognition.Voice.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.Agent\VPet.Cognition.Agent.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.Security\VPet.Cognition.Security.csproj" />
     <ProjectReference Include="..\VPet-Simulator.Windows.Interface\VPet-Simulator.Windows.Interface.csproj" />
   </ItemGroup>
 

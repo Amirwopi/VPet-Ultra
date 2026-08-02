@@ -1,0 +1,193 @@
+name: Build VPet-Ultra (Windows)
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore VPet.sln
+
+      - name: Build (Release)
+        run: dotnet build VPet.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release --no-build --logger "console;verbosity=minimal"
+
+      - name: Publish VPet-Simulator.Windows (Release)
+        run: dotnet publish VPet-Simulator.Windows/VPet-Simulator.Windows.csproj -c Release -r win-x64 --self-contained false -o publish/vpet-windows
+
+      - name: Install zip tool
+        shell: pwsh
+        run: |
+          # Create the cognition mod folder structure
+          $modPath = "publish/vpet-windows/mod/0000_cognition"
+          New-Item -ItemType Directory -Force -Path $modPath
+
+          # Copy all cognition DLLs into the mod folder
+          $cognitionDlls = Get-ChildItem -Path "VPet.Cognition.Host/bin/Release/net8.0-windows" -Filter "VPet.Cognition.*.dll" -Recurse
+          foreach ($dll in $cognitionDlls) {
+            Copy-Item $dll.FullName -Destination $modPath -Force
+            Write-Host "Copied: $($dll.Name)"
+          }
+
+          # Also copy dependency DLLs
+          $depDlls = Get-ChildItem -Path "VPet.Cognition.Host/bin/Release/net8.0-windows" -Filter "*.dll" -Recurse | Where-Object { $_.Name -notlike "VPet.Cognition.*" -and $_.Name -notlike "VPet-Simulator.*" }
+          foreach ($dll in $depDlls) {
+            Copy-Item $dll.FullName -Destination $modPath -Force
+            Write-Host "Copied dep: $($dll.Name)"
+          }
+
+      - name: Create appsettings.json template
+        shell: pwsh
+        run: |
+          $template = @'
+          {
+            "Cognition": {
+              "Enabled": true,
+              "Llm": {
+                "Provider": "ollama",
+                "Endpoint": "http://localhost:11434",
+                "Model": "qwen2.5:3b",
+                "ApiKey": "",
+                "Timeout": "00:01:00",
+                "MaxTokens": 1024,
+                "Temperature": 0.7
+              },
+              "Memory": {
+                "DbPath": "data/cognition.db",
+                "Encrypt": false,
+                "VectorDimensions": 768,
+                "ConsolidationInterval": "00:05:00",
+                "ForgettingInterval": "1.00:00:00",
+                "MaxDbSizeMb": 500
+              },
+              "Personality": {
+                "Seed": {
+                  "Name": "Vpet",
+                  "Description": "A desktop companion."
+                },
+                "EvolutionRate": 0.02,
+                "ReflectionIntervalTurns": 10,
+                "EvaluationIntervalTurns": 5,
+                "CoreTraitMaxDrift": 0.1
+              },
+              "Emotion": {
+                "BlendFactor": 0.3,
+                "DecayRatePerSec": 0.01,
+                "PersistInterval": "00:01:00",
+                "AntagonisticSuppression": 0.5,
+                "SentimentMethod": "rule"
+              },
+              "Voice": {
+                "Enabled": false,
+                "BargeIn": true,
+                "ContinuousMode": false,
+                "SilenceTimeoutSec": 3,
+                "WakeWord": {
+                  "Provider": "openwakeword",
+                  "Model": "hey_vpet.onnx",
+                  "Threshold": 0.5
+                },
+                "Stt": {
+                  "Provider": "whisper",
+                  "ExecutablePath": "whisper-cli",
+                  "ModelPath": "models/ggml-base.en.bin",
+                  "Language": "auto",
+                  "Threads": 4,
+                  "Device": "cpu"
+                },
+                "Tts": {
+                  "Provider": "piper",
+                  "ExecutablePath": "piper",
+                  "ModelPath": "models/en_US-amy-medium.onnx",
+                  "SpeakerId": null,
+                  "LengthScale": 1.0,
+                  "NoiseScale": 0.667,
+                  "NoiseW": 0.8,
+                  "KokoroVoice": "af_heart",
+                  "KokoroSpeed": 1.0,
+                  "Device": "cpu"
+                }
+              },
+              "Tools": {
+                "Enabled": true,
+                "TimeoutSec": 30,
+                "AllowedPaths": [],
+                "BlockedCommands": [],
+                "DangerousPatterns": [],
+                "Win32Allowlist": [],
+                "PromptTimeoutSec": 30
+              },
+              "Agent": {
+                "Enabled": true,
+                "MaxStepsPerPlan": 10,
+                "MaxRetries": 3,
+                "ConfidenceThreshold": 0.5,
+                "MinConfidence": 0.3,
+                "MaxConcurrentGoals": 3
+              },
+              "Animation": {
+                "EmotionBiasEnabled": true,
+                "EmotionOverrideThreshold": 0.6,
+                "LipSyncEnabled": true,
+                "LipSyncVisemeCount": 5
+              },
+              "Logging": {
+                "Level": "Information",
+                "File": "logs/cognition-.log",
+                "Console": true,
+                "RedactKeys": ["apiKey", "fallbackApiKey"]
+              }
+            }
+          }
+          '@
+          $template | Out-File -FilePath "publish/vpet-windows/appsettings.json" -Encoding UTF8
+
+      - name: Zip publish folder
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "publish/vpet-windows/*" -DestinationPath "VPet-Ultra-Windows.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VPet-Ultra-Windows
+          path: VPet-Ultra-Windows.zip
+          retention-days: 30
+
+      - name: Upload to Release (on tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: VPet-Ultra-Windows.zip
+          name: VPet-Ultra ${{ github.ref_name }}
+          body: |
+            ## VPet-Ultra ${{ github.ref_name }}
+
+            ### Installation
+            1. Download and extract this zip
+            2. Follow the instructions in `INSTALL.md` (included in the repo)
+            3. Download AI models as described in `docs/MODELS.md`
+
+            ### What's Included
+            - VPet-Simulator.Windows (the pet application)
+            - VPet.Cognition plugin DLLs (in `mod/0000_cognition/`)
+            - `appsettings.json` template (pre-configured for Ollama + qwen2.5:3b)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
