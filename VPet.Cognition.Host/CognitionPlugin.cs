@@ -203,7 +203,7 @@ public sealed class CognitionHost : ICognitionFacade
             {
                 // Only override if emotion is strong enough
                 if (evt.After.Joy > _options.Value.Animation.EmotionOverrideThreshold)
-                    _main.Display(graphType, animatType);
+                    _main.Display(graphType, animatType, (Action<string>?)null);
             });
         }
         catch (Exception ex)
