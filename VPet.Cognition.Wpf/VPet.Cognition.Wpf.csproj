@@ -24,7 +24,6 @@
   <ItemGroup>
     <ProjectReference Include="..\VPet.Cognition.Domain\VPet.Cognition.Domain.csproj" />
     <ProjectReference Include="..\VPet.Cognition.LLM\VPet.Cognition.LLM.csproj" />
-    <ProjectReference Include="..\VPet.Cognition.Host\VPet.Cognition.Host.csproj" />
     <ProjectReference Include="..\VPet-Simulator.Windows.Interface\VPet-Simulator.Windows.Interface.csproj" />
   </ItemGroup>
 

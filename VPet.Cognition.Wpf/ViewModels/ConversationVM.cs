@@ -2,8 +2,8 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using VPet.Cognition.Domain.Abstractions;
 using VPet.Cognition.Domain.Entities;
-using VPet.Cognition.Host;
 using VPet.Cognition.LLM;
 
 namespace VPet.Cognition.Wpf.ViewModels;
@@ -15,7 +15,7 @@ namespace VPet.Cognition.Wpf.ViewModels;
 public sealed partial class ConversationVM : ObservableObject
 {
     private readonly ConversationService _conversationService;
-    private readonly CognitionHost _cognitionHost;
+    private readonly ICognitionFacade _cognitionFacade;
     private readonly ILogger<ConversationVM> _logger;
     private CancellationTokenSource? _cts;
 
@@ -35,11 +35,11 @@ public sealed partial class ConversationVM : ObservableObject
 
     public ConversationVM(
         ConversationService conversationService,
-        CognitionHost cognitionHost,
+        ICognitionFacade cognitionFacade,
         ILogger<ConversationVM> logger)
     {
         _conversationService = conversationService;
-        _cognitionHost = cognitionHost;
+        _cognitionFacade = cognitionFacade;
         _logger = logger;
     }
 
@@ -63,15 +63,15 @@ public sealed partial class ConversationVM : ObservableObject
 
         try
         {
-            // 1. Retrieve memory context and apply personality/emotion via CognitionHost
+            // 1. Retrieve memory context and apply personality/emotion via CognitionFacade
             string memoryContext = "";
             try
             {
-                memoryContext = await _cognitionHost.ProcessConversationTurnAsync(userInput, _cts.Token);
+                memoryContext = await _cognitionFacade.ProcessConversationTurnAsync(userInput, _cts.Token);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "CognitionHost processing failed; continuing without memory.");
+                _logger.LogWarning(ex, "CognitionFacade processing failed; continuing without memory.");
             }
 
             // 2. Stream the conversation with memory context
@@ -93,7 +93,7 @@ public sealed partial class ConversationVM : ObservableObject
                 // 3. Store the conversation turn to memory
                 try
                 {
-                    await _cognitionHost.StoreConversationTurnAsync(userInput, result.Value.Text, _cts.Token);
+                    await _cognitionFacade.StoreConversationTurnAsync(userInput, result.Value.Text, _cts.Token);
                 }
                 catch (Exception ex)
                 {

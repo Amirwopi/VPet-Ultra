@@ -116,7 +116,7 @@ public sealed class CognitionPlugin : MainPlugin
 /// <summary>
 /// The orchestrator that attaches cognition to the pet's <c>Main</c> control.
 /// </summary>
-public sealed class CognitionHost
+public sealed class CognitionHost : ICognitionFacade
 {
     private readonly IEventBus _eventBus;
     private readonly ILogger<CognitionHost> _logger;
@@ -653,6 +653,7 @@ public static class CognitionHostBuilder
 
         // ── Cognition host ──
         services.AddSingleton<CognitionHost>();
+        services.AddSingleton<VPet.Cognition.Domain.Abstractions.ICognitionFacade>(sp => sp.GetRequiredService<CognitionHost>());
 
         // ── Personality + Emotion ──
         services.AddSingleton<IPersonalityEngine>(sp =>
