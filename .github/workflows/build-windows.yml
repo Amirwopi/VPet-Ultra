@@ -23,6 +23,10 @@ jobs:
       - name: Restore
         run: dotnet restore VPet.sln
 
+      - name: Restore Host project (if solution restore failed)
+        run: dotnet restore VPet.Cognition.Host/VPet.Cognition.Host.csproj
+        continue-on-error: true
+
       - name: Build (Release)
         run: dotnet build VPet.sln -c Release --no-restore
 
@@ -30,7 +34,9 @@ jobs:
         run: dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release --no-build --logger "console;verbosity=minimal"
 
       - name: Build cognition Host DLL (Release)
-        run: dotnet build VPet.Cognition.Host/VPet.Cognition.Host.csproj -c Release --no-restore
+        run: |
+          dotnet restore VPet.Cognition.Host/VPet.Cognition.Host.csproj
+          dotnet build VPet.Cognition.Host/VPet.Cognition.Host.csproj -c Release
 
       - name: Package cognition plugin
         shell: pwsh
