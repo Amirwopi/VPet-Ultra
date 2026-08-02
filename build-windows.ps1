@@ -45,12 +45,14 @@ if ($LASTEXITCODE -ne 0) { Write-Host "Publish failed!" -ForegroundColor Red; ex
 
 # Step 4b: Copy mod data (essential game data not included by dotnet publish)
 Write-Host "[4b/7] Copying mod data..." -ForegroundColor Yellow
-$srcMod = "VPet-Simulator.Windows/mod"
+$srcCore = "VPet-Simulator.Windows/mod/0000_core"
 $dstMod = Join-Path $OutputDir "mod"
-if (Test-Path $dstMod) { Remove-Item $dstMod -Recurse -Force }
-Copy-Item -Path $srcMod -Destination $dstMod -Recurse -Force
-$modFileCount = (Get-ChildItem $dstMod -Recurse | Measure-Object).Count
-Write-Host "  Copied mod folder ($modFileCount files)"
+$dstCore = Join-Path $dstMod "0000_core"
+New-Item -ItemType Directory -Force -Path $dstMod | Out-Null
+if (Test-Path $dstCore) { Remove-Item $dstCore -Recurse -Force }
+Copy-Item -Path $srcCore -Destination $dstCore -Recurse -Force
+$modFileCount = (Get-ChildItem $dstCore -Recurse | Measure-Object).Count
+Write-Host "  Copied 0000_core ($modFileCount files)"
 
 # Step 5: Build cognition Host
 Write-Host "[5/7] Building cognition Host..." -ForegroundColor Yellow

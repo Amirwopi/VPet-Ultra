@@ -36,17 +36,20 @@ jobs:
       - name: Publish VPet-Simulator.Windows (x64)
         run: dotnet publish VPet-Simulator.Windows/VPet-Simulator.Windows.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained false -o publish/vpet-ultra
 
-      # ── Copy the mod folder (core mod data: pets, food, themes, etc.) ──
+      # ── Copy the mod/0000_core data folder (pets, food, themes, etc.) ──
       - name: Copy mod data
         shell: pwsh
         run: |
-          # The mod folder contains essential game data (0000_core) that is not
-          # included by dotnet publish. Copy it from the source tree.
-          $srcMod = "VPet-Simulator.Windows/mod"
+          # Only 0000_core is a real folder; the other mod entries are symlinks
+          # to the original developer's local machine. Copy only 0000_core.
+          $srcCore = "VPet-Simulator.Windows/mod/0000_core"
           $dstMod = "publish/vpet-ultra/mod"
-          if (Test-Path $dstMod) { Remove-Item $dstMod -Recurse -Force }
-          Copy-Item -Path $srcMod -Destination $dstMod -Recurse -Force
-          Write-Host "Copied mod folder ($(Get-ChildItem $dstMod -Recurse | Measure-Object).Count files)"
+          $dstCore = "$dstMod/0000_core"
+          New-Item -ItemType Directory -Force -Path $dstMod
+          if (Test-Path $dstCore) { Remove-Item $dstCore -Recurse -Force }
+          Copy-Item -Path $srcCore -Destination $dstCore -Recurse -Force
+          $fileCount = (Get-ChildItem $dstCore -Recurse | Measure-Object).Count
+          Write-Host "Copied 0000_core ($fileCount files)"
 
       # ── Build and publish the cognition Host (WPF) ──
       - name: Build cognition Host (Release)
