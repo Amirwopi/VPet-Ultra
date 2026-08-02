@@ -86,7 +86,7 @@ public class VoiceProviderTests
     }
 
     [Fact]
-    public async Task PiperTtsProvider_GetVisemesAsync_ShouldReturnEmpty()
+    public async Task PiperTtsProvider_GetVisemesAsync_ShouldReturnVisemes()
     {
         var provider = new PiperTtsProvider(
             "/nonexistent/piper", "/nonexistent/model.onnx",
@@ -94,7 +94,7 @@ public class VoiceProviderTests
             _loggerFactory.CreateLogger<PiperTtsProvider>());
 
         var visemes = await provider.GetVisemesAsync("hello");
-        visemes.Should().BeEmpty();
+        visemes.Should().NotBeEmpty();
     }
 
     [Fact]
@@ -136,7 +136,7 @@ public class VoiceProviderTests
     }
 
     [Fact]
-    public async Task KokoroTtsProvider_GetVisemesAsync_ShouldReturnEmpty()
+    public async Task KokoroTtsProvider_GetVisemesAsync_ShouldReturnVisemes()
     {
         var provider = new KokoroTtsProvider(
             "/nonexistent/kokoro", "/nonexistent/model.onnx",
@@ -144,6 +144,6 @@ public class VoiceProviderTests
             _loggerFactory.CreateLogger<KokoroTtsProvider>());
 
         var visemes = await provider.GetVisemesAsync("hello");
-        visemes.Should().BeEmpty();
+        visemes.Should().NotBeEmpty();
     }
 }

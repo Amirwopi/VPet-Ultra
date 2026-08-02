@@ -53,10 +53,62 @@ public sealed class WhisperSttProvider : ISttProvider
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        // For streaming, we use whisper-cli in server mode if available,
-        // otherwise we process audio chunks via temp files in a background loop.
-        // Phase 1: start a background listener that processes audio files queued to it.
-        _logger.LogInformation("Whisper STT streaming started. Model={Model}, Lang={Lang}", _modelPath, _language);
+        // Start a background task that monitors a temp directory for audio files
+        // and transcribes them as they appear. This enables a "streaming" workflow
+        // where the audio capture layer writes WAV chunks to the temp dir.
+        _ = Task.Run(async () =>
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), "vpet_stt");
+            Directory.CreateDirectory(tempDir);
+
+            _logger.LogInformation("Whisper STT streaming started. Model={Model}, Lang={Lang}, TempDir={Dir}",
+                _modelPath, _language, tempDir);
+
+            while (!_cts.Token.IsCancellationRequested)
+            {
+                try
+                {
+                    // Look for new .wav files in the temp directory
+                    var wavFiles = Directory.GetFiles(tempDir, "*.wav");
+                    foreach (var wavFile in wavFiles)
+                    {
+                        try
+                        {
+                            var transcript = await TranscribeFileAsync(wavFile, _cts.Token);
+
+                            // Emit partial transcript
+                            PartialTranscript?.Invoke(transcript);
+
+                            // Emit final transcript
+                            FinalTranscript?.Invoke(transcript);
+
+                            // Clean up the processed file
+                            try { File.Delete(wavFile); } catch { /* ignore */ }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to transcribe {File}", wavFile);
+                            try { File.Delete(wavFile); } catch { /* ignore */ }
+                        }
+                    }
+
+                    // Wait before polling again
+                    await Task.Delay(100, _cts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "STT streaming loop error.");
+                    await Task.Delay(1000, _cts.Token);
+                }
+            }
+
+            _logger.LogInformation("Whisper STT streaming stopped.");
+        }, _cts.Token);
+
         return Task.CompletedTask;
     }
 

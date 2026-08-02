@@ -60,6 +60,10 @@ public sealed class PiperTtsProvider : ITtsProvider
         {
             var effectiveLengthScale = _lengthScale / Math.Max(0.1, prosody.SpeedMultiplier);
 
+            // Piper doesn't support pitch/volume directly, but we log them for future use
+            _logger.LogDebug("TTS prosody: speed={Speed:F2} pitch={Pitch:F2} vol={Vol:F2}",
+                prosody.SpeedMultiplier, prosody.PitchMultiplier, prosody.VolumeMultiplier);
+
             var args = $"-m \"{_modelPath}\" -f \"{outputPath}\"";
             if (_speakerId.HasValue)
                 args += $" -s {_speakerId.Value}";
@@ -134,9 +138,33 @@ public sealed class PiperTtsProvider : ITtsProvider
 
     public Task<IReadOnlyList<VisemeHint>> GetVisemesAsync(string text, CancellationToken cancellationToken = default)
     {
-        // Piper doesn't provide viseme data directly; return empty for now.
-        // Future: use phoneme alignment from piper --output-raw
-        return Task.FromResult<IReadOnlyList<VisemeHint>>(Array.Empty<VisemeHint>());
+        // Piper doesn't provide viseme data directly, but we can estimate
+        // visemes from the text using a simple phoneme-to-viseme mapping.
+        var visemes = new List<VisemeHint>();
+        var visemeMap = new Dictionary<char, int>
+        {
+            {'a', 0}, {'e', 1}, {'i', 2}, {'o', 3}, {'u', 4},
+            {'A', 0}, {'E', 1}, {'I', 2}, {'O', 3}, {'U', 4},
+            {'b', 0}, {'p', 0}, {'m', 0},
+            {'f', 1}, {'v', 1},
+            {'t', 2}, {'d', 2}, {'n', 2}, {'l', 2}, {'r', 2},
+            {'k', 3}, {'g', 3}, {'s', 3}, {'z', 3},
+            {'w', 4}, {'y', 4},
+            {' ', -1}, {'.', -1}, {',', -1}, {'!', -1}, {'?', -1},
+        };
+
+        // Estimate ~80ms per character (average speaking rate)
+        const int msPerChar = 80;
+        for (int i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            if (visemeMap.TryGetValue(c, out var viseme) && viseme >= 0)
+            {
+                visemes.Add(new VisemeHint(viseme, TimeSpan.FromMilliseconds(i * msPerChar), TimeSpan.FromMilliseconds(msPerChar)));
+            }
+        }
+
+        return Task.FromResult<IReadOnlyList<VisemeHint>>(visemes);
     }
 
     public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
