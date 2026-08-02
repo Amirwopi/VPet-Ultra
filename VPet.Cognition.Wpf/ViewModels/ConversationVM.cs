@@ -3,16 +3,19 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using VPet.Cognition.Domain.Entities;
+using VPet.Cognition.Host;
 using VPet.Cognition.LLM;
 
 namespace VPet.Cognition.Wpf.ViewModels;
 
 /// <summary>
 /// View-model for the conversation window. Manages message history, streaming, and cancel.
+/// Integrates memory retrieval, personality, and emotion via CognitionHost.
 /// </summary>
 public sealed partial class ConversationVM : ObservableObject
 {
     private readonly ConversationService _conversationService;
+    private readonly CognitionHost _cognitionHost;
     private readonly ILogger<ConversationVM> _logger;
     private CancellationTokenSource? _cts;
 
@@ -28,14 +31,15 @@ public sealed partial class ConversationVM : ObservableObject
     [ObservableProperty]
     private string _systemPrompt = "You are a helpful desktop companion. Be friendly and concise.";
 
-    [ObservableProperty]
-    private string _memoryContext = string.Empty;
-
     private readonly List<ChatMessage> _history = new();
 
-    public ConversationVM(ConversationService conversationService, ILogger<ConversationVM> logger)
+    public ConversationVM(
+        ConversationService conversationService,
+        CognitionHost cognitionHost,
+        ILogger<ConversationVM> logger)
     {
         _conversationService = conversationService;
+        _cognitionHost = cognitionHost;
         _logger = logger;
     }
 
@@ -59,9 +63,21 @@ public sealed partial class ConversationVM : ObservableObject
 
         try
         {
+            // 1. Retrieve memory context and apply personality/emotion via CognitionHost
+            string memoryContext = "";
+            try
+            {
+                memoryContext = await _cognitionHost.ProcessConversationTurnAsync(userInput, _cts.Token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "CognitionHost processing failed; continuing without memory.");
+            }
+
+            // 2. Stream the conversation with memory context
             var result = await _conversationService.StreamConversationAsync(
                 SystemPrompt,
-                MemoryContext,
+                memoryContext,
                 _history,
                 userInput,
                 Array.Empty<ToolSchema>(),
@@ -73,6 +89,16 @@ public sealed partial class ConversationVM : ObservableObject
                 _history.Add(new ChatMessage("user", userInput));
                 _history.Add(new ChatMessage("assistant", result.Value.Text));
                 _logger.LogInformation("Conversation turn: {Len} chars", result.Value.Text.Length);
+
+                // 3. Store the conversation turn to memory
+                try
+                {
+                    await _cognitionHost.StoreConversationTurnAsync(userInput, result.Value.Text, _cts.Token);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to store conversation to memory.");
+                }
             }
             else
             {
