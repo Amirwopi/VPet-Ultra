@@ -2,57 +2,90 @@
 
 این فایل لیست کامل مدل‌های AI مورد نیاز VPet-Ultra رو داره. هر مدل رو جداگانه دانلود کن و تو مسیر درست بذار.
 
+> **مهم:** VPet-Ultra به صورت پیش‌فرض مدل‌ها رو **داخل خودش** اجرا می‌کنه (با LLamaSharp). نیازی به Ollama نیست! Ollama فقط یه حالت جایگزین هست.
+
 ---
 
-## ۱. مدل زبانی (LLM) — Qwen2.5-3B
+## ۱. مدل زبانی (LLM) — اجرای محلی با LLamaSharp
 
-این مدل مغز پت هست — گفتگو، استدلال، و تولید جواب.
+این مدل مغز پت هست — گفتگو، استدلال، و تولید جواب. مدل به صورت فایل `.gguf` دانلود میشه و داخل برنامه اجرا میشه.
 
-### نصب با Ollama (پیشنهادی — ساده‌ترین روش)
+### نصب (حالت محلی — پیشنهادی)
 
-1. **Ollama رو نصب کن:**
-   - برو به https://ollama.com/download
-   - نسخه Windows رو دانلود و نصب کن
+1. **مدل Qwen2.5-3B رو دانلود کن:**
+   - برو به https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/tree/main
+   - فایل `qwen2.5-3b-instruct-q4_k_m.gguf` رو دانلود کن (~۲ گیگابایت)
 
-2. **مدل Qwen2.5-3B رو دانلود کن:**
-   ```powershell
-   ollama pull qwen2.5:3b
+2. **فایل رو تو پوشه models بذار:**
    ```
-   این حدود ۲ گیگابایت دانلود می‌کنه. صبر کن تا تموم شه.
-
-3. **تست کن که کار می‌کنه:**
-   ```powershell
-   ollama run qwen2.5:3b "سلام، چطوری؟"
+   VPet/
+   ├── models/
+   │   └── qwen2.5-3b-instruct-q4_k_m.gguf
    ```
-   باید جواب بده.
 
-### مدل‌های جایگزین (اختیاری)
+3. **تو `appsettings.json`:**
+   ```json
+   "Llm": {
+     "Provider": "local",
+     "Model": "qwen2.5-3b-instruct-q4_k_m",
+     "ModelsDirectory": "models",
+     "GpuLayerCount": 0,
+     "ContextSize": 4096
+   }
+   ```
 
-اگه کیفیت بهتری خواستی، می‌تونی مدل‌های بزرگتر بکشی:
+### مدل‌های متن جایگزین
 
-| مدل | حجم | کیفیت | سرعت |
-|---|---|---|---|
-| `qwen2.5:3b` | ~۲GB | متوسط | سریع ✅ پیشنهادی |
-| `qwen2.5:7b` | ~۴.۷GB | خوب | متوسط |
-| `qwen2.5:14b` | ~۹GB | عالی | کند |
-| `llama3.2:3b` | ~۲GB | متوسط | سریع |
-| `deepseek-r1:7b` | ~۴.۷GB | عالی (استدلال) | متوسط |
+| مدل | حجم | کیفیت | سرعت | RAM لازم |
+|---|---|---|---|---|
+| `qwen2.5-1.5b-instruct-q4_k_m` | ~۱GB | پایین | خیلی سریع | ۲GB |
+| `qwen2.5-3b-instruct-q4_k_m` | ~۲GB | متوسط | سریع ✅ پیشنهادی | ۴GB |
+| `qwen2.5-7b-instruct-q4_k_m` | ~۴.۵GB | خوب | متوسط | ۸GB |
+| `llama-3.2-3b-instruct-q4_k_m` | ~۲GB | متوسط | سریع | ۴GB |
 
-برای تعویض مدل:
+> **لینک‌های دانلود:**
+> - Qwen2.5: https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF
+> - Llama 3.2: https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct-GGUF
+
+### GPU Acceleration (کارت گرافیک NVIDIA)
+
+اگه GPU داری، می‌تونی سرعت رو چند برابر کنی:
+
+1. پکیج CUDA backend رو نصب کن:
+   ```powershell
+   dotnet add VPet.Cognition.Inference package LLamaSharp.Backend.Cuda12
+   ```
+
+2. تو `appsettings.json`:
+   ```json
+   "GpuLayerCount": 25
+   ```
+
+| VRAM | GpuLayerCount پیشنهادی |
+|---|---|
+| ۴GB | 10-15 |
+| ۸GB | 20-30 |
+| ۱۲GB+ | 35+ |
+
+> بدون GPU هم روی CPU کار می‌کنه، فقط کندتر (۳-۱۰ توکن در ثانیه).
+
+### حالت آنلاین (Ollama) — اختیاری
+
+اگه Ollama نصبه و می‌خوای ازش استفاده کنی:
+
 ```powershell
-ollama pull qwen2.5:7b
+ollama pull qwen2.5:3b
 ```
-بعد تو `appsettings.json`:
+
 ```json
 "Llm": {
   "Provider": "ollama",
-  "Model": "qwen2.5:7b"
+  "Endpoint": "http://localhost:11434",
+  "Model": "qwen2.5:3b"
 }
 ```
 
-### استفاده از مدل ابری (اختیاری)
-
-اگه اینترنت داری و می‌خوای از مدل ابری استفاده کنی:
+### حالت ابری (OpenAI-compatible) — اختیاری
 
 | سرویس | Endpoint | مدل |
 |---|---|---|
@@ -61,7 +94,6 @@ ollama pull qwen2.5:7b
 | Qwen (DashScope) | `https://dashscope.aliyuncs.com/compatible-mode/v1/` | `qwen-turbo` |
 | OpenAI | `https://api.openai.com/v1/` | `gpt-4o-mini` |
 
-تو `appsettings.json`:
 ```json
 "Llm": {
   "Provider": "openai-compatible",
@@ -73,7 +105,39 @@ ollama pull qwen2.5:7b
 
 ---
 
-## ۲. مدل تشخیص گفتار (STT) — Whisper
+## ۲. مدل Vision (بینایی) — اختیاری
+
+اگه می‌خوای پت بتونه عکس ببینه و توضیح بده:
+
+| مدل | حجم | RAM لازم | لینک |
+|---|---|---|---|
+| `smolvlm-500m-instruct-q4_k_m` | ~۵۰۰MB | ۴GB | https://huggingface.co/ggml-org/smolvlm-500m-instruct-gguf |
+| `smolvlm-2.2b-instruct-q4_k_m` | ~۱.۵GB | ۶GB | https://huggingface.co/ggml-org/smolvlm-2.2b-instruct-gguf |
+| `llava-onevision-qwen2-7b-q4_k_m` | ~۴.۵GB | ۱۰GB | https://huggingface.co/lmms-lab/llava-onevision-qwen2-7b-gguf |
+
+تو `appsettings.json`:
+```json
+"EnableVision": true
+```
+
+> **هشدار:** مدل Vision حداقل ۴ گیگابایت RAM اضافه نیاز داره. اگه RAM کم داری، فعال نکن.
+
+---
+
+## ۳. مدل Embedding (حافظه) — اختیاری
+
+برای جستجوی بهتر در حافظه:
+
+| مدل | حجم | لینک |
+|---|---|---|
+| `bge-small-en-v1.5` | ~۱۳۰MB | https://huggingface.co/BAAI/bge-small-en-v1.5 |
+| `bge-m3` | ~۱.۲GB | https://huggingface.co/BAAI/bge-m3 |
+
+> **اختیاری:** بدون این مدل هم حافظه کار می‌کنه، ولی با embedding بهتر جستجو می‌کنه.
+
+---
+
+## ۴. مدل تشخیص گفتار (STT) — Whisper
 
 این مدل صدای تو رو به متن تبدیل می‌کنه.
 
@@ -106,7 +170,7 @@ ollama pull qwen2.5:7b
 
 3. **فایل‌ها رو تو مسیر درست بذار:**
    ```
-   VPet-Ultra/
+   VPet/
    ├── whisper-cli.exe              ← از release دانلود کن
    ├── models/
    │   └── ggml-base.bin            ← مدل Whisper
@@ -127,7 +191,7 @@ ollama pull qwen2.5:7b
 
 ---
 
-## ۳. مدل تبدیل متن به گفتار (TTS) — Piper
+## ۵. مدل تبدیل متن به گفتار (TTS) — Piper
 
 این مدل جواب پت رو به صدا تبدیل می‌کنه.
 
@@ -156,7 +220,7 @@ ollama pull qwen2.5:7b
 
 3. **فایل‌ها رو تو مسیر درست بذار:**
    ```
-   VPet-Ultra/
+   VPet/
    ├── piper.exe                    ← از release دانلود کن
    ├── models/
    │   └── en_US-amy-medium.onnx    ← مدل صوتی
@@ -174,7 +238,7 @@ ollama pull qwen2.5:7b
 
 ---
 
-## ۴. مدل تبدیل متن به گفتار (TTS) — Kokoro (اختیاری)
+## ۶. مدل تبدیل متن به گفتار (TTS) — Kokoro (اختیاری)
 
 Kokoro کیفیت بالاتری داره ولی نصبش کمی پیچیده‌تره.
 
@@ -202,25 +266,29 @@ Kokoro کیفیت بالاتری داره ولی نصبش کمی پیچیده‌
 
 ---
 
-## ۵. ساختار پوشه‌های نهایی
+## ۷. ساختار پوشه‌های نهایی
 
 بعد از نصب همه مدل‌ها، ساختار پوشه‌ها باید اینطوری باشه:
 
 ```
-VPet-Ultra/
+VPet/
 ├── VPet-Simulator.Windows.exe      ← برنامه اصلی پت
 ├── appsettings.json                ← تنظیمات cognition
 ├── mod/
 │   └── 0000_cognition/
 │       ├── VPet.Cognition.Host.dll ← پلاگین cognition
+│       ├── VPet.Cognition.Inference.dll ← موتور اجرای محلی
 │       ├── VPet.Cognition.LLM.dll
 │       ├── VPet.Cognition.Memory.dll
 │       ├── VPet.Cognition.Personality.dll
 │       ├── VPet.Cognition.Voice.dll
 │       ├── VPet.Cognition.Agent.dll
 │       ├── VPet.Cognition.Security.dll
-│       └── VPet.Cognition.Wpf.dll
+│       ├── VPet.Cognition.Wpf.dll
+│       ├── llama.dll               ← کتابخانه LLamaSharp
+│       └── ...                     ← سایر DLL‌های وابسته
 ├── models/                          ← مدل‌های AI
+│   ├── qwen2.5-3b-instruct-q4_k_m.gguf  ← مدل LLM (الزامی)
 │   ├── ggml-base.bin               ← مدل Whisper (STT)
 │   ├── en_US-amy-medium.onnx       ← مدل Piper (TTS)
 │   └── en_US-amy-medium.onnx.json
@@ -234,13 +302,15 @@ VPet-Ultra/
 
 ---
 
-## ۶. خلاصه سریع
+## ۸. خلاصه سریع
 
 | قابلیت | مدل | از کجا دانلود کن | حجم |
 |---|---|---|---|
-| **گفتگو (الزامی)** | Qwen2.5-3B | `ollama pull qwen2.5:3b` | ~۲GB |
+| **گفتگو (الزامی)** | Qwen2.5-3B GGUF | https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF | ~۲GB |
+| **بینایی (اختیاری)** | SmolVLM-500M | https://huggingface.co/ggml-org/smolvlm-500m-instruct-gguf | ~۵۰۰MB |
+| **حافظه (اختیاری)** | BGE-Small | https://huggingface.co/BAAI/bge-small-en-v1.5 | ~۱۳۰MB |
 | **تشخیص صدا (اختیاری)** | Whisper base | https://github.com/ggerganov/whisper.cpp/releases | ~۱۴۲MB |
 | **صدا دادن (اختیاری)** | Piper | https://github.com/rhasspy/piper/releases | ~۶۰MB |
 | **صدا دادن (جایگزین)** | Kokoro | https://github.com/kokoro-ons/kokoro/releases | ~۱۰۰MB |
 
-> **حداقل نصب:** فقط Ollama + Qwen2.5-3B کافیه برای گفتجوی متنی. صدا اختیاریه.
+> **حداقل نصب:** فقط دانلود `qwen2.5-3b-instruct-q4_k_m.gguf` و گذاشتن تو پوشه `models/` کافیه برای گفتجوی متنی. نیازی به Ollama یا سرور نیست!

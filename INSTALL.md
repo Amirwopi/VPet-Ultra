@@ -31,9 +31,10 @@ git --version
 ### روش A: دانلود ZIP آماده (ساده‌ترین)
 
 1. برو به https://github.com/Amirwopi/VPet-Ultra/releases
-2. آخرین نسخه `VPet-Ultra-Windows.zip` رو دانلود کن
-3. تو یه پوشه اکسترکت کن (مثلا `C:\VPet-Ultra\`)
-4. برو به **مرحله ۳**
+2. آخرین نسخه `VPet-Ultra-Cognition.zip` رو دانلود کن
+3. محتویاتش رو کنار VPet اصلی اکسترکت کن
+4. پوشه `mod/0000_cognition/` باید ساخته بشه
+5. برو به **مرحله ۳**
 
 ### روش B: کلون و build دستی
 
@@ -49,32 +50,67 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 .\build-windows.ps1
 ```
 
-خروجی تو پوشه `publish/vpet-windows/` ساخته میشه.
+خروجی تو پوشه `publish/vpet-cognition/` ساخته میشه.
 
 ---
 
-## مرحله ۲: نصب Ollama (مغز پت)
+## مرحله ۲: دانلود مدل AI (مغز پت)
 
-1. برو به https://ollama.com/download
-2. نسخه Windows رو دانلود و نصب کن
-3. Ollama اجرا میشه (آیکون تو system tray ظاهر میشه)
-4. مدل Qwen2.5-3B رو دانلود کن:
+VPet-Ultra به صورت پیش‌فرض مدل‌های AI رو **داخل خودش** اجرا می‌کنه (با LLamaSharp). نیازی به Ollama یا سرور جداگانه نیست!
 
-   ```powershell
-   ollama pull qwen2.5:3b
+### ۲.۱ — مدل متن (اجباری)
+
+1. برو به https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/tree/main
+2. فایل `qwen2.5-3b-instruct-q4_k_m.gguf` رو دانلود کن (~۲ گیگابایت)
+3. تو پوشه `models/` کنار VPet قرار بده:
+   ```
+   VPet\
+   ├── models\
+   │   └── qwen2.5-3b-instruct-q4_k_m.gguf
+   ├── mod\
+   │   └── 0000_cognition\
+   └── VPet-Simulator.Windows.exe
    ```
 
-   صبر کن (~۲ گیگابایت دانلود).
+> **نکته:** اگه RAM/CPU قوی داری، می‌تونی مدل 7B رو دانلود کنی (بهتر ولی کندتر):
+> `qwen2.5-7b-instruct-q4_k_m.gguf` (~۴.۵ گیگابایت)
 
-5. تست کن:
+### ۲.۲ — مدل Vision (اختیاری)
 
-   ```powershell
-   ollama run qwen2.5:3b "سلام"
+اگه می‌خوای پت بتونه عکس ببینه و توضیح بده:
+
+1. برو به https://huggingface.co/lmms-lab/llava-onevision-qwen2-7b-gguf
+2. فایل مدل رو دانلود کن و تو پوشه `models/` بذار
+3. تو `appsettings.json`:
+   ```json
+   "EnableVision": true
    ```
 
-   باید جواب بده. برای خروج `Ctrl+C` بزن.
+> **هشدار:** مدل Vision حداقل ۸ گیگابایت RAM نیاز داره.
 
-> **نکته:** Ollama باید همیشه اجرا باشه تا پت بتونه حرف بزنه. آیکونش تو system tray هست.
+### ۲.۳ — مدل Embedding (برای حافظه بهتر)
+
+1. برو به https://huggingface.co/BAAI/bge-small-en-v1.5
+2. فایل `model.gguf` رو دانلود کن
+3. تو پوشه `models/` بذار
+
+> **اختیاری:** بدون این مدل هم حافظه کار می‌کنه، ولی با embedding بهتر جستجو می‌کنه.
+
+### ۲.۴ — GPU Acceleration (اختیاری)
+
+اگه کارت گرافیک NVIDIA داری:
+
+1. پکیج CUDA backend رو نصب کن:
+   ```powershell
+   dotnet add VPet.Cognition.Inference package LLamaSharp.Backend.Cuda12
+   ```
+2. تو `appsettings.json`:
+   ```json
+   "GpuLayerCount": 25
+   ```
+   (عدد ۲۵ یعنی ۲۵ لایه مدل روی GPU اجرا میشه — بسته به VRAM تنظیم کن)
+
+> بدون GPU هم روی CPU کار می‌کنه، فقط کندتر.
 
 ---
 
@@ -82,27 +118,47 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 1. برو به پوشه VPet-Ultra (جایی که `VPet-Simulator.Windows.exe` هست)
 2. فایل `appsettings.json` رو با Notepad باز کن
-3. تنظیمات پیش‌فرض برای Ollama + Qwen2.5-3B اینه:
+3. تنظیمات پیش‌فرض برای اجرای محلی (LLamaSharp) اینه:
 
    ```json
    {
      "Cognition": {
        "Enabled": true,
        "Llm": {
-         "Provider": "ollama",
-         "Endpoint": "http://localhost:11434",
-         "Model": "qwen2.5:3b"
+         "Provider": "local",
+         "Model": "qwen2.5-3b-instruct-q4_k_m",
+         "ModelsDirectory": "models",
+         "GpuLayerCount": 0,
+         "ContextSize": 4096,
+         "EnableVision": false,
+         "MaxTokens": 1024,
+         "Temperature": 0.7
        }
      }
    }
    ```
 
-4. اگه مدل دیگه‌ای خواستی (مثلا 7B):
+4. اگه مدل 7B خواستی:
    ```json
-   "Model": "qwen2.5:7b"
+   "Model": "qwen2.5-7b-instruct-q4_k_m"
    ```
 
 5. فایل رو ذخیره کن.
+
+### حالت آنلاین (Ollama) — اختیاری
+
+اگه Ollama نصبه و می‌خوای ازش استفاده کنی:
+```json
+{
+  "Cognition": {
+    "Llm": {
+      "Provider": "ollama",
+      "Endpoint": "http://localhost:11434",
+      "Model": "qwen2.5:3b"
+    }
+  }
+}
+```
 
 ---
 
@@ -123,6 +179,8 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 5. کلیک کن → پنجره گفتگو باز میشه
 6. بنویس: `سلام` و Enter بزن
 7. پت باید جواب بده! 🎉
+
+> **نکته:** اولین جواب ممکنه چند ثانیه طول بکشه چون مدل داره تو حافظه بارگذاری میشه.
 
 ---
 
@@ -146,23 +204,9 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 ### پت جواب نمیده
 
-1. **Ollama اجراست؟** آیکونش تو system tray هست؟
-   ```powershell
-   ollama list
-   ```
-   باید `qwen2.5:3b` رو نشون بده.
-
-2. **پورت درسته؟** تو مرورگر برو به:
-   ```
-   http://localhost:11434/api/tags
-   ```
-   باید JSON نشون بده.
-
-3. **مدل درسته؟**
-   ```powershell
-   ollama run qwen2.5:3b "test"
-   ```
-
+1. **مدل دانلود شده؟** پوشه `models/` رو چک کن. فایل `.gguf` باید باشه.
+2. **اسم مدل درسته؟** تو `appsettings.json` فیلد `Model` رو با اسم فایل چک کن.
+3. **RAM کافی هست؟** مدل 3B حداقل ۴ گیگابایت RAM آزاد نیاز داره.
 4. **لاگ‌ها رو چک کن:** پوشه `logs/` رو باز کن. فایل `cognition-*.log` رو بخون.
 
 ### پت اصلاً باز نمیشه
@@ -170,6 +214,12 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 1. **.NET 8 نصبه؟** `dotnet --version` بزن.
 2. **DLL‌ها هستن؟** پوشه `mod/0000_cognition/` رو چک کن. باید چندتا `.dll` باشه.
 3. **appsettings.json درسته؟** JSON رو با https://jsonlint.com اعتبارسنجی کن.
+
+### جواب‌ها خیلی کندن
+
+1. **GPU فعال کن:** `GpuLayerCount` رو از 0 به 25 (یا بیشتر) تغییر بده.
+2. **مدل کوچک‌تر استفاده کن:** `qwen2.5-1.5b-instruct-q4_k_m.gguf` (~۱ گیگابایت)
+3. **ContextSize کم کن:** از 4096 به 2048 تغییر بده.
 
 ### صدا کار نمیکنه
 
@@ -222,14 +272,13 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 ---
 
-## خلاصه سریع (۵ مرحله)
+## خلاصه سریع (۴ مرحله)
 
 ```
-1. Ollama نصب کن → ollama pull qwen2.5:3b
-2. VPet-Ultra.zip رو دانلود و اکسترکت کن
+1. مدل GGUF دانلود کن → models/qwen2.5-3b-instruct-q4_k_m.gguf
+2. VPet-Ultra-Cognition.zip رو دانلود و کنار VPet اکسترکت کن
 3. appsettings.json رو چک کن (پیش‌فرض درسته)
-4. VPet-Simulator.Windows.exe رو اجرا کن
-5. روی دکمه Chat کلیک کن و حرف بزن!
+4. VPet-Simulator.Windows.exe رو اجرا کن → دکمه Chat → حرف بزن!
 ```
 
-**تمام!** 🎉
+**نیازی به Ollama یا سرور نیست — مدل داخل خود برنامه اجرا میشه!** 🎉

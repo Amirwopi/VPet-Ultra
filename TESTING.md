@@ -15,7 +15,7 @@ dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release --logger
 
 **نتیجه مورد انتظار:**
 ```
-Passed!  - Failed: 0, Passed: 102, Skipped: 0, Total: 102
+Passed!  - Failed: 0, Passed: 129, Skipped: 0, Total: 129
 ```
 
 اگه هر تستی fail شد:
@@ -39,9 +39,39 @@ Build succeeded.
 
 ---
 
-## بخش ۲: تست Ollama (مغز پت)
+## بخش ۲: تست موتور استنتاج (مغز پت)
 
-### ۲.۱ — Ollama اجراست؟
+VPet-Ultra به صورت پیش‌فرض مدل‌ها رو داخل خودش اجرا می‌کنه (LLamaSharp). نیازی به Ollama نیست.
+
+### ۲.۱ — مدل GGUF موجود هست؟
+
+```powershell
+dir models\*.gguf
+```
+
+**نتیجه مورد انتظار:**
+```
+qwen2.5-3b-instruct-q4_k_m.gguf    ~۲GB
+```
+
+اگه نیست، از https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF دانلود کن.
+
+### ۲.۲ — تست اجرای محلی (LocalInferenceProvider)
+
+```powershell
+dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release --filter "Inference"
+```
+
+**نتیجه مورد انتظار:**
+```
+Passed!  - Failed: 0, Passed: 27, Skipped: 0, Total: 27
+```
+
+این تست‌ها موتور استنتاج محلی، ModelManager، ModelRegistry، و VisionModule رو تست می‌کنن.
+
+### ۲.۳ — تست حالت آنلاین (Ollama — اختیاری)
+
+اگه Ollama نصبه:
 
 ```powershell
 ollama list
@@ -58,24 +88,23 @@ qwen2.5:3b     abc123...    2.0 GB   2 minutes ago
 ollama pull qwen2.5:3b
 ```
 
-### ۲.۲ — Ollama پاسخ میده؟
-
-تو مرورگر برو به:
+تو `appsettings.json`:
+```json
+"Provider": "ollama",
+"Endpoint": "http://localhost:11434",
+"Model": "qwen2.5:3b"
 ```
-http://localhost:11434/api/tags
-```
 
-**نتیجه مورد انتظار:** یه JSON با لیست مدل‌ها.
+### ۲.۴ — مدل جواب میده؟
 
-### ۲.۳ — مدل جواب میده؟
-
+با Ollama:
 ```powershell
 ollama run qwen2.5:3b "سلام، چطوری؟"
 ```
 
 **نتیجه مورد انتظار:** مدل یه جواب متنی میده.
 
-### ۲.۴ — تست streaming
+### ۲.۵ — تست streaming
 
 ```powershell
 ollama run qwen2.5:3b "یه داستان کوتاه بگو"
@@ -364,13 +393,13 @@ Get-Content logs\cognition-*.log | Select-String "apiKey"
 - [ ] `mod/0000_cognition/VPet.Cognition.Memory.dll` وجود داره
 - [ ] `mod/0000_cognition/VPet.Cognition.Wpf.dll` وجود داره
 
-### Ollama
-- [ ] Ollama نصبه و اجراست
+### Ollama (اختیاری)
+- [ ] Ollama نصبه و اجراست (فقط اگه از حالت آنلاین استفاده می‌کنی)
 - [ ] `ollama list` مدل `qwen2.5:3b` رو نشون میده
 - [ ] `http://localhost:11434/api/tags` جواب میده
 
 ### تست‌های خودکار
-- [ ] `dotnet test` = 102 passed, 0 failed
+- [ ] `dotnet test` = 129 passed, 0 failed
 - [ ] `dotnet build` = 0 warnings, 0 errors
 
 ### عملکرد
@@ -398,7 +427,8 @@ Get-Content logs\cognition-*.log | Select-String "apiKey"
 
 1. **لاگ رو بخون:** `logs/cognition-*.log`
 2. **تست‌ها رو اجرا کن:** `dotnet test`
-3. **Ollama رو چک کن:** `ollama list`
+3. **مدل GGUF رو چک کن:** `dir models\*.gguf`
+4. **اگه از Ollama استفاده می‌کنی:** `ollama list`
 4. **config رو چک کن:** `appsettings.json` رو با JSON validator اعتبارسنجی کن
 5. **DLL‌ها رو چک کن:** `mod/0000_cognition/` رو باز کن
 6. **مسیرها رو چک کن:** مسیر مدل‌ها تو `appsettings.json` درسته؟
