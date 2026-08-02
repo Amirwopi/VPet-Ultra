@@ -2,8 +2,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using VPet.Cognition.Domain.Abstractions;
-using VPet.Cognition.Host.Options;
-using Microsoft.Extensions.Options;
 
 namespace VPet.Cognition.Wpf.ViewModels;
 
@@ -13,7 +11,6 @@ namespace VPet.Cognition.Wpf.ViewModels;
 public sealed partial class CognitionSettingsVM : ObservableObject
 {
     private readonly ILLMProvider _llmProvider;
-    private readonly IOptions<CognitionOptions> _options;
     private readonly ILogger<CognitionSettingsVM> _logger;
 
     [ObservableProperty] private string _provider = "ollama";
@@ -25,18 +22,10 @@ public sealed partial class CognitionSettingsVM : ObservableObject
 
     public CognitionSettingsVM(
         ILLMProvider llmProvider,
-        IOptions<CognitionOptions> options,
         ILogger<CognitionSettingsVM> logger)
     {
         _llmProvider = llmProvider;
-        _options = options;
         _logger = logger;
-
-        var llm = options.Value.Llm;
-        _provider = llm.Provider;
-        _endpoint = llm.Endpoint;
-        _model = llm.Model;
-        _apiKey = llm.ApiKey;
     }
 
     [RelayCommand]
