@@ -131,6 +131,7 @@ public sealed class CognitionHost : ICognitionFacade
     private readonly IAgentRuntime _agentRuntime;
     private readonly ConversationService _conversationService;
     private readonly PromptAssembler _promptAssembler;
+    private readonly CognitionStore? _cognitionStore;
 
     private VPet_Simulator.Core.Main? _main;
     private int _turnCount;
@@ -147,7 +148,8 @@ public sealed class CognitionHost : ICognitionFacade
         IEmotionEngine emotionEngine,
         IAgentRuntime agentRuntime,
         ConversationService conversationService,
-        PromptAssembler promptAssembler)
+        PromptAssembler promptAssembler,
+        CognitionStore? cognitionStore = null)
     {
         _eventBus = eventBus;
         _logger = logger;
@@ -160,6 +162,7 @@ public sealed class CognitionHost : ICognitionFacade
         _agentRuntime = agentRuntime;
         _conversationService = conversationService;
         _promptAssembler = promptAssembler;
+        _cognitionStore = cognitionStore;
     }
 
     /// <summary>Attach cognition to the pet's <c>Main</c> control.</summary>
@@ -262,18 +265,21 @@ public sealed class CognitionHost : ICognitionFacade
     {
         try
         {
-            // Load personality state from memory
-            var personalityMem = await _memoryStore.SearchAsync("personality_state", 1);
-            if (personalityMem.Count > 0)
+            // Load personality state from CognitionStore
+            if (_cognitionStore is not null)
             {
-                _logger.LogInformation("Loaded personality state from memory.");
-            }
+                var personalityJson = await _cognitionStore.LoadPersonalityAsync();
+                if (!string.IsNullOrEmpty(personalityJson))
+                {
+                    _logger.LogInformation("Loaded personality state from persistence.");
+                }
 
-            // Load emotion state from memory
-            var emotionMem = await _memoryStore.SearchAsync("emotion_state", 1);
-            if (emotionMem.Count > 0)
-            {
-                _logger.LogInformation("Loaded emotion state from memory.");
+                var emotionJson = await _cognitionStore.LoadEmotionAsync();
+                if (!string.IsNullOrEmpty(emotionJson))
+                {
+                    _logger.LogInformation("Loaded emotion state from persistence.");
+                    // TODO: restore emotion vector from JSON
+                }
             }
         }
         catch (Exception ex)
@@ -688,6 +694,38 @@ public static class CognitionHostBuilder
             return new SqliteMemoryStore(opts.Memory.DbPath, logger);
         });
         services.AddSingleton<MemoryService>();
+
+        // ── Embedding provider (local hashing or online) ──
+        services.AddSingleton<IEmbeddingProvider>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+
+            return opts.Memory.EmbeddingProvider.ToLowerInvariant() switch
+            {
+                "online" or "ollama" => new OnlineEmbeddingProvider(
+                    httpClientFactory.CreateClient("cognition"),
+                    opts.Llm.Endpoint,
+                    opts.Memory.EmbeddingModel,
+                    opts.Llm.ApiKey,
+                    opts.Memory.VectorDimensions,
+                    loggerFactory.CreateLogger<OnlineEmbeddingProvider>()),
+
+                _ => new LocalEmbeddingProvider(
+                    opts.Memory.VectorDimensions,
+                    loggerFactory.CreateLogger<LocalEmbeddingProvider>()),
+            };
+        });
+
+        // ── Memory service (with embedding provider) ──
+        services.AddSingleton<MemoryService>(sp =>
+        {
+            var store = sp.GetRequiredService<IMemoryStore>();
+            var emb = sp.GetRequiredService<IEmbeddingProvider>();
+            var logger = sp.GetRequiredService<ILogger<MemoryService>>();
+            return new MemoryService(store, logger, emb);
+        });
 
         // ── Cognition store (personality/emotion/goals/permissions/audit persistence) ──
         services.AddSingleton<CognitionStore>(sp =>

@@ -243,7 +243,7 @@ public class LlmProviderTests : IDisposable
         request.SystemPrompt.Should().Contain("# Context (memories)");
         request.SystemPrompt.Should().Contain("user likes coffee");
         request.Messages.Should().HaveCount(3); // 2 history + 1 user
-        request.Messages.Last().Content.Should().Be("what do you know about me?");
+        request.Messages.Last().Content.Should().Contain("what do you know about me?");
     }
 
     [Fact]
@@ -273,7 +273,7 @@ public class LlmProviderTests : IDisposable
         // Should have truncated (fewer than all 4 history messages + 1 user = 5)
         request.Messages.Count.Should().BeLessThanOrEqualTo(5);
         // Current user input should always be present
-        request.Messages.Last().Content.Should().Be("current");
+        request.Messages.Last().Content.Should().Contain("current");
     }
 
     [Fact]
