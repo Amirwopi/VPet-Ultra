@@ -18,7 +18,7 @@ public partial class CognitionSettingsWindow
     {
         if (DataContext is CognitionSettingsVM vm)
         {
-            await vm.TestConnectionAsync();
+            await vm.TestConnectionPublicAsync();
         }
     }
 }

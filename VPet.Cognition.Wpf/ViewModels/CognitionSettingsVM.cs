@@ -47,4 +47,7 @@ public sealed partial class CognitionSettingsVM : ObservableObject
             IsTesting = false;
         }
     }
+
+    /// <summary>Public wrapper for the command — called from code-behind.</summary>
+    public Task TestConnectionPublicAsync() => TestConnectionAsync();
 }

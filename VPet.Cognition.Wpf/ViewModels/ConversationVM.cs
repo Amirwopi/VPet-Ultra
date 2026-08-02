@@ -68,7 +68,7 @@ public sealed partial class ConversationVM : ObservableObject
                 token => companionMsg.AppendToken(token),
                 cancellationToken: _cts.Token);
 
-            if (result.IsSuccess)
+            if (result.IsSuccess && result.Value is not null)
             {
                 _history.Add(new ChatMessage("user", userInput));
                 _history.Add(new ChatMessage("assistant", result.Value.Text));
