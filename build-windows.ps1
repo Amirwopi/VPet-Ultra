@@ -43,6 +43,15 @@ Write-Host "[4/7] Publishing VPet-Simulator.Windows ($Platform)..." -ForegroundC
 dotnet publish VPet-Simulator.Windows/VPet-Simulator.Windows.csproj -c $Configuration -p:Platform=$Platform -r win-$Platform --self-contained false -o $OutputDir
 if ($LASTEXITCODE -ne 0) { Write-Host "Publish failed!" -ForegroundColor Red; exit 1 }
 
+# Step 4b: Copy mod data (essential game data not included by dotnet publish)
+Write-Host "[4b/7] Copying mod data..." -ForegroundColor Yellow
+$srcMod = "VPet-Simulator.Windows/mod"
+$dstMod = Join-Path $OutputDir "mod"
+if (Test-Path $dstMod) { Remove-Item $dstMod -Recurse -Force }
+Copy-Item -Path $srcMod -Destination $dstMod -Recurse -Force
+$modFileCount = (Get-ChildItem $dstMod -Recurse | Measure-Object).Count
+Write-Host "  Copied mod folder ($modFileCount files)"
+
 # Step 5: Build cognition Host
 Write-Host "[5/7] Building cognition Host..." -ForegroundColor Yellow
 dotnet restore VPet.Cognition.Host/VPet.Cognition.Host.csproj
