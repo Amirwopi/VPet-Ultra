@@ -1,7 +1,7 @@
 <pu:WindowX x:Class="VPet.Cognition.Wpf.Views.ConversationWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:pu="https://openxml.community/wpf/ui"
+        xmlns:pu="clr-namespace:Panuon.WPF.UI;assembly=Panuon.WPF.UI"
         xmlns:vm="clr-namespace:VPet.Cognition.Wpf.ViewModels"
         xmlns:conv="clr-namespace:VPet.Cognition.Wpf.Converters"
         Title="VPet Chat" Height="600" Width="450"

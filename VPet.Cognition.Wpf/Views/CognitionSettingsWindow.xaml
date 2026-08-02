@@ -1,7 +1,7 @@
 <pu:WindowX x:Class="VPet.Cognition.Wpf.Views.CognitionSettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:pu="https://openxml.community/wpf/ui"
+        xmlns:pu="clr-namespace:Panuon.WPF.UI;assembly=Panuon.WPF.UI"
         Title="Cognition Settings" Height="500" Width="500"
         WindowStartupLocation="CenterScreen"
         WindowXCaption.Height="0"
