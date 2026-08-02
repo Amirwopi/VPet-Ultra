@@ -151,41 +151,83 @@ jobs:
           Copy-Item "docs/MODELS.md" -Destination "publish/vpet-ultra/" -Force
 
       # ── Zip the full package ──
-      - name: Zip publish folder
+      - name: Zip full package
         shell: pwsh
         run: |
-          Compress-Archive -Path "publish/vpet-ultra/*" -DestinationPath "VPet-Ultra-Windows.zip" -Force
+          Compress-Archive -Path "publish/vpet-ultra/*" -DestinationPath "VPet-Ultra-Full.zip" -Force
+          $size = [math]::Round((Get-Item "VPet-Ultra-Full.zip").Length / 1MB, 1)
+          Write-Host "Full zip: $size MB"
 
-      - name: Upload artifact
+      # ── Zip the cognition plugin only (for updates) ──
+      - name: Zip cognition plugin only
+        shell: pwsh
+        run: |
+          $pluginPath = "publish/vpet-cognition-update"
+          New-Item -ItemType Directory -Force -Path $pluginPath
+
+          # Copy only the cognition mod folder
+          Copy-Item -Path "publish/vpet-ultra/mod/0000_cognition" -Destination "$pluginPath/mod/0000_cognition" -Recurse -Force
+
+          # Copy appsettings.json template
+          Copy-Item -Path "publish/vpet-ultra/appsettings.json" -Destination $pluginPath -Force
+
+          # Copy docs
+          Copy-Item "INSTALL.md" -Destination $pluginPath -Force
+          Copy-Item "TESTING.md" -Destination $pluginPath -Force
+          Copy-Item "docs/MODELS.md" -Destination $pluginPath -Force
+
+          Compress-Archive -Path "$pluginPath/*" -DestinationPath "VPet-Ultra-Plugin.zip" -Force
+          $size = [math]::Round((Get-Item "VPet-Ultra-Plugin.zip").Length / 1MB, 1)
+          Write-Host "Plugin zip: $size MB"
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: VPet-Ultra-Windows
-          path: VPet-Ultra-Windows.zip
+          name: VPet-Ultra-Build
+          path: |
+            VPet-Ultra-Full.zip
+            VPet-Ultra-Plugin.zip
           retention-days: 30
 
       - name: Upload to Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: VPet-Ultra-Windows.zip
+          files: |
+            VPet-Ultra-Full.zip
+            VPet-Ultra-Plugin.zip
           name: VPet-Ultra ${{ github.ref_name }}
           body: |
             ## VPet-Ultra ${{ github.ref_name }}
 
-            ### Installation
-            1. Download and extract `VPet-Ultra-Windows.zip`
-            2. Follow the instructions in `INSTALL.md` (included in the zip)
-            3. Download AI models as described in `MODELS.md` (included in the zip)
+            ### دو نوع دانلود — Choose Your Download
+
+            | فایل | حجم | برای چه |
+            |---|---|---|
+            | `VPet-Ultra-Full.zip` | ~914 MB | **اولین نصب** — کل برنامه + پلاگین AI + داده‌های بازی |
+            | `VPet-Ultra-Plugin.zip` | ~50 MB | **آپدیت** — فقط پلاگین AI (اگه قبلا Full رو نصب کردی) |
+
+            ---
+
+            ### Installation (First Time)
+            1. Download and extract `VPet-Ultra-Full.zip`
+            2. Follow `INSTALL.md` (included in the zip)
+            3. Download AI models as described in `MODELS.md`
             4. Run `VPet-Simulator.Windows.exe`
             5. Click the Chat button on the pet's toolbar
 
-            ### What's Included
+            ### Update (Already Installed)
+            1. Download `VPet-Ultra-Plugin.zip`
+            2. Extract and replace the `mod/0000_cognition/` folder in your existing VPet installation
+            3. Replace `appsettings.json` if settings changed
+            4. Restart VPet — done!
+
+            ### What's Included (Full)
             - **VPet-Simulator.Windows** — the full desktop pet application (x64)
-            - **VPet.Cognition plugin** — AI cognition DLLs (in `mod/0000_cognition/`)
-            - **LLamaSharp native libraries** — for in-process GGUF model execution
+            - **mod/0000_core** — core game data (pets, food, themes, images)
+            - **mod/0000_cognition** — AI cognition plugin (LLamaSharp + all cognition DLLs)
             - `appsettings.json` — pre-configured for local LLamaSharp + Qwen2.5-3B
             - Documentation: INSTALL.md, TESTING.md, MODELS.md
-            - Empty directories: `models/`, `data/`, `logs/`
 
             ### Quick Start
             ```
