@@ -23,32 +23,33 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore
+      - name: Restore solution
         run: dotnet restore VPet.sln
 
-      - name: Restore Host project (if solution restore failed)
-        run: dotnet restore VPet.Cognition.Host/VPet.Cognition.Host.csproj
-        continue-on-error: true
-
-      - name: Build (Release)
-        run: dotnet build VPet.sln -c Release --no-restore
+      - name: Build solution (Release x64)
+        run: dotnet build VPet.sln -c Release -p:Platform=x64 --no-restore
 
       - name: Test
         run: dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release --no-build --logger "console;verbosity=minimal"
 
-      - name: Build cognition Host DLL (Release)
+      # ── Publish the main VPet application (x64) ──
+      - name: Publish VPet-Simulator.Windows (x64)
+        run: dotnet publish VPet-Simulator.Windows/VPet-Simulator.Windows.csproj -c Release -p:Platform=x64 -r win-x64 --self-contained false -o publish/vpet-ultra
+
+      # ── Build and publish the cognition Host (WPF) ──
+      - name: Build cognition Host (Release)
         run: |
           dotnet restore VPet.Cognition.Host/VPet.Cognition.Host.csproj
           dotnet build VPet.Cognition.Host/VPet.Cognition.Host.csproj -c Release
 
-      - name: Package cognition plugin
+      # ── Copy cognition plugin DLLs into the mod folder ──
+      - name: Copy cognition plugin
         shell: pwsh
         run: |
-          # Create the cognition mod folder structure
-          $modPath = "publish/vpet-cognition/mod/0000_cognition"
+          $modPath = "publish/vpet-ultra/mod/0000_cognition"
           New-Item -ItemType Directory -Force -Path $modPath
 
-          # Copy all cognition DLLs into the mod folder
+          # Copy all cognition DLLs
           $hostBin = "VPet.Cognition.Host/bin/Release/net8.0-windows"
           $cognitionDlls = Get-ChildItem -Path $hostBin -Filter "VPet.Cognition.*.dll" -Recurse
           foreach ($dll in $cognitionDlls) {
@@ -56,21 +57,27 @@ jobs:
             Write-Host "Copied: $($dll.Name)"
           }
 
-          # Also copy dependency DLLs
-          $depDlls = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse | Where-Object { $_.Name -notlike "VPet.Cognition.*" -and $_.Name -notlike "VPet-Simulator.*" }
+          # Copy dependency DLLs (non-VPet, non-LinePutScript)
+          $depDlls = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse |
+            Where-Object { $_.Name -notlike "VPet.Cognition.*" -and $_.Name -notlike "VPet-Simulator.*" -and $_.Name -notlike "LinePutScript.*" }
           foreach ($dll in $depDlls) {
-            Copy-Item $dll.FullName -Destination $modPath -Force
-            Write-Host "Copied dep: $($dll.Name)"
+            $dest = Join-Path $modPath $dll.Name
+            if (-not (Test-Path $dest)) {
+              Copy-Item $dll.FullName -Destination $modPath -Force
+              Write-Host "Copied dep: $($dll.Name)"
+            }
           }
 
           # Copy LLamaSharp native libraries
-          $nativeLibs = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse | Where-Object { $_.Name -like "llama.dll" -or $_.Name -like "ggml*.dll" -or $_.Name -like "cuda*.dll" }
+          $nativeLibs = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse |
+            Where-Object { $_.Name -like "llama.dll" -or $_.Name -like "ggml*.dll" -or $_.Name -like "cuda*.dll" }
           foreach ($lib in $nativeLibs) {
             Copy-Item $lib.FullName -Destination $modPath -Force
             Write-Host "Copied native: $($lib.Name)"
           }
 
-      - name: Create appsettings.json template
+      # ── Create appsettings.json ──
+      - name: Create appsettings.json
         shell: pwsh
         run: |
           $template = @'
@@ -110,48 +117,67 @@ jobs:
             }
           }
           '@
-          $template | Out-File -FilePath "publish/vpet-cognition/appsettings.json" -Encoding UTF8
+          $template | Out-File -FilePath "publish/vpet-ultra/appsettings.json" -Encoding UTF8
 
-      - name: Create models directory
+      # ── Create empty directories ──
+      - name: Create runtime directories
         shell: pwsh
-        run: New-Item -ItemType Directory -Force -Path "publish/vpet-cognition/models"
+        run: |
+          New-Item -ItemType Directory -Force -Path "publish/vpet-ultra/models"
+          New-Item -ItemType Directory -Force -Path "publish/vpet-ultra/data"
+          New-Item -ItemType Directory -Force -Path "publish/vpet-ultra/logs"
 
+      # ── Copy documentation ──
       - name: Copy documentation
         shell: pwsh
         run: |
-          Copy-Item "INSTALL.md" -Destination "publish/vpet-cognition/" -Force
-          Copy-Item "TESTING.md" -Destination "publish/vpet-cognition/" -Force
-          Copy-Item "docs/MODELS.md" -Destination "publish/vpet-cognition/" -Force
+          Copy-Item "INSTALL.md" -Destination "publish/vpet-ultra/" -Force
+          Copy-Item "TESTING.md" -Destination "publish/vpet-ultra/" -Force
+          Copy-Item "docs/MODELS.md" -Destination "publish/vpet-ultra/" -Force
 
+      # ── Zip the full package ──
       - name: Zip publish folder
         shell: pwsh
         run: |
-          Compress-Archive -Path "publish/vpet-cognition/*" -DestinationPath "VPet-Ultra-Cognition.zip" -Force
+          Compress-Archive -Path "publish/vpet-ultra/*" -DestinationPath "VPet-Ultra-Windows.zip" -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VPet-Ultra-Cognition
-          path: VPet-Ultra-Cognition.zip
+          name: VPet-Ultra-Windows
+          path: VPet-Ultra-Windows.zip
           retention-days: 30
 
       - name: Upload to Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: VPet-Ultra-Cognition.zip
+          files: VPet-Ultra-Windows.zip
           name: VPet-Ultra ${{ github.ref_name }}
           body: |
             ## VPet-Ultra ${{ github.ref_name }}
 
             ### Installation
-            1. Download and extract this zip into your VPet folder
-            2. Follow the instructions in `INSTALL.md`
-            3. Download AI models as described in `MODELS.md`
+            1. Download and extract `VPet-Ultra-Windows.zip`
+            2. Follow the instructions in `INSTALL.md` (included in the zip)
+            3. Download AI models as described in `MODELS.md` (included in the zip)
+            4. Run `VPet-Simulator.Windows.exe`
+            5. Click the Chat button on the pet's toolbar
 
             ### What's Included
-            - VPet.Cognition plugin DLLs (in `mod/0000_cognition/`)
-            - `appsettings.json` template (pre-configured for local LLamaSharp + Qwen2.5-3B)
+            - **VPet-Simulator.Windows** — the full desktop pet application (x64)
+            - **VPet.Cognition plugin** — AI cognition DLLs (in `mod/0000_cognition/`)
+            - **LLamaSharp native libraries** — for in-process GGUF model execution
+            - `appsettings.json` — pre-configured for local LLamaSharp + Qwen2.5-3B
             - Documentation: INSTALL.md, TESTING.md, MODELS.md
+            - Empty directories: `models/`, `data/`, `logs/`
+
+            ### Quick Start
+            ```
+            1. Download qwen2.5-3b-instruct-q4_k_m.gguf from HuggingFace
+            2. Place it in the models/ folder
+            3. Run VPet-Simulator.Windows.exe
+            4. Click Chat on the pet's toolbar
+            ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
