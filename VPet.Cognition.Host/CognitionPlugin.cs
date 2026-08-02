@@ -806,12 +806,14 @@ public static class CognitionHostBuilder
         services.AddSingleton<IAgentRuntime>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
-            var tool = sp.GetRequiredService<IToolProvider>();
+            var tools = sp.GetServices<IToolProvider>().ToArray();
             var perm = sp.GetRequiredService<IPermissionService>();
+            var llm = sp.GetService<ILLMProvider>();
             var logger = sp.GetRequiredService<ILogger<DefaultAgentRuntime>>();
             return new DefaultAgentRuntime(
-                tool, perm, opts.Agent.MaxStepsPerPlan, opts.Agent.MaxRetries,
-                opts.Agent.ConfidenceThreshold, logger);
+                tools.FirstOrDefault() ?? tools[0], perm, opts.Agent.MaxStepsPerPlan, opts.Agent.MaxRetries,
+                opts.Agent.ConfidenceThreshold, logger)
+            { LlmProvider = llm };
         });
 
         // ── WPF module (Windows only) ──

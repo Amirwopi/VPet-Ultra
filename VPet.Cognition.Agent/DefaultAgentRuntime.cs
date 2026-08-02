@@ -26,6 +26,9 @@ public sealed class DefaultAgentRuntime : IAgentRuntime
 
     public event Action<CognitionEvent>? EventRaised;
 
+    /// <summary>Optional LLM provider for planning.</summary>
+    public ILLMProvider? LlmProvider { get; set; }
+
     public DefaultAgentRuntime(
         IToolProvider toolProvider,
         IPermissionService permissionService,
@@ -118,6 +121,72 @@ public sealed class DefaultAgentRuntime : IAgentRuntime
         return Task.CompletedTask;
     }
 
+    private async Task<Plan> PlanGoalAsync(string description, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Planning goal: {Desc}", description);
+
+        var prompt = "Break down the following goal into steps. Each step should be a simple action.\n" +
+            "Respond as JSON array: [{\"kind\":\"ToolCall\",\"description\":\"...\",\"tool\":\"...\",\"args\":{}}]\n" +
+            "Available kinds: ToolCall, Wait, Remember, Notify, LlmCall\n" +
+            $"Goal: {description}\n" +
+            $"Max steps: {_maxStepsPerPlan}";
+
+        var request = new ChatRequest
+        {
+            SystemPrompt = "You are a planning module. Break goals into actionable steps. Respond in JSON only.",
+            Messages = new[] { new ChatMessageDto("user", prompt) },
+            MaxTokens = 512,
+            Temperature = 0.3,
+        };
+
+        var result = await LlmProvider!.ChatAsync(request, cancellationToken);
+        if (!result.IsSuccess || result.Value is null)
+        {
+            _logger.LogWarning("LLM planning failed: {Error}", result.Error);
+            return new Plan { Steps = new() };
+        }
+
+        var steps = ParsePlanSteps(result.Value.Content);
+        _logger.LogInformation("Plan created with {Count} steps", steps.Count);
+        return new Plan { Steps = steps };
+    }
+
+    private List<AgentTask> ParsePlanSteps(string json)
+    {
+        var steps = new List<AgentTask>();
+        try
+        {
+            var jsonStart = json.IndexOf('[');
+            var jsonEnd = json.LastIndexOf(']');
+            if (jsonStart < 0 || jsonEnd < 0) return steps;
+
+            var jsonArray = json.Substring(jsonStart, jsonEnd - jsonStart + 1);
+            using var doc = JsonDocument.Parse(jsonArray);
+
+            foreach (var element in doc.RootElement.EnumerateArray())
+            {
+                var kind = element.TryGetProperty("kind", out var kEl) ? kEl.GetString() : "ToolCall";
+                var desc = element.TryGetProperty("description", out var dEl) ? dEl.GetString() : "";
+                var tool = element.TryGetProperty("tool", out var tEl) ? tEl.GetString() : "";
+                var args = element.TryGetProperty("args", out var aEl) ? aEl.GetRawText() : "{}";
+
+                steps.Add(new AgentTask
+                {
+                    Description = desc ?? "",
+                    Kind = Enum.Parse<TaskKind>(kind ?? "ToolCall", ignoreCase: true),
+                    ToolName = tool,
+                    Arguments = JsonDocument.Parse(args).RootElement.Clone(),
+                    Status = AgentTaskStatus.Pending,
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to parse plan steps from LLM response.");
+        }
+        return steps;
+    }
+
     public Task<IReadOnlyList<Goal>> GetActiveGoalsAsync(CancellationToken cancellationToken = default)
     {
         var active = _goals.Values
@@ -128,10 +197,24 @@ public sealed class DefaultAgentRuntime : IAgentRuntime
 
     private async Task ExecuteGoalAsync(Goal goal, CancellationToken cancellationToken)
     {
+        // If no plan exists, try to create one via LLM
+        if (goal.Plan is null && LlmProvider is not null)
+        {
+            try
+            {
+                goal.Plan = await PlanGoalAsync(goal.Description, cancellationToken);
+                EventRaised?.Invoke(new PlanCreatedEvent(goal.Id, goal.Plan.Steps.Count));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Planning failed for goal {Id}", goal.Id.Value);
+            }
+        }
+
         if (goal.Plan is null)
         {
-            // Simple execution: no plan, just mark as done
-            goal.Confidence = 1.0;
+            // No plan and no LLM — mark as done with low confidence
+            goal.Confidence = 0.5;
             return;
         }
 
@@ -185,7 +268,6 @@ public sealed class DefaultAgentRuntime : IAgentRuntime
                         break;
 
                     case TaskKind.Remember:
-                        // Memory storage is handled by MemoryService at the caller level
                         _logger.LogDebug("Remember task: {Desc}", task.Description);
                         break;
 
@@ -194,9 +276,14 @@ public sealed class DefaultAgentRuntime : IAgentRuntime
                         break;
 
                     case TaskKind.LlmCall:
-                        // LLM calls are handled by ConversationService at the caller level
                         _logger.LogDebug("LLM call task: {Desc}", task.Description);
                         break;
+                }
+
+                // Verify the task result
+                if (task.Result is { } result && !result.Success)
+                {
+                    throw new InvalidOperationException($"Task failed: {result.Error}");
                 }
 
                 task.Status = AgentTaskStatus.Done;
@@ -214,8 +301,18 @@ public sealed class DefaultAgentRuntime : IAgentRuntime
                 {
                     task.Status = AgentTaskStatus.Failed;
                     task.Result = new ToolResult(false, string.Empty, ex.Message, TimeSpan.Zero);
+
+                    // Reflect on failure
+                    _logger.LogInformation("Task {Id} failed after {Retries} retries. Reflecting...",
+                        task.Id, retries);
+                    EventRaised?.Invoke(new TaskFailedEvent(task.Id, ex.Message, retries));
                     return;
                 }
+
+                // Exponential backoff: 1s, 2s, 4s
+                var backoff = TimeSpan.FromSeconds(Math.Pow(2, retries - 1));
+                _logger.LogDebug("Backing off for {Delay} before retry {Retry}", backoff, retries);
+                await Task.Delay(backoff, cancellationToken);
             }
         }
     }

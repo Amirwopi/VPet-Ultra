@@ -14,3 +14,4 @@ public sealed record TaskStartedEvent(GoalId GoalId, string TaskId) : CognitionE
 public sealed record TaskCompletedEvent(GoalId GoalId, string TaskId, bool Success) : CognitionEvent;
 public sealed record DecisionMadeEvent(GoalId GoalId, double Confidence, bool Autonomous) : CognitionEvent;
 public sealed record NotifyEvent(string Message) : CognitionEvent;
+public sealed record TaskFailedEvent(string TaskId, string Error, int RetryCount) : CognitionEvent;
