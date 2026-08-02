@@ -776,10 +776,32 @@ public static class CognitionHostBuilder
             var logger = sp.GetRequiredService<ILogger<DefaultPermissionService>>();
             return new DefaultPermissionService(logger, store);
         });
+
+        // Register all tool providers
         services.AddSingleton<IToolProvider>(sp =>
         {
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             return new VPet.Cognition.AgentRuntime.Tools.BrowserTool(loggerFactory.CreateLogger<VPet.Cognition.AgentRuntime.Tools.BrowserTool>());
+        });
+        services.AddSingleton<IToolProvider>(sp =>
+        {
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            return new VPet.Cognition.AgentRuntime.Tools.PowerShellTool(loggerFactory.CreateLogger<VPet.Cognition.AgentRuntime.Tools.PowerShellTool>());
+        });
+        services.AddSingleton<IToolProvider>(sp =>
+        {
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            return new VPet.Cognition.AgentRuntime.Tools.CmdTool(loggerFactory.CreateLogger<VPet.Cognition.AgentRuntime.Tools.CmdTool>());
+        });
+        services.AddSingleton<IToolProvider>(sp =>
+        {
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            return new VPet.Cognition.AgentRuntime.Tools.FileWriteTool(loggerFactory.CreateLogger<VPet.Cognition.AgentRuntime.Tools.FileWriteTool>());
+        });
+        services.AddSingleton<IToolProvider>(sp =>
+        {
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            return new VPet.Cognition.AgentRuntime.Tools.FolderTool(loggerFactory.CreateLogger<VPet.Cognition.AgentRuntime.Tools.FolderTool>());
         });
         services.AddSingleton<IAgentRuntime>(sp =>
         {
