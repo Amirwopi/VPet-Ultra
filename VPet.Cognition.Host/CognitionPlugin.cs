@@ -592,6 +592,10 @@ public static class CognitionHostBuilder
         // ── Config loader ──
         services.AddSingleton<CognitionConfigLoader>();
 
+        // ── Security ──
+        services.AddSingleton<SecretResolver>();
+        services.AddTransient<EgressFilterHandler>();
+
         // ── Event bus ──
         services.AddSingleton<IEventBus, EventBus.EventBus>();
 
