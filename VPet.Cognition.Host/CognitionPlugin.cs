@@ -643,9 +643,11 @@ public static class CognitionHostBuilder
         {
             var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
             var logger = sp.GetRequiredService<ILogger<DefaultEmotionEngine>>();
+            var eventBus = sp.GetRequiredService<IEventBus>();
             return new DefaultEmotionEngine(
                 opts.Emotion.BlendFactor, opts.Emotion.DecayRatePerSec,
-                opts.Emotion.AntagonisticSuppression, logger);
+                opts.Emotion.AntagonisticSuppression, logger)
+            { EventBus = eventBus };
         });
 
         // ── Agent + Tools + Permission ──

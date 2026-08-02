@@ -2,13 +2,15 @@ using Microsoft.Extensions.Logging;
 using VPet.Cognition.Domain.Abstractions;
 using VPet.Cognition.Domain.Entities;
 using VPet.Cognition.Domain.Enums;
+using VPet.Cognition.Domain.Events;
 using VPet.Cognition.Domain.ValueObjects;
 
 namespace VPet.Cognition.PersonalityEngine;
 
 /// <summary>
 /// Default <see cref="IEmotionEngine"/> implementation. Maintains a 10-dimensional
-/// emotion vector that blends with stimuli and decays over time.
+/// emotion vector that blends with stimuli and decays over time toward a personality
+/// baseline. Publishes <see cref="EmotionChangedEvent"/> on each change.
 /// </summary>
 public sealed class DefaultEmotionEngine : IEmotionEngine
 {
@@ -18,6 +20,12 @@ public sealed class DefaultEmotionEngine : IEmotionEngine
     private readonly double _antagonisticSuppression;
     private EmotionVector _vector = EmotionVector.Neutral;
     private DateTimeOffset _lastUpdate = DateTimeOffset.UtcNow;
+
+    /// <summary>Optional event bus for publishing EmotionChangedEvent.</summary>
+    public IEventBus? EventBus { get; set; }
+
+    /// <summary>Optional personality baseline for decay target (0–1 per dimension).</summary>
+    public EmotionVector? PersonalityBaseline { get; set; }
 
     public DefaultEmotionEngine(
         double blendFactor,
@@ -43,6 +51,8 @@ public sealed class DefaultEmotionEngine : IEmotionEngine
 
     public Task ApplyAsync(EmotionStimulus stimulus, CancellationToken cancellationToken = default)
     {
+        var before = _vector;
+
         // Apply decay first (time-based)
         DecayInternal();
 
@@ -56,7 +66,7 @@ public sealed class DefaultEmotionEngine : IEmotionEngine
 
             _vector = SetDimension(_vector, primary, newValue);
 
-            // Suppress antagonistic emotions (e.g. joy suppresses sadness, not vice versa)
+            // Suppress antagonistic emotions
             _vector = SuppressAntagonists(primary);
         }
 
@@ -75,12 +85,26 @@ public sealed class DefaultEmotionEngine : IEmotionEngine
         _logger.LogInformation("Emotion applied: {Dominant} arousal={Arousal:F2} valence={Valence:F2}",
             _vector.Dominant, _vector.Arousal, _vector.Valence);
 
+        // Publish EmotionChangedEvent
+        if (EventBus is not null && !before.Equals(_vector))
+        {
+            EventBus.Publish(new EmotionChangedEvent(before, _vector, _vector.Dominant), cancellationToken);
+        }
+
         return Task.CompletedTask;
     }
 
     public Task DecayAsync(CancellationToken cancellationToken = default)
     {
+        var before = _vector;
         DecayInternal();
+
+        // Publish decay event if significant change
+        if (EventBus is not null && !before.Equals(_vector))
+        {
+            EventBus.Publish(new EmotionDecayedEvent(_vector), cancellationToken);
+        }
+
         return Task.CompletedTask;
     }
 
@@ -89,13 +113,11 @@ public sealed class DefaultEmotionEngine : IEmotionEngine
         var dominant = _vector.Dominant;
         var intensity = _vector[dominant];
 
-        // Map emotions to VPet animation graph types
-        // Joy/Excitement → Happy mode, Sadness/Anger → PoorCondition mode
         GraphType? graph = dominant switch
         {
-            EmotionType.Joy => GraphType.Say,           // talking happily
-            EmotionType.Sadness => GraphType.Sleep,      // sleeping when sad
-            EmotionType.Anger => GraphType.Touch_Body,   // reactive
+            EmotionType.Joy => GraphType.Say,
+            EmotionType.Sadness => GraphType.Sleep,
+            EmotionType.Anger => GraphType.Touch_Body,
             EmotionType.Curiosity => GraphType.Default,
             EmotionType.Excitement => GraphType.StartUP,
             EmotionType.Fear => GraphType.Idel,
@@ -106,7 +128,6 @@ public sealed class DefaultEmotionEngine : IEmotionEngine
             _ => null,
         };
 
-        // Map emotion to mode type (happiness level)
         ModeType? mode = dominant switch
         {
             EmotionType.Joy or EmotionType.Excitement or EmotionType.Calmness => ModeType.Happy,
@@ -120,12 +141,9 @@ public sealed class DefaultEmotionEngine : IEmotionEngine
 
     public Task<VoiceProsody> MapToVoiceAsync(CancellationToken cancellationToken = default)
     {
-        // Map emotion to voice prosody
-        // Use the dominant emotion's intensity directly for speed
         var dominant = _vector.Dominant;
         var dominantIntensity = _vector[dominant];
 
-        // High-energy emotions → faster speech; low-energy → slower
         var energy = dominant switch
         {
             EmotionType.Joy => 0.6,
@@ -141,9 +159,9 @@ public sealed class DefaultEmotionEngine : IEmotionEngine
             _ => 0.0,
         };
 
-        var speed = 1.0 + energy * dominantIntensity * 0.3;  // 0.91–1.3
-        var pitch = 1.0 + _vector.Valence * 0.2;              // 0.8–1.2
-        var volume = 1.0 + Math.Abs(energy) * dominantIntensity * 0.1; // 0.9–1.1
+        var speed = 1.0 + energy * dominantIntensity * 0.3;
+        var pitch = 1.0 + _vector.Valence * 0.2;
+        var volume = 1.0 + Math.Abs(energy) * dominantIntensity * 0.1;
 
         return Task.FromResult(new VoiceProsody(
             Math.Clamp(speed, 0.5, 2.0),
@@ -153,7 +171,6 @@ public sealed class DefaultEmotionEngine : IEmotionEngine
 
     public Task<DecisionBias> MapToDecisionAsync(CancellationToken cancellationToken = default)
     {
-        // High arousal + low valence → more risk-averse
         var riskAppetite = 0.5 - _vector.Fear * 0.3 + _vector.Excitement * 0.2;
         var proactivity = 0.3 + _vector.Curiosity * 0.4 + _vector.Excitement * 0.3;
         var toolWillingness = 0.5 + _vector.Curiosity * 0.3 - _vector.Stress * 0.2;
@@ -172,31 +189,51 @@ public sealed class DefaultEmotionEngine : IEmotionEngine
 
         var decay = _decayRatePerSec * elapsed;
 
+        // Decay toward personality baseline if set, otherwise toward neutral (0 / calmness=1)
+        var baseline = PersonalityBaseline ?? new EmotionVector(
+            joy: 0, sadness: 0, anger: 0, curiosity: 0.1,
+            stress: 0, excitement: 0, fear: 0,
+            calmness: 0.5, surprise: 0, frustration: 0);
+
         _vector = new EmotionVector(
-            joy: Math.Max(0, _vector.Joy - decay),
-            sadness: Math.Max(0, _vector.Sadness - decay),
-            anger: Math.Max(0, _vector.Anger - decay),
-            curiosity: Math.Max(0, _vector.Curiosity - decay),
-            stress: Math.Max(0, _vector.Stress - decay),
-            excitement: Math.Max(0, _vector.Excitement - decay),
-            fear: Math.Max(0, _vector.Fear - decay),
-            calmness: Math.Min(1, _vector.Calmness + decay * 0.5), // calmness regenerates
-            surprise: Math.Max(0, _vector.Surprise - decay * 2),   // surprise decays fast
-            frustration: Math.Max(0, _vector.Frustration - decay));
+            joy: DecayToward(_vector.Joy, baseline.Joy, decay),
+            sadness: DecayToward(_vector.Sadness, baseline.Sadness, decay),
+            anger: DecayToward(_vector.Anger, baseline.Anger, decay),
+            curiosity: DecayToward(_vector.Curiosity, baseline.Curiosity, decay),
+            stress: DecayToward(_vector.Stress, baseline.Stress, decay),
+            excitement: DecayToward(_vector.Excitement, baseline.Excitement, decay),
+            fear: DecayToward(_vector.Fear, baseline.Fear, decay),
+            calmness: DecayToward(_vector.Calmness, baseline.Calmness, decay * 0.5),
+            surprise: DecayToward(_vector.Surprise, baseline.Surprise, decay * 2),
+            frustration: DecayToward(_vector.Frustration, baseline.Frustration, decay));
 
         _lastUpdate = now;
     }
 
+    private static double DecayToward(double current, double target, double decay)
+    {
+        if (current > target)
+            return Math.Max(target, current - decay);
+        if (current < target)
+            return Math.Min(target, current + decay);
+        return current;
+    }
+
     private EmotionVector SuppressAntagonists(EmotionType primary)
     {
-        // Antagonistic pairs: joy↔sadness, calmness↔anger, excitement↔fear
+        // Antagonistic pairs: joy↔sadness, calmness↔anger, excitement↔fear, calmness↔stress
         var suppression = _antagonisticSuppression;
         return primary switch
         {
             EmotionType.Joy => _vector with { Sadness = Math.Max(0, _vector.Sadness - suppression) },
             EmotionType.Sadness => _vector with { Joy = Math.Max(0, _vector.Joy - suppression) },
-            EmotionType.Calmness => _vector with { Anger = Math.Max(0, _vector.Anger - suppression) },
+            EmotionType.Calmness => _vector with
+            {
+                Anger = Math.Max(0, _vector.Anger - suppression),
+                Stress = Math.Max(0, _vector.Stress - suppression),
+            },
             EmotionType.Anger => _vector with { Calmness = Math.Max(0, _vector.Calmness - suppression) },
+            EmotionType.Stress => _vector with { Calmness = Math.Max(0, _vector.Calmness - suppression) },
             EmotionType.Excitement => _vector with { Fear = Math.Max(0, _vector.Fear - suppression) },
             EmotionType.Fear => _vector with { Excitement = Math.Max(0, _vector.Excitement - suppression) },
             _ => _vector,
