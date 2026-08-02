@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VPet.Cognition.Domain\VPet.Cognition.Domain.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.Memory\VPet.Cognition.Memory.csproj" />
   </ItemGroup>
 
 </Project>

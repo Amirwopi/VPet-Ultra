@@ -5,56 +5,78 @@ using VPet.Cognition.Domain.Abstractions;
 using VPet.Cognition.Domain.Entities;
 using VPet.Cognition.Domain.Enums;
 using VPet.Cognition.Domain.Events;
+using VPet.Cognition.MemoryStore;
 
 namespace VPet.Cognition.AgentRuntime;
 
 /// <summary>
-/// Default <see cref="IPermissionService"/> implementation. Maintains in-memory
-/// permission grants. In a full implementation, grants are persisted to SQLite.
+/// Default <see cref="IPermissionService"/> implementation. Persists grants to SQLite
+/// via <see cref="CognitionStore"/>. Auto-grants non-confirming tools; prompts for
+/// dangerous ones (UI layer resolves via <see cref="PermissionPromptedEvent"/>).
 /// </summary>
 public sealed class DefaultPermissionService : IPermissionService
 {
     private readonly ILogger<DefaultPermissionService> _logger;
+    private readonly CognitionStore? _store;
     private readonly ConcurrentDictionary<string, PermissionGrant> _grants = new();
 
     public event Action<CognitionEvent>? EventRaised;
 
-    public DefaultPermissionService(ILogger<DefaultPermissionService> logger)
+    public DefaultPermissionService(ILogger<DefaultPermissionService> logger, CognitionStore? store = null)
     {
         _logger = logger;
+        _store = store;
     }
 
-    public Task<PermissionState> CheckAsync(string toolName, CancellationToken cancellationToken = default)
+    public async Task<PermissionState> CheckAsync(string toolName, CancellationToken cancellationToken = default)
     {
+        // Check in-memory cache first
         if (_grants.TryGetValue(toolName, out var grant))
         {
             if (grant.RevokedAt is not null)
-                return Task.FromResult(PermissionState.Revoked);
+                return PermissionState.Revoked;
             if (grant.State == PermissionState.Granted)
-                return Task.FromResult(PermissionState.Granted);
+                return PermissionState.Granted;
             if (grant.State == PermissionState.Denied)
-                return Task.FromResult(PermissionState.Denied);
+                return PermissionState.Denied;
         }
-        return Task.FromResult(PermissionState.NotRequested);
+
+        // Check persisted store
+        if (_store is not null)
+        {
+            try
+            {
+                if (await _store.IsPermissionGrantedAsync(toolName, cancellationToken))
+                {
+                    _grants[toolName] = new PermissionGrant(toolName, PermissionState.Granted, true, DateTimeOffset.UtcNow, null);
+                    return PermissionState.Granted;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to check persisted permission for {Tool}", toolName);
+            }
+        }
+
+        return PermissionState.NotRequested;
     }
 
-    public Task<PermissionState> RequestAsync(string toolName, ToolSchema schema, JsonElement args, CancellationToken cancellationToken = default)
+    public async Task<PermissionState> RequestAsync(string toolName, ToolSchema schema, JsonElement args, CancellationToken cancellationToken = default)
     {
-        // In a full implementation, this would show a dialog to the user.
-        // For now, auto-grant if the tool doesn't require confirmation.
+        // Auto-grant if the tool doesn't require confirmation
         if (!schema.RequiresConfirmation)
         {
-            GrantAsync(toolName, schema.AllowAlways, cancellationToken).GetAwaiter().GetResult();
-            return Task.FromResult(PermissionState.Granted);
+            await GrantAsync(toolName, schema.AllowAlways, cancellationToken);
+            return PermissionState.Granted;
         }
 
         // If confirmation required, mark as prompted (UI layer will resolve)
         _logger.LogInformation("Permission prompted for tool {Tool}", toolName);
         EventRaised?.Invoke(new PermissionPromptedEvent(toolName));
-        return Task.FromResult(PermissionState.Prompted);
+        return PermissionState.Prompted;
     }
 
-    public Task GrantAsync(string toolName, bool alwaysAllow, CancellationToken cancellationToken = default)
+    public async Task GrantAsync(string toolName, bool alwaysAllow, CancellationToken cancellationToken = default)
     {
         var grant = new PermissionGrant(
             toolName, PermissionState.Granted, alwaysAllow,
@@ -62,11 +84,18 @@ public sealed class DefaultPermissionService : IPermissionService
 
         _grants[toolName] = grant;
         _logger.LogInformation("Permission granted for tool {Tool} (always={Always})", toolName, alwaysAllow);
+
+        // Persist to SQLite
+        if (_store is not null && alwaysAllow)
+        {
+            try { await _store.GrantPermissionAsync(toolName, "always", null, cancellationToken); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to persist permission grant for {Tool}", toolName); }
+        }
+
         EventRaised?.Invoke(new PermissionGrantedEvent(toolName, alwaysAllow));
-        return Task.CompletedTask;
     }
 
-    public Task DenyAsync(string toolName, CancellationToken cancellationToken = default)
+    public async Task DenyAsync(string toolName, CancellationToken cancellationToken = default)
     {
         var grant = new PermissionGrant(
             toolName, PermissionState.Denied, false,
@@ -74,18 +103,30 @@ public sealed class DefaultPermissionService : IPermissionService
 
         _grants[toolName] = grant;
         _logger.LogInformation("Permission denied for tool {Tool}", toolName);
+
+        // Persist denial by revoking
+        if (_store is not null)
+        {
+            try { await _store.RevokePermissionAsync(toolName, cancellationToken); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to persist permission denial for {Tool}", toolName); }
+        }
+
         EventRaised?.Invoke(new PermissionDeniedEvent(toolName));
-        return Task.CompletedTask;
     }
 
-    public Task RevokeAsync(string toolName, CancellationToken cancellationToken = default)
+    public async Task RevokeAsync(string toolName, CancellationToken cancellationToken = default)
     {
         if (_grants.TryGetValue(toolName, out var grant))
         {
             _grants[toolName] = grant with { State = PermissionState.Revoked, RevokedAt = DateTimeOffset.UtcNow };
             _logger.LogInformation("Permission revoked for tool {Tool}", toolName);
         }
-        return Task.CompletedTask;
+
+        if (_store is not null)
+        {
+            try { await _store.RevokePermissionAsync(toolName, cancellationToken); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to persist permission revoke for {Tool}", toolName); }
+        }
     }
 
     public Task<IReadOnlyList<PermissionGrant>> ListGrantsAsync(CancellationToken cancellationToken = default)

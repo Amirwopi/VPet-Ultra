@@ -590,6 +590,14 @@ public static class CognitionHostBuilder
         });
         services.AddSingleton<MemoryService>();
 
+        // ── Cognition store (personality/emotion/goals/permissions/audit persistence) ──
+        services.AddSingleton<CognitionStore>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var logger = sp.GetRequiredService<ILogger<CognitionStore>>();
+            return new CognitionStore(opts.Memory.DbPath, logger);
+        });
+
         // ── Voice providers (STT) ──
         services.AddSingleton<ISttProvider>(sp =>
         {
@@ -641,7 +649,12 @@ public static class CognitionHostBuilder
         });
 
         // ── Agent + Tools + Permission ──
-        services.AddSingleton<IPermissionService, DefaultPermissionService>();
+        services.AddSingleton<IPermissionService>(sp =>
+        {
+            var store = sp.GetService<CognitionStore>();
+            var logger = sp.GetRequiredService<ILogger<DefaultPermissionService>>();
+            return new DefaultPermissionService(logger, store);
+        });
         services.AddSingleton<IToolProvider>(sp =>
         {
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
