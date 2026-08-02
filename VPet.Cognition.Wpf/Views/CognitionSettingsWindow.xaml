@@ -1,11 +1,9 @@
-<pu:WindowX x:Class="VPet.Cognition.Wpf.Views.CognitionSettingsWindow"
+<Window x:Class="VPet.Cognition.Wpf.Views.CognitionSettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:pu="clr-namespace:Panuon.WPF.UI;assembly=Panuon.WPF.UI"
         Title="Cognition Settings" Height="500" Width="500"
         WindowStartupLocation="CenterScreen"
-        WindowXCaption.Height="0"
-        WindowStyle="None"
+        WindowStyle="SingleBorderWindow"
         ResizeMode="CanResize"
         Background="#1E1E2E"
         Foreground="#E0E0E0">
@@ -26,23 +24,22 @@
         <!-- LLM Provider -->
         <TextBlock Grid.Row="1" Text="LLM Provider" FontWeight="SemiBold" Margin="0,0,0,5" />
         <ComboBox Grid.Row="2" SelectedIndex="0" Margin="0,0,0,15" Background="#2A2A3C" Foreground="#E0E0E0">
-            <ComboBoxItem Content="Ollama (local)" />
+            <ComboBoxItem Content="Local (LLamaSharp)" />
+            <ComboBoxItem Content="Ollama (local server)" />
             <ComboBoxItem Content="OpenAI-compatible (cloud)" />
         </ComboBox>
 
         <!-- Endpoint -->
-        <TextBlock Grid.Row="3" Text="Endpoint" FontWeight="SemiBold" Margin="0,0,0,5" />
-        <TextBox Grid.Row="4" pu:TextBoxHelper.Watermark="http://localhost:11434"
-                 Margin="0,0,0,15" Padding="8,6" Background="#2A2A3C" Foreground="#E0E0E0" BorderBrush="#3D3D5C" />
+        <TextBlock Grid.Row="3" Text="Endpoint (for online mode)" FontWeight="SemiBold" Margin="0,0,0,5" />
+        <TextBox Grid.Row="4" Margin="0,0,0,15" Padding="8,6" Background="#2A2A3C" Foreground="#E0E0E0" BorderBrush="#3D3D5C" />
 
         <!-- Model -->
         <TextBlock Grid.Row="5" Text="Model" FontWeight="SemiBold" Margin="0,0,0,5" />
-        <TextBox Grid.Row="6" pu:TextBoxHelper.Watermark="qwen2.5:3b"
-                 Margin="0,0,0,15" Padding="8,6" Background="#2A2A3C" Foreground="#E0E0E0" BorderBrush="#3D3D5C" />
+        <TextBox Grid.Row="6" Margin="0,0,0,15" Padding="8,6" Background="#2A2A3C" Foreground="#E0E0E0" BorderBrush="#3D3D5C" />
 
         <!-- Test button -->
         <Button Grid.Row="7" Content="Test Connection" Padding="15,8"
                 Background="#7B68EE" Foreground="White" BorderThickness="0"
                 HorizontalAlignment="Left" Click="TestConnection_Click" />
     </Grid>
-</pu:WindowX>
+</Window>
