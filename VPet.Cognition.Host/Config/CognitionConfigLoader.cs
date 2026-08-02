@@ -1,6 +1,8 @@
+using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using VPet.Cognition.Host.Options;
+using VPet.Cognition.Security;
 
 namespace VPet.Cognition.Host.Config;
 
@@ -66,7 +68,7 @@ public sealed class CognitionConfigLoader
         var json = JsonSerializer.Serialize(wrapper, new JsonSerializerOptions { WriteIndented = true });
 
         // Redact secrets before writing
-        json = VPet.Cognition.Host.Security.SecretRedactor.Redact(json);
+        json = SecretRedactor.Redact(json);
 
         File.WriteAllText(filePath, json);
         _logger.LogInformation("Saved cognition config to {Path}", filePath);

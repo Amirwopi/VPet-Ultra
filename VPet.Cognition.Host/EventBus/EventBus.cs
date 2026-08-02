@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 using VPet.Cognition.Domain.Abstractions;
 using VPet.Cognition.Domain.Events;
 

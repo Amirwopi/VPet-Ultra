@@ -1,6 +1,10 @@
+using System.IO;
+using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Serilog;
+using VPet.Cognition.AgentRuntime;
 using VPet.Cognition.Domain.Abstractions;
 using VPet.Cognition.Host.EventBus;
 using VPet.Cognition.Host.Options;
@@ -8,6 +12,8 @@ using VPet.Cognition.LLM;
 using VPet.Cognition.LLM.Ollama;
 using VPet.Cognition.LLM.OpenAICompatible;
 using VPet.Cognition.MemoryStore;
+using VPet.Cognition.PersonalityEngine;
+using VPet.Cognition.Security;
 using VPet.Cognition.Voice.Stt;
 using VPet.Cognition.Voice.Tts;
 using VPet_Simulator.Windows.Interface;
@@ -215,6 +221,42 @@ public static class CognitionHostBuilder
 
         // Cognition host
         services.AddSingleton<CognitionHost>();
+
+        // Personality + Emotion
+        services.AddSingleton<IPersonalityEngine>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var logger = sp.GetRequiredService<ILogger<DefaultPersonalityEngine>>();
+            return new DefaultPersonalityEngine(
+                new PersonalitySeed { Name = opts.Personality.Seed.Name, Description = opts.Personality.Seed.Description },
+                opts.Personality.EvolutionRate, opts.Personality.CoreTraitMaxDrift, logger);
+        });
+        services.AddSingleton<IEmotionEngine>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var logger = sp.GetRequiredService<ILogger<DefaultEmotionEngine>>();
+            return new DefaultEmotionEngine(
+                opts.Emotion.BlendFactor, opts.Emotion.DecayRatePerSec,
+                opts.Emotion.AntagonisticSuppression, logger);
+        });
+
+        // Agent + Tools + Permission
+        services.AddSingleton<IPermissionService, DefaultPermissionService>();
+        services.AddSingleton<IToolProvider>(sp =>
+        {
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            return new VPet.Cognition.AgentRuntime.Tools.BrowserTool(loggerFactory.CreateLogger<VPet.Cognition.AgentRuntime.Tools.BrowserTool>());
+        });
+        services.AddSingleton<IAgentRuntime>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var tool = sp.GetRequiredService<IToolProvider>();
+            var perm = sp.GetRequiredService<IPermissionService>();
+            var logger = sp.GetRequiredService<ILogger<DefaultAgentRuntime>>();
+            return new DefaultAgentRuntime(
+                tool, perm, opts.Agent.MaxStepsPerPlan, opts.Agent.MaxRetries,
+                opts.Agent.ConfidenceThreshold, logger);
+        });
 
         // WPF module (if available — only on Windows)
         if (OperatingSystem.IsWindows())
