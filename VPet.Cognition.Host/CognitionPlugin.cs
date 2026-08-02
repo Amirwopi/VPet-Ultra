@@ -808,6 +808,9 @@ public static class CognitionHostBuilder
         });
 
         // ── Agent + Tools + Permission ──
+        services.AddSingleton<GoalPriorityQueue>();
+        services.AddSingleton<AgentScheduler>();
+        services.AddSingleton<GoalManager>();
         services.AddSingleton<IPermissionService>(sp =>
         {
             var store = sp.GetService<CognitionStore>();
