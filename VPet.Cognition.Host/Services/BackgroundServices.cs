@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using VPet.Cognition.Domain.Abstractions;
 using VPet.Cognition.Host.Options;
 using VPet.Cognition.MemoryStore;
 

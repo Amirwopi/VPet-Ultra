@@ -7,9 +7,11 @@ using Microsoft.Extensions.Options;
 using Serilog;
 using VPet.Cognition.AgentRuntime;
 using VPet.Cognition.Domain.Abstractions;
+using VPet.Cognition.Domain.Events;
 using VPet.Cognition.Host.Config;
 using VPet.Cognition.Host.EventBus;
 using VPet.Cognition.Host.Options;
+using VPet.Cognition.Host.Services;
 using VPet.Cognition.Inference;
 using VPet.Cognition.Inference.Abstractions;
 using VPet.Cognition.Inference.Local;
@@ -174,7 +176,7 @@ public sealed class CognitionHost : ICognitionFacade
             _options.Value.Enabled, _llmProvider.ProviderId);
 
         // Subscribe to emotion events to drive animation
-        _eventBus.Subscribe<VPet.Cognition.Domain.Abstractions.EmotionChangedEvent>(
+        _eventBus.Subscribe<EmotionChangedEvent>(
             (evt, ct) => { OnEmotionChanged(evt); return Task.CompletedTask; });
 
         // Start emotion decay timer (every 10 seconds)
