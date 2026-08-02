@@ -212,7 +212,7 @@ public sealed class CognitionHost : ICognitionFacade
         }
     }
 
-    private static (VPet_Simulator.Core.GraphType, VPet_Simulator.Core.AnimatType) MapEmotionToAnimation(
+    private static (VPet_Simulator.Core.GraphInfo.GraphType, VPet_Simulator.Core.GraphInfo.AnimatType) MapEmotionToAnimation(
         VPet.Cognition.Domain.ValueObjects.EmotionVector emotion)
     {
         // Find the dominant emotion
@@ -232,17 +232,17 @@ public sealed class CognitionHost : ICognitionFacade
 
         return max.Emotion switch
         {
-            "Joy" => (VPet_Simulator.Core.GraphType.Touch_Head, VPet_Simulator.Core.AnimatType.A_Start),
-            "Sadness" => (VPet_Simulator.Core.GraphType.Sleep, VPet_Simulator.Core.AnimatType.A_Start),
-            "Anger" => (VPet_Simulator.Core.GraphType.Touch_Body, VPet_Simulator.Core.AnimatType.A_Start),
-            "Curiosity" => (VPet_Simulator.Core.GraphType.Idel, VPet_Simulator.Core.AnimatType.A_Start),
-            "Excitement" => (VPet_Simulator.Core.GraphType.Idel, VPet_Simulator.Core.AnimatType.A_Start),
-            "Fear" => (VPet_Simulator.Core.GraphType.Switch_Down, VPet_Simulator.Core.AnimatType.A_Start),
-            "Calmness" => (VPet_Simulator.Core.GraphType.Idel, VPet_Simulator.Core.AnimatType.A_Start),
-            "Surprise" => (VPet_Simulator.Core.GraphType.Idel, VPet_Simulator.Core.AnimatType.A_Start),
-            "Stress" => (VPet_Simulator.Core.GraphType.Work, VPet_Simulator.Core.AnimatType.A_Start),
-            "Frustration" => (VPet_Simulator.Core.GraphType.Idel, VPet_Simulator.Core.AnimatType.A_Start),
-            _ => (VPet_Simulator.Core.GraphType.Idel, VPet_Simulator.Core.AnimatType.A_Start),
+            "Joy" => (VPet_Simulator.Core.GraphInfo.GraphType.Touch_Head, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
+            "Sadness" => (VPet_Simulator.Core.GraphInfo.GraphType.Sleep, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
+            "Anger" => (VPet_Simulator.Core.GraphInfo.GraphType.Touch_Body, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
+            "Curiosity" => (VPet_Simulator.Core.GraphInfo.GraphType.Idel, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
+            "Excitement" => (VPet_Simulator.Core.GraphInfo.GraphType.Idel, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
+            "Fear" => (VPet_Simulator.Core.GraphInfo.GraphType.Switch_Down, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
+            "Calmness" => (VPet_Simulator.Core.GraphInfo.GraphType.Idel, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
+            "Surprise" => (VPet_Simulator.Core.GraphInfo.GraphType.Idel, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
+            "Stress" => (VPet_Simulator.Core.GraphInfo.GraphType.Work, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
+            "Frustration" => (VPet_Simulator.Core.GraphInfo.GraphType.Idel, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
+            _ => (VPet_Simulator.Core.GraphInfo.GraphType.Idel, VPet_Simulator.Core.GraphInfo.AnimatType.A_Start),
         };
     }
 
