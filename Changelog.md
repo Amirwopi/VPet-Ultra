@@ -103,8 +103,34 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 - 15 security tests — all passing.
 
 ### Summary
-- **102 tests, all passing** in Release. 0 warnings, 0 errors.
-- 10 cognition projects (8 build on Linux, 2 require Windows for WPF).
+- **129 tests, all passing** in Release. 0 warnings, 0 errors.
+- 11 cognition projects (9 build on Linux, 2 require Windows for WPF).
 - 0 changes to existing VPet projects.
-- Full offline-first: Ollama + Qwen2.5-3B + Whisper + Piper/Kokoro.
-- Config-switchable LLM provider and model.
+- Full offline-first: LLamaSharp + Qwen2.5-3B + Whisper + Piper/Kokoro.
+- Config-switchable inference provider (local / ollama / openai-compatible).
+
+### Added — Modular Inference Engine
+- `VPet.Cognition.Inference` (net8.0): decouples cognition from LLM backend.
+  - `IInferenceProvider` abstraction with `InferenceCapabilities` flags (Text, Streaming,
+    Vision, Embedding, ToolCalling, Json).
+  - `LocalInferenceProvider` — runs GGUF models in-process via LLamaSharp 0.16. No
+    external server needed. CPU and GPU (CUDA) supported.
+  - `OnlineInferenceProvider` — connects to Ollama or OpenAI-compatible endpoints.
+    Lists and categorizes models (text, vision, embedding).
+  - `ModelRegistry` — 9 curated official models (Qwen2.5-3B/7B/1.5B, Llama-3.2-3B,
+    SmolVLM-500M/2.2B, LLaVA-7B, BGE-Small/M3).
+  - `ModelManager` — search, download from HuggingFace (with progress events), install,
+    update, delete, disk usage tracking.
+  - `VisionModule` — optional, toggleable at runtime, disabled by default to save RAM.
+- Host DI updated to register `IInferenceProvider`, `ModelManager`, `VisionModule`.
+- `CognitionOptions.Llm` updated: `Provider` default "local", `ModelsDirectory`,
+  `GpuLayerCount`, `ContextSize`, `EnableVision`.
+- 27 inference tests — all passing.
+- ADR 0007 (local inference via LLamaSharp as default, online as fallback).
+
+### Added — CI/CD
+- `.github/workflows/build-windows.yml` — GitHub Actions workflow: restore, build, test,
+  package cognition DLLs into `VPet-Ultra-Cognition.zip` artifact.
+- `build-windows.ps1` — local Windows build script.
+- CI passes on Windows. Artifact: `VPet-Ultra-Cognition` (cognition plugin DLLs +
+  LLamaSharp native libs + appsettings template + docs).
