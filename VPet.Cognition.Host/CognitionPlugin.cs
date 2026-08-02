@@ -1,5 +1,3 @@
-using System.IO;
-using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -23,6 +21,7 @@ using VPet.Cognition.Security;
 using VPet.Cognition.Voice.Stt;
 using VPet.Cognition.Voice.Tts;
 using VPet_Simulator.Windows.Interface;
+using PersonalitySeed = VPet.Cognition.PersonalityEngine.PersonalitySeed;
 
 namespace VPet.Cognition.Host;
 
@@ -150,7 +149,7 @@ public static class CognitionHostBuilder
 
         // Options (Phase 1: defaults; future: bind from appsettings.json + LPS)
         var options = new CognitionOptions();
-        services.AddSingleton(Options.Create(options));
+        services.AddSingleton(Microsoft.Extensions.Options.Options.Create(options));
 
         // Event bus
         services.AddSingleton<IEventBus, EventBus.EventBus>();
