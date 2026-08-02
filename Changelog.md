@@ -5,6 +5,99 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-08-02
+
+### Summary
+- **129 tests, all passing**. CI green on Windows.
+- Major integration fixes: cognition now actually wired to pet, memory, personality, emotion.
+- LLM fallback chain + retry. Embedding providers. Prompt injection defense.
+- 5 new tool providers. ConversationFsm. Streaming STT. Viseme estimation.
+- Agent LLM planning + retry backoff + task verification.
+
+### Fixed — Critical Integration (was no-op/stubs)
+- **Config loading**: `appsettings.json` now read via `IConfiguration` + bound to `CognitionOptions`
+  (was `new CognitionOptions()` — config file ignored entirely)
+- **AttachToPet**: real implementation — subscribes to `EmotionChangedEvent`, maps 10 emotions →
+  `GraphInfo.GraphType` + `GraphInfo.AnimatType`, emotion decay timer, loads persisted state
+  (was a no-op that only logged)
+- **Memory wiring**: `CognitionHost.ProcessConversationTurnAsync` retrieves memory context,
+  applies personality prompt, analyzes sentiment → emotion stimulus, evolves personality,
+  stores conversation turns. `ConversationVM` now calls `CognitionHost` for memory + personality + emotion
+  (was hardcoded `_memoryContext = ""`)
+- **Personality `ReflectAsync`**: now uses LLM to generate trait adjustments
+  (was just `Confidence +0.01`)
+- **Personality `EvaluateAsync`**: real core trait drift clamping — compares against seed snapshot,
+  resets toward seed if drift > maxDrift (was a stub with "In a full implementation..." comment)
+- **Emotion `EmotionChangedEvent`**: now published via EventBus on each change
+  (was only logged, never published)
+- **Emotion decay**: now targets personality baseline (was decaying toward 0)
+- **Emotion `Calmness↔Stress`**: antagonistic pair added (was missing — doc lists 4 pairs)
+- **Memory `ForgetAsync`**: only forgets low-importance/old memories
+  (was marking ALL memories as forgotten unconditionally)
+- **Memory `ConsolidateAsync`**: 4-step process — decay, spaced repetition boost, prune, promote
+  (was just `importance * 0.95`)
+- **Permission persistence**: `DefaultPermissionService` now persists grants to SQLite
+  (was in-memory only — grants lost on restart)
+- **Whisper STT streaming**: `StartStreamingAsync` now actually works — monitors temp dir for .wav files
+  (was a no-op that only logged)
+- **TTS visemes**: Piper and Kokoro now return estimated visemes from text
+  (was returning empty arrays)
+
+### Added — Persistence
+- `CognitionStore`: 5 SQLite tables — `personality_state`, `emotion_state`, `goals`,
+  `permission_grants`, `tool_invocations` (with tamper-evident hash chain)
+- Personality persistence: `LoadAsync`/`PersistAsync` callbacks wired to `CognitionStore`
+- Emotion persistence: `EmotionPersistenceService` saves state every 1 minute
+- Background services: `MemoryMaintenanceService` (consolidation + forgetting + compression),
+  `PersonalityEvaluationService` (core trait drift check) — all `IHostedService`
+
+### Added — LLM
+- `FallbackLlmProvider`: wraps primary + fallback providers with retry + exponential backoff
+  (1s, 2s, 4s). Falls back to secondary if primary fails after all retries.
+  Streaming fallback: if primary stream throws, switches to fallback.
+- `TokenCounter`: approximates token count (~4 chars/token), truncates history to budget
+- `SayInfoWithStream` wiring: `CognitionHost.StreamToPetAsync` streams LLM tokens directly
+  to pet's `MessageBar` (in-pet conversation mode, no separate window)
+- Prompt injection defense: user input wrapped in `<user_input>` delimiters, system prompt
+  includes security instruction
+
+### Added — Embedding
+- `LocalEmbeddingProvider`: offline-first hashing-based embeddings (384 dims, no model files needed)
+- `OnlineEmbeddingProvider`: calls OpenAI-compatible `/embeddings` endpoint
+- Both registered in DI, selectable via config (`EmbeddingProvider: local|online`)
+- `MemoryService` now gets embedding provider injected
+
+### Added — Tools (5 new providers)
+- `PowerShellTool`: execute PowerShell commands with blocklist + timeout
+- `CmdTool`: execute CMD commands (Windows only) with blocklist + timeout
+- `FileWriteTool`: write/append text to files with path allowlist
+- `FolderTool`: list/create/delete folders
+- All require confirmation (dangerous operations)
+
+### Added — Voice
+- `ConversationFsm`: state machine (Idle/Listening/Thinking/Speaking/Interrupted)
+  with valid transition checking and `StateChanged` event
+
+### Added — Agent
+- LLM-based planning: `PlanGoalAsync` decomposes goals into steps via LLM
+  (was null → goal marked done with confidence=1.0)
+- Retry with exponential backoff (1s, 2s, 4s) between attempts
+- Task verification: checks `ToolResult.Success` before marking Done
+- `TaskFailedEvent` published on final failure (for reflection/audit)
+- `LlmProvider` wired to agent in DI
+
+### Added — Architecture
+- `ICognitionFacade` interface in Domain — breaks circular dependency (Wpf↔Host)
+- `IHttpClientFactory` replaces `new HttpClient()` (fixes socket exhaustion)
+- Serilog file+console logging with rolling day, log level from config
+
+### Changed
+- `VPet.Cognition.Host` now references `VPet-Simulator.Core` (for `GraphInfo.GraphType`/`AnimatType`)
+- `VPet.Cognition.Agent` now references `VPet.Cognition.Memory` (for `CognitionStore`)
+- `VPet.Cognition.Wpf` no longer references `VPet.Cognition.Host` (uses `ICognitionFacade`)
+
+## [0.1.0] — 2026-08-02
+
 ### Added — Enterprise Engineering Specification
 - Complete 21-file documentation project in `docs/` covering the full AI transformation:
   vision, current/target architecture, AI pipeline, memory, personality, emotion, voice,
