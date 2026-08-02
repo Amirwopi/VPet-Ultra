@@ -435,6 +435,73 @@ public sealed class CognitionHost : ICognitionFacade
         }
     }
 
+    /// <summary>
+    /// Stream LLM response directly to the pet's MessageBar (SayInfoWithStream).
+    /// This is the in-pet conversation mode (no separate window).
+    /// </summary>
+    public async Task StreamToPetAsync(string userInput, CancellationToken ct = default)
+    {
+        if (_main is null)
+        {
+            _logger.LogWarning("Cannot stream to pet — Main is null.");
+            return;
+        }
+
+        // 1. Process conversation turn (memory, personality, emotion)
+        string memoryContext = await ProcessConversationTurnAsync(userInput, ct);
+
+        // 2. Create SayInfoWithStream for the pet's MessageBar
+        var sayInfo = new VPet_Simulator.Core.SayInfoWithStream();
+
+        // 3. Start the Say on the UI thread
+        _main.Dispatcher.Invoke(() => _main.Say(sayInfo));
+
+        // 4. Stream LLM tokens to the SayInfo
+        try
+        {
+            var systemPrompt = await _personalityEngine.RenderSystemPromptAsync(ct);
+            var request = new ChatRequest
+            {
+                SystemPrompt = systemPrompt,
+                Messages = new[]
+                {
+                    new ChatMessageDto("user", userInput),
+                },
+                MaxTokens = _options.Value.Llm.MaxTokens,
+                Temperature = _options.Value.Llm.Temperature,
+            };
+
+            await foreach (var chunk in _llmProvider.StreamChatAsync(request, ct))
+            {
+                if (chunk.Delta?.Text is { } token && !string.IsNullOrEmpty(token))
+                {
+                    // Append token to SayInfo on the UI thread
+                    _main.Dispatcher.Invoke(() => sayInfo.UpdateText(token));
+                }
+            }
+
+            // Finish the stream
+            _main.Dispatcher.Invoke(() => sayInfo.FinishGenerate());
+
+            // Store to memory
+            var fullText = sayInfo.CurrentText.ToString();
+            await StoreConversationTurnAsync(userInput, fullText, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            _main.Dispatcher.Invoke(() => sayInfo.FinishGenerate());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "StreamToPet failed.");
+            _main.Dispatcher.Invoke(() =>
+            {
+                sayInfo.UpdateText($" [Error: {ex.Message}]");
+                sayInfo.FinishGenerate();
+            });
+        }
+    }
+
     public void DetachFromPet()
     {
         _emotionDecayTimer?.Dispose();
@@ -522,32 +589,43 @@ public static class CognitionHostBuilder
         // ── Event bus ──
         services.AddSingleton<IEventBus, EventBus.EventBus>();
 
-        // ── LLM provider selection by config ──
+        // ── LLM provider selection by config (with fallback chain + retry) ──
         services.AddSingleton<ILLMProvider>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
-            var httpClient = httpClientFactory.CreateClient("cognition");
 
-            return opts.Llm.Provider.ToLowerInvariant() switch
+            ILLMProvider primary = CreateProvider(opts.Llm, httpClientFactory, loggerFactory);
+            ILLMProvider? fallback = null;
+
+            // Build fallback if configured
+            if (!string.IsNullOrEmpty(opts.Llm.FallbackProvider))
             {
-                "ollama" => new OllamaLlmProvider(
-                    opts.Llm.Endpoint, opts.Llm.Model, opts.Llm.Timeout,
-                    httpClient, loggerFactory.CreateLogger<OllamaLlmProvider>()),
+                var fallbackOpts = new LlmOptions
+                {
+                    Provider = opts.Llm.FallbackProvider!,
+                    Endpoint = opts.Llm.FallbackEndpoint ?? "http://localhost:11434",
+                    Model = opts.Llm.FallbackModel ?? "qwen2.5:3b",
+                    ApiKey = opts.Llm.FallbackApiKey ?? "",
+                    Timeout = opts.Llm.Timeout,
+                };
+                fallback = CreateProvider(fallbackOpts, httpClientFactory, loggerFactory);
+            }
 
-                "openai-compatible" or "openai" => new OpenAICompatibleLlmProvider(
-                    "openai-compatible", opts.Llm.Endpoint, opts.Llm.Model,
-                    opts.Llm.ApiKey, opts.Llm.Timeout,
-                    httpClient, loggerFactory.CreateLogger<OpenAICompatibleLlmProvider>()),
+            if (fallback is not null)
+            {
+                return new FallbackLlmProvider(primary, fallback, maxRetries: 2,
+                    loggerFactory.CreateLogger<FallbackLlmProvider>());
+            }
 
-                // "local" uses the Inference engine, but we still register an LLM provider
-                // for the ConversationService. The LocalInferenceProvider is registered separately.
-                _ => new OllamaLlmProvider(
-                    "http://localhost:11434", "qwen2.5:3b", TimeSpan.FromMinutes(2),
-                    httpClient, loggerFactory.CreateLogger<OllamaLlmProvider>()),
-            };
+            // No fallback — still wrap in retry provider
+            return new FallbackLlmProvider(primary, null, maxRetries: 2,
+                loggerFactory.CreateLogger<FallbackLlmProvider>());
         });
+
+        // ── Token counter ──
+        services.AddSingleton<TokenCounter>();
 
         // ── LLM services ──
         services.AddSingleton<PromptAssembler>();
@@ -723,5 +801,28 @@ public static class CognitionHostBuilder
         }
 
         return services.BuildServiceProvider();
+    }
+
+    private static ILLMProvider CreateProvider(LlmOptions llm, IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory)
+    {
+        var httpClient = httpClientFactory.CreateClient("cognition");
+
+        return llm.Provider.ToLowerInvariant() switch
+        {
+            "ollama" => new OllamaLlmProvider(
+                llm.Endpoint, llm.Model, llm.Timeout,
+                httpClient, loggerFactory.CreateLogger<OllamaLlmProvider>()),
+
+            "openai-compatible" or "openai" => new OpenAICompatibleLlmProvider(
+                "openai-compatible", llm.Endpoint, llm.Model,
+                llm.ApiKey, llm.Timeout,
+                httpClient, loggerFactory.CreateLogger<OpenAICompatibleLlmProvider>()),
+
+            // "local" uses the Inference engine — register an Ollama provider as a bridge
+            // (the LocalInferenceProvider is registered separately as IInferenceProvider)
+            _ => new OllamaLlmProvider(
+                "http://localhost:11434", "qwen2.5:3b", TimeSpan.FromMinutes(2),
+                httpClient, loggerFactory.CreateLogger<OllamaLlmProvider>()),
+        };
     }
 }
