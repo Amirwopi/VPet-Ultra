@@ -35,6 +35,7 @@
     <ProjectReference Include="..\VPet.Cognition.Voice\VPet.Cognition.Voice.csproj" />
     <ProjectReference Include="..\VPet.Cognition.Agent\VPet.Cognition.Agent.csproj" />
     <ProjectReference Include="..\VPet.Cognition.Security\VPet.Cognition.Security.csproj" />
+    <ProjectReference Include="..\VPet.Cognition.Inference\VPet.Cognition.Inference.csproj" />
     <ProjectReference Include="..\VPet.Cognition.Wpf\VPet.Cognition.Wpf.csproj" />
     <ProjectReference Include="..\VPet-Simulator.Windows.Interface\VPet-Simulator.Windows.Interface.csproj" />
   </ItemGroup>

@@ -8,6 +8,12 @@ using VPet.Cognition.AgentRuntime;
 using VPet.Cognition.Domain.Abstractions;
 using VPet.Cognition.Host.EventBus;
 using VPet.Cognition.Host.Options;
+using VPet.Cognition.Inference;
+using VPet.Cognition.Inference.Abstractions;
+using VPet.Cognition.Inference.Local;
+using VPet.Cognition.Inference.Models;
+using VPet.Cognition.Inference.Online;
+using VPet.Cognition.Inference.Vision;
 using VPet.Cognition.LLM;
 using VPet.Cognition.LLM.Ollama;
 using VPet.Cognition.LLM.OpenAICompatible;
@@ -177,6 +183,50 @@ public static class CognitionHostBuilder
         services.AddSingleton<PromptAssembler>();
         services.AddSingleton<StreamAdapter>();
         services.AddSingleton<ConversationService>();
+
+        // Inference engine — local (LLamaSharp) or online (Ollama/OpenAI-compatible)
+        services.AddSingleton<IInferenceProvider>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var llm = opts.Llm;
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+
+            return llm.Provider.ToLowerInvariant() switch
+            {
+                "local" or "local-llama" or "llamasharp" => new LocalInferenceProvider(
+                    llm.ModelsDirectory, llm.GpuLayerCount, llm.ContextSize,
+                    loggerFactory.CreateLogger<LocalInferenceProvider>()),
+
+                "ollama" => new OnlineInferenceProvider(
+                    "ollama", llm.Endpoint, "", llm.Timeout,
+                    new HttpClient(), loggerFactory.CreateLogger<OnlineInferenceProvider>()),
+
+                "openai-compatible" or "openai" => new OnlineInferenceProvider(
+                    "openai-compatible", llm.Endpoint, llm.ApiKey, llm.Timeout,
+                    new HttpClient(), loggerFactory.CreateLogger<OnlineInferenceProvider>()),
+
+                _ => new LocalInferenceProvider(
+                    "models", 0, 4096,
+                    loggerFactory.CreateLogger<LocalInferenceProvider>()),
+            };
+        });
+
+        // Model manager — search, download, install, update, delete models
+        services.AddSingleton<ModelManager>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var logger = sp.GetRequiredService<ILogger<ModelManager>>();
+            return new ModelManager(opts.Llm.ModelsDirectory, logger);
+        });
+
+        // Vision module (optional)
+        services.AddSingleton<VisionModule>(sp =>
+        {
+            var provider = sp.GetRequiredService<IInferenceProvider>();
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var logger = sp.GetRequiredService<ILogger<VisionModule>>();
+            return new VisionModule(provider, opts.Llm.EnableVision, logger);
+        });
 
         // Memory store
         services.AddSingleton<IMemoryStore>(sp =>

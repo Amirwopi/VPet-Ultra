@@ -19,11 +19,12 @@ public sealed class CognitionOptions
 
 public sealed class LlmOptions
 {
-    public string Provider { get; set; } = "ollama";
+    /// <summary>"local" for LLamaSharp (in-process), "ollama" for Ollama server, "openai-compatible" for cloud.</summary>
+    public string Provider { get; set; } = "local";
     public string Endpoint { get; set; } = "http://localhost:11434";
-    public string Model { get; set; } = "qwen2.5:7b";
+    public string Model { get; set; } = "qwen2.5-3b-instruct-q4_k_m";
     public string ApiKey { get; set; } = string.Empty;
-    public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(1);
+    public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(2);
     public int MaxTokens { get; set; } = 1024;
     public double Temperature { get; set; } = 0.7;
     public int? Seed { get; set; }
@@ -31,6 +32,14 @@ public sealed class LlmOptions
     public string? FallbackEndpoint { get; set; }
     public string? FallbackModel { get; set; }
     public string? FallbackApiKey { get; set; }
+    /// <summary>GPU layers to offload (0 = CPU only, -1 = all to GPU).</summary>
+    public int GpuLayerCount { get; set; } = 0;
+    /// <summary>Context window size in tokens.</summary>
+    public int ContextSize { get; set; } = 4096;
+    /// <summary>Directory for GGUF model files.</summary>
+    public string ModelsDirectory { get; set; } = "models";
+    /// <summary>Enable optional vision module.</summary>
+    public bool EnableVision { get; set; } = false;
 }
 
 public sealed class MemoryOptions
