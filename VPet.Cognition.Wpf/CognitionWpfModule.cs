@@ -1,4 +1,5 @@
 using System.Windows;
+using VPet.Cognition.Domain.Abstractions;
 using VPet.Cognition.Wpf.Views;
 
 namespace VPet.Cognition.Wpf;
@@ -34,6 +35,40 @@ public sealed class CognitionWpfModule
         var vm = _services.GetService(typeof(ViewModels.CognitionSettingsVM)) as ViewModels.CognitionSettingsVM
                  ?? throw new InvalidOperationException("CognitionSettingsVM not registered");
         var window = new CognitionSettingsWindow(vm);
+        window.Show();
+    }
+
+    /// <summary>
+    /// Show the emotion dashboard window.
+    /// </summary>
+    public void ShowEmotionDashboard()
+    {
+        var engine = _services.GetService(typeof(IEmotionEngine)) as IEmotionEngine;
+        if (engine is null) return;
+        var window = new EmotionDashboardWindow(engine);
+        window.Show();
+    }
+
+    /// <summary>
+    /// Show the personality window.
+    /// </summary>
+    public void ShowPersonality()
+    {
+        var engine = _services.GetService(typeof(IPersonalityEngine)) as IPersonalityEngine;
+        if (engine is null) return;
+        var window = new PersonalityWindow(engine);
+        window.Show();
+    }
+
+    /// <summary>
+    /// Show the memory inspector window.
+    /// </summary>
+    public void ShowMemoryInspector()
+    {
+        var store = _services.GetService(typeof(IMemoryStore)) as IMemoryStore;
+        var memService = _services.GetService(typeof(MemoryService)) as MemoryService;
+        if (store is null || memService is null) return;
+        var window = new MemoryInspectorWindow(store, memService);
         window.Show();
     }
 }
