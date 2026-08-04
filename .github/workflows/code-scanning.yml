@@ -26,10 +26,11 @@ jobs:
             p/csharp
             p/owasp-top-ten
             p/security-audit
+          output: semgrep.sarif
           generateSarifReport: "1"
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && hashFiles('semgrep.sarif') != ''
         with:
           sarif_file: semgrep.sarif

@@ -1,8 +1,8 @@
 version: 2
 updates:
-  # NuGet packages in VPet-Simulator.Windows
+  # NuGet packages — all projects together (grouped)
   - package-ecosystem: "nuget"
-    directory: "/VPet-Simulator.Windows"
+    directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -12,34 +12,16 @@ updates:
       - "nuget"
     commit-message:
       prefix: "deps:"
-    reviewers:
-      - "Amirwopi"
-
-  # NuGet packages in VPet-Simulator.Windows.Interface
-  - package-ecosystem: "nuget"
-    directory: "/VPet-Simulator.Windows.Interface"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "nuget"
-    commit-message:
-      prefix: "deps:"
-
-  # NuGet packages in VPet-Simulator.Core
-  - package-ecosystem: "nuget"
-    directory: "/VPet-Simulator.Core"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "nuget"
-    commit-message:
-      prefix: "deps:"
+    groups:
+      # Group all Panuon updates together so they don't cause version mismatch
+      panuon:
+        patterns:
+          - "Panuon.WPF"
+          - "Panuon.WPF.UI"
+      # Group all other NuGet packages
+      nuget-all:
+        patterns:
+          - "*"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
