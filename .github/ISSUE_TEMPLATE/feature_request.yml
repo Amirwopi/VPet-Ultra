@@ -1,0 +1,40 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+title: "[FEATURE] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Motivation
+      description: What problem does this feature solve? Or what's missing?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature you'd like to see
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - AI / LLM
+        - Animation / Live2D
+        - UI / UX
+        - Mod System
+        - Voice / TTS / STT
+        - Memory / Personality
+        - Agent / Tools
+        - Performance
+        - Other
+    validations:
+      required: true
