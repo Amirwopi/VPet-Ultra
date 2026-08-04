@@ -12,6 +12,7 @@
     <Description>Voice providers for VPet cognition: Whisper STT + Piper/Kokoro TTS (offline-first).</Description>
     <Product>VPet.Cognition.Voice</Product>
     <Copyright>Copyright (c) 2026</Copyright>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
