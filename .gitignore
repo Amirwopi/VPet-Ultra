@@ -34,4 +34,4 @@ Thumbs.db
 # Secrets
 appsettings.local.json
 *.pfx
-*.key
+*.key.playwright-mcp/

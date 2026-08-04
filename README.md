@@ -147,6 +147,7 @@ dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release
 - [`Changelog.md`](Changelog.md) — تغییرات
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — راهنمای مشارکت
 - [`TESTING.md`](TESTING.md) — راهنمای تست
+- [`wiki/`](wiki/) — مستندات کامل (Architecture، Build، Configuration، AI Models، Live2D، Mod System، Steam Removal، Troubleshooting، FAQ)
 
 ## 🤝 Contributing
 
