@@ -71,4 +71,14 @@ public sealed class CognitionWpfModule
         var window = new MemoryInspectorWindow(store, memService);
         window.Show();
     }
+
+    /// <summary>
+    /// Prompt the user for a tool permission. Returns the user's choice.
+    /// </summary>
+    public PermissionResult PromptPermission(ToolSchema schema, string argsPreview)
+    {
+        var window = new PermissionPromptWindow(schema, argsPreview);
+        window.ShowDialog();
+        return window.Result;
+    }
 }
