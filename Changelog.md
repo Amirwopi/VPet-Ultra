@@ -5,6 +5,17 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+- **CLion support** — professional `CMakeLists.txt` wrapping the `dotnet` CLI so the .NET 8 solution can be opened, built, run, and debugged from CLion.
+  - 16 per-project build targets (`build-<Project>`)
+  - Solution-level targets: `build-all`, `restore`, `clean-all`, `test`, `test-build`, `publish`
+  - Run targets: `run-VPet.Windows`, `run-VPet.Solution`, `run-VPet.Tool`
+  - Debug targets with `netcoredbg`: `debug-VPet.Windows`, `debug-VPet.Solution`
+  - 7 CLion run configurations pre-configured (Build All, Restore, Run, Tests, Clean, Publish)
+  - `scripts/install-netcoredbg.ps1` helper to install the .NET debugger
+  - CMake profiles (Debug/Release) registered in `.idea/workspace.xml`
+- `.gitignore` updated to exclude CMake build directories
+
 ## [0.2.0] — 2026-08-04
 
 ### Added

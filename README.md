@@ -69,6 +69,47 @@ dotnet build VPet-Simulator.Windows/VPet-Simulator.Windows.csproj \
 dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release
 ```
 
+### Debug با CLion
+
+این پروژه C#/.NET هست، اما یک `CMakeLists.txt` حرفه‌ای هم داره که `dotnet` CLI رو wrap می‌کنه تا بتونی توی CLion پروژه رو باز کنی، build کنی، اجرا کنی و debug کنی.
+
+```bash
+# 1. CLion رو باز کن و CMakeLists.txt رو انتخاب کن (File ▸ Open)
+# 2. CLion خودش configure می‌کنه (Ninja generator، Debug profile)
+# 3. از toolbar Run Configurations رو انتخاب کن:
+#      Build All          → dotnet build (کل solution)
+#      Restore            → dotnet restore
+#      Run VPet.Windows   → اجرای desktop pet (x64 Debug)
+#      Run VPet.Solution  → اجرای solution launcher
+#      Tests              → build + dotnet test (129 test)
+#      Clean              → dotnet clean
+#      Publish            → build-local.ps1 (full package)
+```
+
+برای step-through debugging با `netcoredbg`:
+
+```powershell
+# netcoredbg رو نصب کن
+.\scripts\install-netcoredbg.ps1
+
+# بعد توی CLion: Tools ▸ CMake ▸ Reload CMake Project
+# targetهای debug-VPet.Windows و debug-VPet.Solution ظاهر می‌شن
+```
+
+| CMake Target | Description |
+|---|---|
+| `build-all` | `dotnet build` کل VPet.sln (restore + build) |
+| `restore` | `dotnet restore` (NuGet) |
+| `clean-all` | `dotnet clean` |
+| `test` | `dotnet test` (129 cognition test) |
+| `test-build` | build + test در یک مرحله |
+| `publish` | `build-local.ps1` (full package + zip) |
+| `build-<project>` | build تک‌پروژه‌ای (۱۶ پروژه) |
+| `run-VPet.Windows` | اجرای VPet-Simulator.Windows.exe |
+| `run-VPet.Solution` | اجرای VPet.Solution.exe |
+| `run-VPet.Tool` | اجرای VPet-Simulator.Tool.exe |
+| `debug-VPet.Windows` | debug با netcoredbg (اگر نصب باشه) |
+
 ### Configure
 
 فایل `appsettings.json` توی output directory بساز. default، local inference (LLamaSharp) هست:

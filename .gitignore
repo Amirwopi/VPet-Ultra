@@ -9,6 +9,8 @@ obj/
 # Publish output
 publish/
 *.zip
+memory-bank
+doc
 
 # Runtime data
 models/
@@ -26,6 +28,14 @@ Cache/
 .idea/
 *.swp
 *~
+
+# CMake / CLion build dirs (CMakeLists.txt wraps dotnet CLI for debugging)
+cmake-build-*/
+*.cbp
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
 
 # OS
 Thumbs.db
