@@ -1,0 +1,31 @@
+---
+name: Bug Report
+about: Report a bug or unexpected behavior
+title: "[BUG] "
+labels: ["bug"]
+assignees: []
+---
+
+## Bug Description
+<!-- A clear description of what the bug is -->
+
+## Steps to Reproduce
+1.
+2.
+3.
+
+## Expected Behavior
+<!-- What you expected to happen -->
+
+## Actual Behavior
+<!-- What actually happened -->
+
+## Environment
+- OS: [e.g. Windows 11, Linux (Wine)]
+- .NET version: [e.g. 8.0.423]
+- VPet-Ultra version: [e.g. from git tag or commit hash]
+- AI model used: [e.g. Qwen2.5-3B, none]
+- Mode: [local inference / online / no AI]
+
+## Logs / Screenshots
+<!-- Paste any relevant logs or screenshots here -->
