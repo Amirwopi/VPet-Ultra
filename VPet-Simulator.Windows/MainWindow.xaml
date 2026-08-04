@@ -12,9 +12,22 @@
     </WindowChrome.WindowChrome>
     <Grid x:Name="MGHost" x:FieldModifier="public">
         <Grid x:Name="MGrid" Width="250" Height="Auto" x:FieldModifier="public">
-            <Label x:Name="LoadingText" HorizontalAlignment="Center" VerticalAlignment="Center"
-                    Background="{DynamicResource DARKPrimaryLight}" Foreground="{DynamicResource DARKPrimaryText}"
-                    Content="Loading" />
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Label x:Name="LoadingText" HorizontalAlignment="Center"
+                        Background="{DynamicResource DARKPrimaryLight}" Foreground="{DynamicResource DARKPrimaryText}"
+                        Content="Loading" />
+                <!-- Debug progress bar: shows animation loading percentage.
+                     Wrapped in #if DEBUG so it can be removed easily. -->
+                <ProgressBar x:Name="LoadingProgressBar" Width="230" Height="8"
+                        HorizontalAlignment="Center" Margin="0,4,0,0"
+                        Minimum="0" Maximum="100" Value="0"
+                        Foreground="{DynamicResource PrimaryDarker}"
+                        Background="{DynamicResource DARKPrimaryLight}" />
+                <Label x:Name="LoadingPercent" HorizontalAlignment="Center"
+                        Foreground="{DynamicResource DARKPrimaryText}"
+                        Background="{DynamicResource DARKPrimaryLight}"
+                        Content="0%" FontSize="10" Margin="0,2,0,0" />
+            </StackPanel>
             <Border x:Name="DisplayGrid" />
         </Grid>
     </Grid>

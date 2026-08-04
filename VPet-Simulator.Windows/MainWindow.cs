@@ -1533,15 +1533,56 @@ namespace VPet_Simulator.Windows
 
             Main = await Dispatcher.InvokeAsync(() => new Main(Core));
 
+            int totalGraphs = petloader.GraphCount;
             Main.LoadALL((c) =>
             {
-                Dispatcher.Invoke(() => LoadingText.Content = "Attempting to load animations and generate cache\\nThis step may take a while\\nPlease be patient".Translate()
-                + $"\n  {c} / {petloader.GraphCount}");
+                Dispatcher.Invoke(() =>
+                {
+                    int percent = totalGraphs > 0 ? (int)(c * 100.0 / totalGraphs) : 0;
+                    if (percent > 100) percent = 100;
+                    LoadingText.Content = "Attempting to load animations and generate cache\\nThis step may take a while\\nPlease be patient".Translate()
+                        + $"\n  {c} / {totalGraphs} ({percent}%)";
+                    // Update progress bar and percentage label (debug only)
+                    if (LoadingProgressBar != null)
+                        LoadingProgressBar.Value = percent;
+                    if (LoadingPercent != null)
+                        LoadingPercent.Content = $"{percent}%";
+                });
             }
             //#if NewYear
             //            , Core.Graph.FindGraph("newyear", AnimatType.Single, Core.Save.Mode)
             //#endif
             );
+
+            // Debug: show any loading errors in a popup window
+            // Wrapped in #if DEBUG so it can be removed easily for release builds.
+#if DEBUG
+            if (Main.ErrorMessage.Count > 0)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    var errorWin = new System.Windows.Window
+                    {
+                        Title = "Debug: Animation Loading Errors",
+                        Width = 600,
+                        Height = 400,
+                        WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
+                        Content = new System.Windows.Controls.ScrollViewer
+                        {
+                            Content = new System.Windows.Controls.TextBlock
+                            {
+                                Text = string.Join("\n\n", Main.ErrorMessage),
+                                TextWrapping = System.Windows.TextWrapping.Wrap,
+                                FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                                FontSize = 11,
+                                Margin = new System.Windows.Thickness(10)
+                            }
+                        }
+                    };
+                    errorWin.ShowDialog();
+                });
+            }
+#endif
             Main.NoFunctionMOD = Set.CalFunState;
             await Dispatcher.InvokeAsync(() =>
               {

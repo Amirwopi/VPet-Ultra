@@ -232,6 +232,61 @@ if (Test-Path "docs/MODELS.md") {
 Write-Host "  OK" -ForegroundColor Green
 Write-Host ""
 
+# Step 7c: Copy optional native dependencies (Live2D, Piper, Whisper)
+Write-Host "[7c/8] Copying optional native dependencies..." -ForegroundColor Yellow
+
+# Live2D Cubism Core — required for Live2D model support
+$live2dFiles = @("Live2DCubismCore.dll", "Live2DCubismCore.lib")
+foreach ($f in $live2dFiles) {
+    if (Test-Path $f) {
+        Copy-Item $f -Destination $OutputDir -Force
+        Write-Host "  Copied: $f"
+    } else {
+        Write-Host "  Skipped: $f (not found)" -ForegroundColor DarkGray
+    }
+}
+
+# Piper TTS — extract piper_windows_amd64.zip to output/piper/
+$piperZip = "piper_windows_amd64.zip"
+if (Test-Path $piperZip) {
+    $piperOut = Join-Path $OutputDir "piper"
+    if (Test-Path $piperOut) { Remove-Item $piperOut -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $piperOut | Out-Null
+    Expand-Archive -Path $piperZip -DestinationPath $piperOut -Force
+    # Find piper.exe and ensure it is at piper/piper.exe
+    $piperExe = Get-ChildItem $piperOut -Filter "piper.exe" -Recurse | Select-Object -First 1
+    if ($piperExe) {
+        Write-Host "  Extracted: $piperZip -> piper/ ($($piperExe.Name))"
+    } else {
+        Write-Host "  Extracted: $piperZip -> piper/ (piper.exe not found inside)" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipped: $piperZip (not found)" -ForegroundColor DarkGray
+}
+
+# Whisper STT — extract whisper-bin-x64.zip to output/whisper/
+$whisperZip = "whisper-bin-x64.zip"
+if (Test-Path $whisperZip) {
+    $whisperOut = Join-Path $OutputDir "whisper"
+    if (Test-Path $whisperOut) { Remove-Item $whisperOut -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $whisperOut | Out-Null
+    Expand-Archive -Path $whisperZip -DestinationPath $whisperOut -Force
+    $whisperExe = Get-ChildItem $whisperOut -Filter "whisper-cli.exe" -Recurse | Select-Object -First 1
+    if (-not $whisperExe) {
+        $whisperExe = Get-ChildItem $whisperOut -Filter "whisper*.exe" -Recurse | Select-Object -First 1
+    }
+    if ($whisperExe) {
+        Write-Host "  Extracted: $whisperZip -> whisper/ ($($whisperExe.Name))"
+    } else {
+        Write-Host "  Extracted: $whisperZip -> whisper/ (whisper exe not found inside)" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "  Skipped: $whisperZip (not found)" -ForegroundColor DarkGray
+}
+
+Write-Host "  OK" -ForegroundColor Green
+Write-Host ""
+
 # Step 8: Zip
 Write-Host "[8/8] Creating zip packages..." -ForegroundColor Yellow
 

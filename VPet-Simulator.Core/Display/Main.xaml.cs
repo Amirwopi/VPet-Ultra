@@ -107,7 +107,7 @@ namespace VPet_Simulator.Core
                 return;
             }
             int count = 0;
-            DateTime start = DateTime.Now.AddSeconds(2);
+            DateTime start = DateTime.Now.AddSeconds(1);
             var tasks = new List<Task>();
 
             foreach (var igs in Core.Graph.GraphsList.Values)
@@ -148,7 +148,7 @@ namespace VPet_Simulator.Core
                             Interlocked.Increment(ref count);
                             if (start < DateTime.Now)
                             {
-                                start = DateTime.Now.AddSeconds(2);
+                                start = DateTime.Now.AddSeconds(1);
                                 WaitCountAction.Invoke(count);
                             }
                         }));
