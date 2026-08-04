@@ -262,14 +262,14 @@ Write-Host "==========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Output:" -ForegroundColor White
 Write-Host "  Folder:     $OutputDir\" -ForegroundColor White
-Write-Host "  Full zip:   $fullZip ($fullSize MB)" -ForegroundColor White
-Write-Host "  Plugin zip: $pluginZip ($pluginSize MB)" -ForegroundColor White
+Write-Host "  Full zip:   $fullZip ($($fullSize) MB)" -ForegroundColor White
+Write-Host "  Plugin zip: $pluginZip ($($pluginSize) MB)" -ForegroundColor White
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Download qwen2.5-3b-instruct-q4_k_m.gguf from HuggingFace"
 Write-Host "  2. Place it in the models\ folder"
 Write-Host "  3. Run VPet-Simulator.Windows.exe"
-Write-Host "  4. Click Chat on the pet's toolbar"
+Write-Host "  4. Click Chat on the pet''s toolbar"
 Write-Host ""
 Write-Host "To distribute:" -ForegroundColor Cyan
 Write-Host "  - Full zip: for new users (first install)"
