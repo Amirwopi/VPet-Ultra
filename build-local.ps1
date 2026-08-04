@@ -287,40 +287,6 @@ if (Test-Path $whisperZip) {
 Write-Host "  OK" -ForegroundColor Green
 Write-Host ""
 
-# Step 8: Zip
-Write-Host "[8/8] Creating zip packages..." -ForegroundColor Yellow
-
-# Full zip
-$fullZip = "VPet-Ultra-Full-v$Version.zip"
-if (Test-Path $fullZip) { Remove-Item $fullZip -Force }
-Compress-Archive -Path "$OutputDir/*" -DestinationPath $fullZip -Force
-$fullSize = [math]::Round((Get-Item $fullZip).Length / 1MB, 1)
-Write-Host "  Full zip: $fullZip ($fullSize MB)"
-
-# Plugin-only zip (for updates)
-$pluginZip = "VPet-Ultra-Plugin-v$Version.zip"
-$pluginPath = "publish/vpet-cognition-update"
-New-Item -ItemType Directory -Force -Path $pluginPath | Out-Null
-Copy-Item -Path $modPath -Destination "$pluginPath/mod/0000_cognition" -Recurse -Force
-Copy-Item -Path $appsettingsPath -Destination $pluginPath -Force
-Copy-Item "INSTALL.md" -Destination $pluginPath -Force
-Copy-Item "TESTING.md" -Destination $pluginPath -Force
-if (Test-Path "docs/MODELS.md") {
-    Copy-Item "docs/MODELS.md" -Destination $pluginPath -Force
-} elseif (Test-Path "wiki/AI-Models.md") {
-    Copy-Item "wiki/AI-Models.md" -Destination $pluginPath -Force
-}
-
-if (Test-Path $pluginZip) { Remove-Item $pluginZip -Force }
-Compress-Archive -Path "$pluginPath/*" -DestinationPath $pluginZip -Force
-$pluginSize = [math]::Round((Get-Item $pluginZip).Length / 1MB, 1)
-Write-Host "  Plugin zip: $pluginZip ($pluginSize MB)"
-
-# Cleanup temp
-Remove-Item $pluginPath -Recurse -Force -ErrorAction SilentlyContinue
-Write-Host "  OK" -ForegroundColor Green
-Write-Host ""
-
 # Done
 Write-Host "==========================================" -ForegroundColor Green
 Write-Host "  BUILD COMPLETE - v$Version" -ForegroundColor Green
@@ -328,18 +294,10 @@ Write-Host "==========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Output:" -ForegroundColor White
 Write-Host "  Folder:     $OutputDir\" -ForegroundColor White
-$fullMsg = "  Full zip:   $fullZip ($fullSize MB)"
-$pluginMsg = "  Plugin zip: $pluginZip ($pluginSize MB)"
-Write-Host $fullMsg -ForegroundColor White
-Write-Host $pluginMsg -ForegroundColor White
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Download qwen2.5-3b-instruct-q4_k_m.gguf from HuggingFace"
 Write-Host "  2. Place it in the models\ folder"
 Write-Host "  3. Run VPet-Simulator.Windows.exe"
 Write-Host "  4. Click Chat on the pet''s toolbar"
-Write-Host ""
-Write-Host "To distribute:" -ForegroundColor Cyan
-Write-Host "  - Full zip: for new users (first install)"
-Write-Host "  - Plugin zip: for updates (replace mod\0000_cognition\ only)"
 Write-Host ""

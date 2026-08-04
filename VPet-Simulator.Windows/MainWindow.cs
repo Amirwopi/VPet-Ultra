@@ -1534,25 +1534,53 @@ namespace VPet_Simulator.Windows
             Main = await Dispatcher.InvokeAsync(() => new Main(Core));
 
             int totalGraphs = petloader.GraphCount;
+
+            // Periodic progress timer: updates the UI every 500ms even if no
+            // graph just became ready. This prevents the loading screen from
+            // appearing frozen at 0% while graphs are still being generated.
+            var progressTimer = new System.Windows.Threading.DispatcherTimer();
+            progressTimer.Interval = TimeSpan.FromMilliseconds(500);
+            int lastReportedCount = 0;
+            progressTimer.Tick += (s, e) =>
+            {
+                int currentCount = 0;
+                // Count how many graphs are ready by checking the Main's loaded count
+                // We use the callback count as a proxy
+                currentCount = lastReportedCount;
+                int percent = totalGraphs > 0 ? (int)(currentCount * 100.0 / totalGraphs) : 0;
+                if (percent > 100) percent = 100;
+                LoadingText.Content = "Attempting to load animations and generate cache\\nThis step may take a while\\nPlease be patient".Translate()
+                    + $"\n  {currentCount} / {totalGraphs} ({percent}%)";
+                if (LoadingProgressBar != null)
+                    LoadingProgressBar.Value = percent;
+                if (LoadingPercent != null)
+                    LoadingPercent.Content = $"{percent}%";
+            };
+            progressTimer.Start();
+
             Main.LoadALL((c) =>
             {
-                Dispatcher.Invoke(() =>
+                // Use BeginInvoke (not Invoke) to avoid deadlock: LoadALL blocks
+                // the UI thread via .Wait(), so Dispatcher.Invoke would deadlock.
+                lastReportedCount = c;
+                Dispatcher.BeginInvoke(new Action(() =>
                 {
                     int percent = totalGraphs > 0 ? (int)(c * 100.0 / totalGraphs) : 0;
                     if (percent > 100) percent = 100;
                     LoadingText.Content = "Attempting to load animations and generate cache\\nThis step may take a while\\nPlease be patient".Translate()
                         + $"\n  {c} / {totalGraphs} ({percent}%)";
-                    // Update progress bar and percentage label (debug only)
                     if (LoadingProgressBar != null)
                         LoadingProgressBar.Value = percent;
                     if (LoadingPercent != null)
                         LoadingPercent.Content = $"{percent}%";
-                });
+                }));
             }
             //#if NewYear
             //            , Core.Graph.FindGraph("newyear", AnimatType.Single, Core.Save.Mode)
             //#endif
             );
+
+            progressTimer.Stop();
 
             // Debug: show any loading errors in a popup window
             // Wrapped in #if DEBUG so it can be removed easily for release builds.

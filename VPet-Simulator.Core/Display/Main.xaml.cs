@@ -110,6 +110,20 @@ namespace VPet_Simulator.Core
             DateTime start = DateTime.Now.AddSeconds(1);
             var tasks = new List<Task>();
 
+            // Periodic progress reporter: fires every 500ms even if no graph
+            // just became ready, so the UI doesn't appear frozen at 0%.
+            var progressTimer = new System.Timers.Timer(500);
+            progressTimer.AutoReset = true;
+            progressTimer.Elapsed += (s, e) =>
+            {
+                if (start < DateTime.Now)
+                {
+                    start = DateTime.Now.AddSeconds(1);
+                    WaitCountAction?.Invoke(count);
+                }
+            };
+            progressTimer.Start();
+
             foreach (var igs in Core.Graph.GraphsList.Values)
             {
                 foreach (var ig2 in igs.Values)
@@ -158,7 +172,10 @@ namespace VPet_Simulator.Core
             }
 
             await Task.WhenAll(tasks);
-
+            progressTimer.Stop();
+            progressTimer.Dispose();
+            // Final progress report
+            WaitCountAction?.Invoke(count);
         }
         /// <summary>
         /// </summary>
