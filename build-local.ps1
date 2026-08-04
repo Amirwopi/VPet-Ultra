@@ -262,8 +262,10 @@ Write-Host "==========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Output:" -ForegroundColor White
 Write-Host "  Folder:     $OutputDir\" -ForegroundColor White
-Write-Host "  Full zip:   $fullZip ($($fullSize) MB)" -ForegroundColor White
-Write-Host "  Plugin zip: $pluginZip ($($pluginSize) MB)" -ForegroundColor White
+$fullMsg = "  Full zip:   $fullZip ($fullSize MB)"
+$pluginMsg = "  Plugin zip: $pluginZip ($pluginSize MB)"
+Write-Host $fullMsg -ForegroundColor White
+Write-Host $pluginMsg -ForegroundColor White
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Download qwen2.5-3b-instruct-q4_k_m.gguf from HuggingFace"
