@@ -12,7 +12,6 @@ using System.Windows.Threading;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// PetHelper.xaml 的交互逻辑
     /// </summary>
     public partial class PetHelper : WindowX
     {
@@ -43,7 +42,7 @@ namespace VPet_Simulator.Windows
                 Win32.User32.SetWindowLongPtr(new WindowInteropHelper(this).Handle,
                     Win32.GetWindowLongFields.GWL_HWNDPARENT, new WindowInteropHelper(mw).Handle);
             });
-            ToolTip = "点击此处开关鼠标穿透\n右键开关置于顶层\n长按挪动位置\n可在设置中关闭".Translate();
+            ToolTip = "Click here toggle mouse HitThrough\\nRight-click toggle place in TopMost\\nPress and hold to move position\\nCan be turned off in the settings".Translate();
         }
 
         private void Image_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -113,7 +112,6 @@ namespace VPet_Simulator.Windows
         private void WindowX_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             mw.Topmost = !mw.Topmost;
-            //同步托盘图标菜单中「置于顶层」选项的选中状态
             (mw.notifyIcon.ContextMenuStrip.Items.Find("NotifyIcon_TopMost", false).First() as
                 System.Windows.Forms.ToolStripMenuItem).Checked = mw.Topmost;
 

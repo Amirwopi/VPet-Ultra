@@ -25,14 +25,14 @@
         <Border Background="{DynamicResource PrimaryTrans4}" PreviewMouseDown="Grid_PreviewMouseDown"
                 Grid.ColumnSpan="4" Grid.RowSpan="6" BorderBrush="{DynamicResource DARKPrimary}" BorderThickness="4" />
         <Viewbox Grid.Row="3" Grid.Column="1" HorizontalAlignment="Center" PreviewMouseDown="Grid_PreviewMouseDown">
-            <Label Content="{ll:Str '桌宠移动范围'}" Background="{x:Null}" />
+            <Label Content="{ll:Str 'Move range of VPET'}" Background="{x:Null}" />
         </Viewbox>
         <Viewbox Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom"
                 PreviewMouseDown="Grid_PreviewMouseDown">
-            <Label Content="{ll:Str '鼠标左键拖动范围\&#13;调整边框调整大小'}" Background="{x:Null}" />
+            <Label Content="{ll:Str '\&#13;'}" Background="{x:Null}" />
         </Viewbox>
         <Viewbox Grid.Row="4" Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Top">
-            <Button Style="{DynamicResource ThemedButtonStyle}" Content="{ll:Str '设置当前范围为移动范围'}" MinWidth="120"
+            <Button Style="{DynamicResource ThemedButtonStyle}" Content="{ll:Str 'Set the current range as the moving range'}" MinWidth="120"
                     Click="Save_Click" />
         </Viewbox>
         <Viewbox Grid.Column="3" HorizontalAlignment="Right">

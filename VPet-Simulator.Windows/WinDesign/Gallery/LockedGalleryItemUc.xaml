@@ -23,7 +23,7 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <TextBlock Text="{ll:Str 解锁条件}" FontWeight="Bold" />
+                <TextBlock Text="{ll:Str Unlock conditions}" FontWeight="Bold" />
                 <ScrollViewer Grid.Row="1">
                     <TextBlock x:Name="unlocktext" TextWrapping="Wrap" />
                 </ScrollViewer>
@@ -31,20 +31,20 @@
                         Style="{DynamicResource ThemedButtonStyle}" Click="Button_Click" Visibility="Collapsed"
                         Margin="0,7,0,0">
                     <TextBlock>
-                        <Run x:Name="rAnd" Text="并" /> 
-                        <Run Text="{ll:Str 花费}" />
+                        <Run x:Name="rAnd" Text="AND" /> 
+                        <Run Text="{ll:Str Spend}" />
                         <Run x:Name="clmoney" />
-                        <Run Text="{ll:Str 解锁}" />
+                        <Run Text="{ll:Str Unlock}" />
                     </TextBlock>
                 </Button>
                 <Button x:Name="btnCannot" Grid.Row="3" Cursor="No" pu:ButtonHelper.HoverBackground="{x:Null}"
                         pu:ButtonHelper.ClickBackground="{x:Null}" Background="#7e7e7e" HorizontalAlignment="Center"
                         Style="{DynamicResource ThemedButtonStyle}" Visibility="Collapsed" Margin="0,7,0,0">
                     <TextBlock>
-                         <Run Text="{ll:Str 并}" /> 
-                         <Run Text="{ll:Str 花费}" />
+                         <Run Text="{ll:Str AND}" /> 
+                         <Run Text="{ll:Str Spend}" />
                               <Run x:Name="nlmoney" />
-                           <Run Text="{ll:Str 解锁}" />
+                           <Run Text="{ll:Str Unlock}" />
                     </TextBlock>
                 </Button>
             </Grid>

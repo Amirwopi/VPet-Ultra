@@ -11,21 +11,17 @@ using VPet_Simulator.Windows.Interface;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// TalkSelect.xaml 的交互逻辑
     /// </summary>
     public partial class TalkSelect : UserControl
-    {// 使用新的选项方式的聊天框
+    {
 
         /// <summary>
-        /// 当前存在在列表的选项
         /// </summary>
         List<SelectText> textList = new List<SelectText>();
         /// <summary>
-        /// 已经说过的话
         /// </summary>
         HashSet<string> textSaid = new HashSet<string>();
         /// <summary>
-        /// 下次刷新时间
         /// </summary>
         public DateTime RelsTime;
         private DateTime lastAddTime;
@@ -41,18 +37,15 @@ namespace VPet_Simulator.Windows
 
 
         /// <summary>
-        /// 刷新当前所有选项
         /// </summary>
         public void RelsSelect()
         {
             if (RelsTime < DateTime.Now)
             {
-                //刷新选项
-                RelsTime = DateTime.Now.AddMinutes(10);//10分钟刷新一次, 每次聊天增加5分钟
+                RelsTime = DateTime.Now.AddMinutes(10);
                 lastAddTime = DateTime.Now;
                 textList.Clear();
                 textSaid.Clear();
-                //随机选取选项
                 var list = mw.SelectTexts.ToList();
                 while (list.Count > 0 && textList.Count < 5)
                 {
@@ -65,7 +58,6 @@ namespace VPet_Simulator.Windows
                     }
                 }
             }
-            //刷新显示
             if (textList.Count > 0)
             {
                 tbTalk.Items.Clear();
@@ -81,7 +73,7 @@ namespace VPet_Simulator.Windows
             else
             {
                 tbTalk.Items.Clear();
-                tbTalk.Items.Add("没有可以说的话".Translate());
+                tbTalk.Items.Add("There's nothing to say".Translate());
                 btn_Send.IsEnabled = false;
             }
             double min = (RelsTime - DateTime.Now).TotalMinutes;
@@ -89,12 +81,12 @@ namespace VPet_Simulator.Windows
             double progress = 1 - min / interval;
             progress = Math.Min(1, Math.Max(0, progress));
             PrograssUsed.Value = progress;
-            PrograssUsed.ToolTip = "下次刷新剩余时间: {0:f1}分钟".Translate(min);
+            PrograssUsed.ToolTip = "Next refresh remaining time: {0:f1} minutes".Translate(min);
         }
 
         private void btn_Send_Click(object sender, RoutedEventArgs e)
         {
-            if (tbTalk.SelectedIndex == -1 || tbTalk.Text == "没有可以说的话".Translate() || textList.Count == 0)
+            if (tbTalk.SelectedIndex == -1 || tbTalk.Text == "There's nothing to say".Translate() || textList.Count == 0)
             {
                 return;
             }
@@ -102,10 +94,8 @@ namespace VPet_Simulator.Windows
             var say = textList[tbTalk.SelectedIndex];
             textList.RemoveAt(tbTalk.SelectedIndex);
 
-            //添加日志
             mw.ActivityLogs.Add(new ActivityLog("hostsay",say.TranslateChoose));
 
-            //聊天效果
             if (say.Exp != 0)
             {
                 if (say.Exp > 0)

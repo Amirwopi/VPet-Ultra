@@ -11,12 +11,10 @@ using VPet_Simulator.Core;
 namespace VPet_Simulator.Windows.Interface
 {
     /// <summary>
-    /// 游戏存档 最新版
     /// </summary>
     public class GameSave_v2 : IGetOBJ<ILine>
     {
         /// <summary>
-        /// 新存档
         /// </summary>
         public GameSave_v2(string petname)
         {
@@ -27,7 +25,7 @@ namespace VPet_Simulator.Windows.Interface
         protected void load(ILPS lps, Statistics oldStatistics = null, GameSave_VPet oldGameSave = null, ILPS olddata = null)
         {
             if (lps.FindLine("statistics") == null)
-            {//尝试从老存档加载
+            {
                 Statistics = oldStatistics ?? new Statistics();
             }
             else
@@ -92,7 +90,7 @@ namespace VPet_Simulator.Windows.Interface
                         catch (Exception e)
                         {
                             HashCheck = false;
-                            MessageBoxX.Show(e.ToString(), "当前存档Hash验证信息".Translate() + ":" + "失败".Translate());
+                            MessageBoxX.Show(e.ToString(), "Current Save Hash Verification".Translate() + ":" + "Fail".Translate());
                         }
                     }
                 }
@@ -103,18 +101,13 @@ namespace VPet_Simulator.Windows.Interface
             Data.AddRange(lps);
         }
         /// <summary>
-        /// 读存档, 带入老数据
         /// </summary>
-        /// <param name="lps">数据</param>
-        /// <param name="oldStatistics">老统计</param>
-        /// <param name="oldGameSave">老存档</param>
-        /// <param name="olddata">老数据</param>
+        /// <param name="lps">Data</param>
         public GameSave_v2(ILPS lps, Statistics oldStatistics = null, GameSave_VPet oldGameSave = null, ILPS olddata = null)
         {
             load(lps, oldStatistics, oldGameSave, olddata);
         }
         /// <summary>
-        /// 读存档, 带入老存档
         /// </summary>
         /// <param name="lps"></param>
         /// <param name="oldSave"></param>
@@ -124,15 +117,13 @@ namespace VPet_Simulator.Windows.Interface
         }
 
         /// <summary>
-        /// 游戏相关数据
         /// </summary>
         public LPS_D Data = new LPS_D();
         /// <summary>
-        /// 游戏存档
         /// </summary>
         public GameSave_VPet GameSave;
         /// <summary>
-        /// 统计
+        /// Statistics
         /// </summary>
         public Statistics Statistics = null;
 
@@ -157,13 +148,10 @@ namespace VPet_Simulator.Windows.Interface
         }
 
         /// <summary>
-        /// Hash检查
         /// </summary>
         public bool HashCheck { get; private set; } = true;
 
         /// <summary>
-        /// 关闭该玩家的HashCheck检查
-        /// 请使用imw中的HashCheckOff
         /// </summary>
         public void HashCheckOff()
         {

@@ -14,45 +14,44 @@ namespace VPet_Simulator.Windows.Interface
     {
         public override string ItemType => "Food";
         /// <summary>
-        /// 食物类型
+        /// FoodType
         /// </summary>
         public enum FoodType
         {
             /// <summary>
-            /// 食物 (默认)
+            /// Food (Default)
             /// </summary>
             Food,
             /// <summary>
-            /// 收藏 (自定义)
             /// </summary>
             Star,
             /// <summary>
-            /// 正餐
+            /// Main Dishes
             /// </summary>
             Meal,
             /// <summary>
-            /// 零食
+            /// Snacks
             /// </summary>
             Snack,
             /// <summary>
-            /// 饮料
+            /// Drinks
             /// </summary>
             Drink,
             /// <summary>
-            /// 功能性
+            /// Functional
             /// </summary>
             Functional,
             /// <summary>
-            /// 药品
+            /// Medicine
             /// </summary>
             Drug,
             /// <summary>
-            /// 礼品
+            /// Gift
             /// </summary>
             Gift,
         }
         /// <summary>
-        /// 食物类型
+        /// FoodType
         /// </summary>
         [Line(type: ConvertType.ToEnum, ignoreCase: true)]
         public FoodType Type { get; set; } = FoodType.Food;
@@ -73,7 +72,7 @@ namespace VPet_Simulator.Windows.Interface
         public double Likability { get; set; }
 
         /// <summary>
-        /// 描述(ToBetterBuy)
+        /// descriptions(ToBetterBuy)
         /// </summary>
 
         public override string Description
@@ -90,13 +89,13 @@ namespace VPet_Simulator.Windows.Interface
             {
                 var dic = new Dictionary<string, double>()
                 {
-                    { LocalizeCore.Translate("经验值"), (double)Exp },
-                    { LocalizeCore.Translate("饱腹度"), StrengthFood },
-                    { LocalizeCore.Translate("口渴度"), StrengthDrink },
-                    { LocalizeCore.Translate("体力"), Strength },
-                    { LocalizeCore.Translate("心情"), Feeling },
-                    { LocalizeCore.Translate("健康"), Health },
-                    { LocalizeCore.Translate("好感度"), Likability },
+                    { LocalizeCore.Translate("EXP"), (double)Exp },
+                    { LocalizeCore.Translate("Hunger"), StrengthFood },
+                    { LocalizeCore.Translate("Thirst"), StrengthDrink },
+                    { LocalizeCore.Translate("Stamina"), Strength },
+                    { LocalizeCore.Translate("Mood"), Feeling },
+                    { LocalizeCore.Translate("Health"), Health },
+                    { LocalizeCore.Translate("Likeablilty"), Likability },
                 };
                 return dic.Where(kv => kv.Value != 0)
                     .ToDictionary(kv => kv.Key, kv => $"{(kv.Value > 0 ? "+" : "")}{kv.Value.ToString("f2")}");
@@ -105,29 +104,25 @@ namespace VPet_Simulator.Windows.Interface
 
        
         /// <summary>
-        /// 是否已收藏
         /// </summary>
         public override bool Star { get; set; }
        
         public bool? isoverload = null;
         /// <summary>
-        /// 当前物品推荐价格
         /// </summary>
         public double RealPrice => ((Exp / 3 + Strength / 5 + StrengthDrink / 3 + StrengthFood / 2 + Feeling / 6) / 3 + Health + Likability * 10);
         /// <summary>
-        /// 该食物是否超模
         /// </summary>
         public bool IsOverLoad()
         {
             if (isoverload == null)
             {
                 double relp = RealPrice;
-                isoverload = Price < (relp - 10) * 0.7;// Price > (relp + 10) * 1.3;// || Price < (relp - 10) * 0.7;//30%容错
+                isoverload = Price < (relp - 10) * 0.7;
             }
             return isoverload.Value;
         }
         /// <summary>
-        /// 加载物品图片
         /// </summary>
         public void LoadImageSource(IMainWindow imw)
         {
@@ -142,31 +137,29 @@ namespace VPet_Simulator.Windows.Interface
             if (eattime <= now)
             {
                 if (Type == FoodType.Meal || Type == FoodType.Snack || Type == FoodType.Drink || Type == FoodType.Gift)// || Type == FoodType.Limit)
-                    Data = "喜好度".Translate();
+                    Data = "Preference".Translate();
                 else
-                    Data = "有效度".Translate();
+                    Data = "Effectiveness".Translate();
                 Data += ":\t100%";
             }
             else
             {
                 if (Type == FoodType.Meal || Type == FoodType.Snack || Type == FoodType.Drink || Type == FoodType.Gift)// || Type == FoodType.Limit)
-                    Data = "喜好度".Translate();
+                    Data = "Preference".Translate();
                 else
-                    Data = "有效度".Translate();
+                    Data = "Effectiveness".Translate();
                 if (Type == FoodType.Gift)
                     Data += ":\t" + Math.Max(0.5, 1 - Math.Pow((eattime - now).TotalHours, 2) * 0.01).ToString("p0");
                 else
                     Data += ":\t" + Math.Max(0.5, 1 - Math.Pow((eattime - now).TotalHours, 2) * 0.02).ToString("p0");
-                Data += "\t\t" + "恢复".Translate() + ":\t" + (eattime).ToString("MM/dd HH");
+                Data += "\t\t" + "Restore".Translate() + ":\t" + (eattime).ToString("MM/dd HH");
             }
         }
         /// <summary>
-        /// 食用时显示的动画
         /// </summary>
         [Line(ignoreCase: true)]
         public string Graph { get; set; } = null;
         /// <summary>
-        /// 获取食用时显示的动画
         /// </summary>
         public string GetGraph()
         {
@@ -184,7 +177,6 @@ namespace VPet_Simulator.Windows.Interface
                 return Graph;
         }
         /// <summary>
-        /// 克隆食物对象
         /// </summary>
         public Food Clone()
         {

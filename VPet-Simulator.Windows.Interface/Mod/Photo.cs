@@ -39,43 +39,36 @@ public class Photo
         UnlockAble = new UnlockCondition(line);
     }
     /// <summary>
-    /// 图片所在ZIP
     /// </summary>
     public string Zip { get; set; }
     /// <summary>
-    /// 图片所在位置
     /// </summary>
     public string Path { get; set; }
 
     /// <summary>
-    /// 图片类型
     /// </summary>
     public enum PhotoType
     {
         /// <summary>
-        /// 默认类型
+        /// DefaultType
         /// </summary>
         ALL,
         /// <summary>
-        /// 插图 
+        /// Illustration
         /// </summary>
         Illustration,
         /// <summary>
-        /// 小图 (表情包,头像等)
         /// </summary>
         Thumbnail
     }
     /// <summary>
-    /// 图片类型
     /// </summary>
     public PhotoType Type { get; set; } = PhotoType.ALL;
     /// <summary>
-    /// 图片名字
     /// </summary>
     public string Name { get; set; }
     private string transname = null;
     /// <summary>
-    /// 图片名字 (翻译)
     /// </summary>
     public string TranslateName
     {
@@ -89,12 +82,11 @@ public class Photo
         }
     }
     /// <summary>
-    /// 标签
+    /// Tags
     /// </summary>
     public List<string> Tags { get; set; } = new List<string>();
     private List<string> tagstrans = null;
     /// <summary>
-    /// 标签 (翻译)
     /// </summary>
     public List<string> TagsTrans
     {
@@ -108,12 +100,12 @@ public class Photo
         }
     }
     /// <summary>
-    /// 描述
+    /// descriptions
     /// </summary>
     public string Description { get; set; }
 
     /// <summary>
-    /// 解锁条件
+    /// Unlock conditions
     /// </summary>
     public class UnlockCondition
     {
@@ -186,34 +178,25 @@ public class Photo
 
 
         /// <summary>
-        /// 解锁条件 (仅程序锁定显示)
         /// </summary>
-        public string LockString { get; set; } = "由程序锁定";
+        public string LockString { get; set; } = "Locked by program";
         /// <summary>
-        /// 是否强制锁定不可解锁, 仅限于程序手动解锁
         /// </summary>
         public bool Lock { get; set; } = false;
         /// <summary>
-        /// 是否不需要任何条件直接解锁
         /// </summary>
         public bool None { get; set; } = false;
         /// <summary>
-        /// 可花钱解锁
         /// </summary>
         public int SellPrice { get; set; } = -1;
         /// <summary>
-        /// 是否要满足条件后才能花钱解锁
         /// </summary>
         public bool SellBoth { get; set; } = false;
         /// <summary>
-        /// 判断统计内容条件
         /// </summary>
         public List<(string, int)> StatCheck { get; set; } = new List<(string, int)>();
         /// <summary>
-        /// 判断是否满足解锁条件 (不包括花钱)
         /// </summary>
-        /// <param name="save">游戏存档</param>
-        /// <returns>是否满足解锁条件</returns>
         public bool Check(GameSave_v2 save)
         {
             if (None)
@@ -225,7 +208,6 @@ public class Photo
                 return false;
             }
 
-            //先判断基础的           
             if (LevelMax > save.GameSave.LevelMax)
                 return false;
             if (save.GameSave.LevelMax != 0 && Level > save.GameSave.Level)
@@ -274,13 +256,11 @@ public class Photo
                         if (!CheckDate(new DateTime(now.Year, 12, 25)))
                             return false;
                         break;
-                        //case HolidayType.Player_Birthday: //TODO: 玩家生日
                         //    if (now.Month != save.GameSave.Birthday.Month || now.Day != save.GameSave.Birthday.Day)
                         //        return false;
                         //    break;
                 }
             }
-            //统计数据检查
             foreach (var (stat, value) in StatCheck)
             {
                 var statvalue = save.Statistics.GetInt(stat, -1);
@@ -300,41 +280,40 @@ public class Photo
 
             //if (SellPrice > 0)
             //    if (SellBoth)
-            //        sb.AppendLine("花费${0} 并 满足以下条件:".Translate(SellPrice));
+            // sb.AppendLine("Spend ${0} and meet the following conditions".Translate(SellPrice));
             //    else
-            //        sb.AppendLine("花费${0} 或 满足以下条件:".Translate(SellPrice));
+            //        sb.AppendLine("Spend ${0} or meet the following conditions".Translate(SellPrice));
 
-            //基础条件
 
             if (LevelMax > 0)
-                if (gamesave.GameSave.LevelMax == 0)//玩家不知道LevelMax, 用通俗易懂的方式解释下
-                    sb.AppendLine("等级要求: {0}".Translate(1000 + (LevelMax - 1) * 100));
+                if (gamesave.GameSave.LevelMax == 0)
+                    sb.AppendLine("Level: {0}".Translate(1000 + (LevelMax - 1) * 100));
                 else
                 {
-                    sb.AppendLine("等级突破要求: {0}".Translate(LevelMax));
+                    sb.AppendLine("Level Breakthrough: {0}".Translate(LevelMax));
                     if (Level > 0)
-                        sb.AppendLine("等级要求: {0}".Translate(Level));
+                        sb.AppendLine("Level: {0}".Translate(Level));
                 }
 
             else if (Level > 0)
-                sb.AppendLine("等级要求: {0}".Translate(Level));
+                sb.AppendLine("Level: {0}".Translate(Level));
             if (Money > 0)
-                sb.AppendLine("金钱要求: ${0}".Translate(Money));
+                sb.AppendLine("Monetary: ${0}".Translate(Money));
             if (Likability > 0)
-                sb.AppendLine("好感度要求: {0}".Translate(Likability));
+                sb.AppendLine("Favorability: {0}".Translate(Likability));
             if (Feeling > 0)
-                sb.AppendLine("心情要求: {0}".Translate(Feeling));
+                sb.AppendLine("Mood: {0}".Translate(Feeling));
             if (Date != null)
-                sb.AppendLine("解锁日期: {0}".Translate(Date.Value.ToString("MM-dd")));
+                sb.AppendLine("date: {0}".Translate(Date.Value.ToString("MM-dd")));
             if (Time != null)
-                sb.AppendLine("解锁时间: {0}".Translate(Time.Value.ToString("HH:mm")));
+                sb.AppendLine("time: {0}".Translate(Time.Value.ToString("HH:mm")));
             if (Holiday != HolidayType.None)
-                sb.AppendLine("解锁节日: {0}".Translate(Holiday.ToString().Translate()));
+                sb.AppendLine("festival: {0}".Translate(Holiday.ToString().Translate()));
 
-            //统计数据
+            // StatisticsData
             foreach (var (stat, value) in StatCheck)
             {
-                sb.AppendLine("{0}要求: {1}".Translate(
+                sb.AppendLine("{0}: {1}".Translate(
                    (stat.StartsWith("stat_") ? stat.Substring(5) : stat)
                     .Translate(), value));
             }
@@ -342,82 +321,63 @@ public class Photo
             return sb.ToString().Trim('\n', '\r');
         }
         /// <summary>
-        /// 需求等级
         /// </summary>
         public int Level { get; set; } = 0;
         /// <summary>
-        /// 需求突破次数
         /// </summary>
         public int LevelMax { get; set; } = 0;
         /// <summary>
-        /// 需求金钱(数量/并非消耗)
         /// </summary>
         public int Money { get; set; } = int.MinValue;
         /// <summary>
-        /// 需求好感度
         /// </summary>
         public int Likability { get; set; } = 0;
         /// <summary>
-        /// 需求心情
         /// </summary>
         public int Feeling { get; set; } = 0;
         /// <summary>
-        /// 解锁需求日期
         /// </summary>
         public DateOnly? Date { get; set; } = null;
         /// <summary>
-        /// 解锁需求时间
         /// </summary>
         public TimeOnly? Time { get; set; } = null;
         /// <summary>
-        /// 日期偏移容错(天)
         /// </summary>
         public int DateOffset { get; set; } = 2;
         /// <summary>
-        /// 时间偏移容错(分钟)
         /// </summary>
         public int TimeOffset { get; set; } = 60;
         /// <summary>
-        /// 节假日解锁
         /// </summary>
         public enum HolidayType
         {
             /// <summary>
-            /// 不启用
             /// </summary>
             None,
             /// <summary>
-            /// 中秋
             /// </summary>
             Mid_Autumn_Festival,
             /// <summary>
-            /// 端午
             /// </summary>
             Dragon_Boat_Festival,
             /// <summary>
-            /// 新年
             /// </summary>
             New_Years_Day,
             /// <summary>
-            /// 春节
             /// </summary>
             Spring_Festival,
             /// <summary>
-            /// 圣诞
             /// </summary>
             Christmas,
             /// <summary>
-            /// 生日(玩家)
             /// </summary>
             Player_Birthday,
         }
         /// <summary>
-        /// 节假日
         /// </summary>
         public HolidayType Holiday { get; set; } = HolidayType.None;
 
         /// <summary>
-        /// 检查日期是否符合
         /// </summary>
         public bool CheckDate(DateTime date)
         {
@@ -425,7 +385,6 @@ public class Photo
             return date < now && date.AddDays(DateOffset) > now;
         }
         /// <summary>
-        /// 检查农历日期偏差
         /// </summary>
         public static DateTime GetLunarDate(int month, int day)
         {
@@ -435,12 +394,11 @@ public class Photo
         }
     }
     /// <summary>
-    /// 解锁条件
+    /// Unlock conditions
     /// </summary>
     public UnlockCondition UnlockAble { get; set; }
 
     /// <summary>
-    /// 玩家数据
     /// </summary>
     public class Info
     {
@@ -458,11 +416,10 @@ public class Photo
         }
     }
     /// <summary>
-    /// 玩家数据
     /// </summary>
     public Info PlayerInfo { get; set; } = null;
     /// <summary>
-    /// 是否收藏
+    /// YesNoFavorites
     /// </summary>
     public bool IsStar
     {
@@ -470,11 +427,10 @@ public class Photo
         set { if (PlayerInfo != null) PlayerInfo.Star = value; }
     }
     /// <summary>
-    /// 是否解锁
+    /// Unlock or not
     /// </summary>
     public bool IsUnlock => PlayerInfo != null;
     /// <summary>
-    /// 解锁这张图片
     /// </summary>
     public void Unlock(IMainWindow imw)
     {
@@ -493,27 +449,20 @@ public class Photo
     }
 
     /// <summary>
-    /// 创建缩略图 (以最小的为准)
     /// </summary>   
-    /// <param name="originalImage">原图</param>
-    /// <param name="width">长度</param>
-    /// <param name="height">高度</param>
     /// <returns></returns>
     public static BitmapSource ConvertToThumbnail(BitmapImage originalImage, int width, int height)
     {
-        // 创建一个 RenderTargetBitmap
         if (originalImage.Width < width && originalImage.Height < height
             || width == 0
             || height == 0)
         {
             return originalImage;
         }
-        // 计算缩放比例
         double scaleX = (double)width / originalImage.PixelWidth;
         double scaleY = (double)height / originalImage.PixelHeight;
-        double scale = Math.Min(scaleX, scaleY); // 选择较小的比例以保持纵横比
+        double scale = Math.Min(scaleX, scaleY);
 
-        // 计算缩放后的尺寸
         int scaledWidth = (int)(originalImage.PixelWidth * scale);
         int scaledHeight = (int)(originalImage.PixelHeight * scale);
 
@@ -522,7 +471,6 @@ public class Photo
 
         using (DrawingContext drawingContext = visual.RenderOpen())
         {
-            // 绘制图像
             drawingContext.DrawImage(originalImage, new Rect(0, 0, scaledWidth, scaledHeight));
         }
 
@@ -530,49 +478,39 @@ public class Photo
         return renderBitmap;
     }
     /// <summary>
-    /// 创建灰度图 (未解锁)
     /// </summary>
-    /// <param name="originalImage">原图</param>
     /// <returns></returns>
     public static BitmapSource ConvertToGrayScale(BitmapSource originalImage)
     {
-        // 创建 WriteableBitmap
+        // Create WriteableBitmap
         WriteableBitmap writeableBitmap = new WriteableBitmap(originalImage);
         int width = writeableBitmap.PixelWidth;
         int height = writeableBitmap.PixelHeight;
 
-        // 获取像素数据
         int[] pixels = new int[width * height];
         writeableBitmap.CopyPixels(pixels, width * 4, 0);
 
-        // 转换为灰度
         for (int i = 0; i < pixels.Length; i++)
         {
-            // 获取 ARGB 颜色
             byte a = (byte)((pixels[i] >> 24) & 0xff); // Alpha
             byte r = (byte)((pixels[i] >> 16) & 0xff); // Red
             byte g = (byte)((pixels[i] >> 8) & 0xff);  // Green
             byte b = (byte)(pixels[i] & 0xff);         // Blue
 
-            // 计算灰度值
-            byte gray = (byte)((r + g + b) / 3); // 可以使用其他公式来计算灰度
+            byte gray = (byte)((r + g + b) / 3);
 
-            // 设置新的灰度像素值
             pixels[i] = (a << 24) | (gray << 16) | (gray << 8) | gray; // ARGB
         }
 
-        // 创建新的 WriteableBitmap
         WriteableBitmap grayBitmap = new WriteableBitmap(width, height, writeableBitmap.DpiX, writeableBitmap.DpiY, PixelFormats.Pbgra32, null);
         grayBitmap.WritePixels(new Int32Rect(0, 0, width, height), pixels, width * 4, 0);
 
         return grayBitmap;
     }
     /// <summary>
-    /// 获得当前图片图片
     /// </summary>
     public BitmapImage GetImage(IMainWindow imw)
     {
-        //解压zip
         string zippath = imw.FileSources.FindSource(Zip + ".zlps");
         if (zippath == null)
         {
@@ -584,25 +522,23 @@ public class Photo
         }
         using (ZipArchive archive = ZipFile.OpenRead(zippath))
         {
-            // 找到指定的文件
             ZipArchiveEntry entry = archive.GetEntry(Path);
             if (entry != null)
             {
                 using (Stream stream = entry.Open())
                 {
-                    // 将流内容复制到内存流中
                     using (MemoryStream memoryStream = new MemoryStream())
                     {
                         stream.CopyTo(memoryStream);
-                        memoryStream.Position = 0; // 重置内存流的位置
+                        memoryStream.Position = 0;
 
-                        // 创建 BitmapImage
+                        // Create BitmapImage
                         BitmapImage bitmap = new BitmapImage();
                         bitmap.BeginInit();
-                        bitmap.StreamSource = memoryStream; // 使用内存流
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad; // 立即加载
+                        bitmap.StreamSource = memoryStream;
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
                         bitmap.EndInit();
-                        bitmap.Freeze(); // 使 BitmapImage 可以在不同线程中使用
+                        bitmap.Freeze();
                         return bitmap;
                     }
                 }
@@ -614,13 +550,10 @@ public class Photo
         }
     }
     /// <summary>
-    /// 获取适用于GIF的图片
     /// </summary>
     public BitmapImage GetGifImage(IMainWindow imw)
-    {   //不要看 GIF图片和普通图片读取代码差不多, 实际上一旦回收了MemoryStream, GIF图片控件加载就会出问题
-        //但是这个方法不回收MemoryStream, 占用内存更多, 为了节省内存, 普通图片用GetImage, GIF图片用这个
+    {
 
-        // 解压zip
         string zippath = imw.FileSources.FindSource(Zip + ".zlps");
         if (zippath == null)
         {
@@ -633,25 +566,23 @@ public class Photo
 
         using (ZipArchive archive = ZipFile.OpenRead(zippath))
         {
-            // 找到指定的文件
             ZipArchiveEntry entry = archive.GetEntry(Path);
             if (entry != null)
             {
                 using (Stream stream = entry.Open())
                 {
-                    // 创建一个新的 MemoryStream
                     var memstr = new MemoryStream();
-                    stream.CopyTo(memstr); // 将流内容复制到 MemoryStream
+                    stream.CopyTo(memstr);
 
-                    // 创建 BitmapImage
+                    // Create BitmapImage
                     var bitmap = new BitmapImage();
                     bitmap.BeginInit();
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad; // 立即加载
-                    bitmap.StreamSource = memstr; // 设置流源
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = memstr;
                     bitmap.EndInit();
-                    bitmap.Freeze(); // 使 BitmapImage 可以在不同线程中使用
+                    bitmap.Freeze();
 
-                    return bitmap; // 返回 BitmapImage
+                    return bitmap;
                 }
             }
             else
@@ -664,17 +595,13 @@ public class Photo
 
 
     /// <summary>
-    /// 保存到文件夹时自动转换
     /// </summary>
-    /// <param name="savedir">文件夹</param>
     public string FilePath(string savedir) => savedir + '\\' + FilePath();
     /// <summary>
-    /// 保存到文件夹时自动转换
     /// </summary>
     public string FilePath()
     {
         var filepath = TranslateName;
-        // 不允许的符号列表
         char[] illegalChars = { '\\', '/', ':', '*', '?', '"', '<', '>', '|' };
         foreach (char c in illegalChars)
         {
@@ -683,11 +610,9 @@ public class Photo
         return filepath.Replace(' ', '_') + '.' + Path.Split('.').Last();
     }
     /// <summary>
-    /// 图片另存为文件
     /// </summary>
     public void SaveAs(IMainWindow imw, string filepath)
     {
-        //解压zip
         string zippath = imw.FileSources.FindSource(Zip + ".zlps");
         if (zippath == null)
         {
@@ -699,17 +624,13 @@ public class Photo
         }
         using (ZipArchive archive = ZipFile.OpenRead(zippath))
         {
-            // 找到指定的文件
             ZipArchiveEntry entry = archive.GetEntry(Path);
             if (entry != null)
             {
-                // 打开源文件流
                 using (Stream sourceStream = entry.Open())
                 {
-                    // 创建目标文件流
                     using (FileStream destinationStream = new FileStream(filepath, FileMode.Create, FileAccess.Write))
                     {
-                        // 将源文件流复制到目标文件流
                         sourceStream.CopyTo(destinationStream);
                     }
                 }
@@ -721,11 +642,9 @@ public class Photo
         }
     }
     /// <summary>
-    /// 复制图片到剪贴板
     /// </summary>
     public bool CopyImageToClipboard(IMainWindow imw)
     {
-        // 解压zip
         string zippath = imw.FileSources.FindSource(Zip + ".zlps");
         if (zippath == null)
         {
@@ -735,7 +654,6 @@ public class Photo
         {
             return false;
         }
-        //先看看缓存里面有没有        
         if (!Directory.Exists(System.IO.Path.Combine(GraphCore.CachePath, "photo")))
         {
             Directory.CreateDirectory(System.IO.Path.Combine(GraphCore.CachePath, "photo"));
@@ -745,17 +663,13 @@ public class Photo
         {
             using (ZipArchive archive = ZipFile.OpenRead(zippath))
             {
-                // 找到指定的文件
                 ZipArchiveEntry entry = archive.GetEntry(Path);
                 if (entry != null)
                 {
-                    // 打开源文件流
                     using (Stream sourceStream = entry.Open())
                     {
-                        // 创建目标文件流
                         using (FileStream destinationStream = new FileStream(filepath, FileMode.Create, FileAccess.Write))
                         {
-                            // 将源文件流复制到目标文件流
                             sourceStream.CopyTo(destinationStream);
                         }
                     }
@@ -767,11 +681,9 @@ public class Photo
             }
         }
 
-        // 创建一个 DataObject 并将文件路径添加到 DataObject 中
         DataObject dataObject = new DataObject();
         dataObject.SetFileDropList(new System.Collections.Specialized.StringCollection { filepath });
 
-        // 将 DataObject 设置为剪贴板内容
         Clipboard.SetDataObject(dataObject);
 
         return true;

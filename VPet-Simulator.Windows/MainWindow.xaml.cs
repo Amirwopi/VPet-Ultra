@@ -26,7 +26,6 @@ using Line = LinePutScript.Line;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// MainWindow.xaml 的交互逻辑
     /// </summary>
     public partial class MainWindow : WindowX
     {
@@ -36,14 +35,12 @@ namespace VPet_Simulator.Windows
 
         public MainWindow()
         {
-            //处理ARGS
             Args = new LPS_D();
             foreach (var str in App.Args)
             {
                 Args.Add(new Line(str));
             }
 
-            //存档前缀
             if (Args.ContainsLine("prefix"))
             {
                 PrefixSave = '-' + Args["prefix"].Info;
@@ -83,7 +80,6 @@ namespace VPet_Simulator.Windows
             CultureInfo.CurrentCulture = new CultureInfo(CultureInfo.CurrentCulture.Name);
             CultureInfo.CurrentCulture.NumberFormat = new CultureInfo("en-US").NumberFormat;
 
-            //更新存档系统
             if (Directory.Exists(ExtensionValue.BaseDirectory + @"\BackUP"))
             {
                 if (!Directory.Exists(ExtensionValue.BaseDirectory + @"\Saves"))
@@ -106,7 +102,6 @@ namespace VPet_Simulator.Windows
 
             Task.Run(async () =>
             {
-                //加载所有MOD
                 List<DirectoryInfo> Path = new List<DirectoryInfo>();
                 Path.AddRange(new DirectoryInfo(ModPath).EnumerateDirectories());
 
@@ -114,7 +109,6 @@ namespace VPet_Simulator.Windows
                 CancellationTokenSource source = new CancellationTokenSource();
                 var tsk = Task.Run(async () =>
                 {
-                    //非Steam版本: 仅从本地设置加载workshop路径
                     var workshop = Set["workshop"];
                     foreach (Sub ws in workshop)
                     {
@@ -138,7 +132,6 @@ namespace VPet_Simulator.Windows
 
 
                 Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "Loading Translate")).Wait();
-                //加载语言
                 LocalizeCore.StoreTranslation = true;
                 if (Set.Language == "null")
                 {
@@ -150,7 +143,6 @@ namespace VPet_Simulator.Windows
                 else
                     LocalizeCore.LoadCulture(Set.Language);
 
-                //旧版本设置兼容
                 var cgpte = Set.FindLine("CGPT");
                 if (cgpte != null)
                 {
@@ -169,20 +161,18 @@ namespace VPet_Simulator.Windows
                     }
                 }
                 else if (Set["CGPT"][(gstr)"type"] == "OFF")
-                {//为老玩家开启选项聊天功能
+                {
                     Set["CGPT"][(gstr)"type"] = "LB";
                 }
-                else//新玩家,默认设置为
+                else
                     Set["CGPT"][(gstr)"type"] = "LB";
 
                 await GameLoad(Path);
 
 
-                //这里写的都是限定第一个MW使用的功能, 如果写共通, 请前往
 
-                //物品初始使用方法
                 Item.UseAction.Add("Food", [(imw,Item) =>
-                  {//食物: 默认直接吃掉
+                  {
                       if(Item is Food food)
                       {
                           imw.TakeItem(food);
@@ -194,7 +184,7 @@ namespace VPet_Simulator.Windows
                       return false;
                   }]);
                 Item.UseAction.Add("Toy", [(imw,Item) =>
-                  {//玩具: 默认播放玩耍动画
+                  {
                        var graph = imw.Core.Graph.FindGraph(Item.Data, AnimatType.A_Start, imw.GameSavesData.GameSave.Mode);
                        imw.ActivityLogs.Add(new ActivityLog("al_take_item", Item.TranslateName));
                       if (graph == null)
@@ -206,7 +196,7 @@ namespace VPet_Simulator.Windows
                                 }
                                 else
                                 {
-                                    imw.Main.SayRnd("这个玩具好像不能玩耍呢".Translate());
+                                    imw.Main.SayRnd("This toy doesn't seem to be playable".Translate());
                                 }
                           return true;
                           }
@@ -215,11 +205,10 @@ namespace VPet_Simulator.Windows
                         return true;
                   }]);
                 Item.UseAction.Add("Mail", [
-                //排在前面的方法优先级更高
                 (imw,Item) => {
                       switch (Item.Name)
                       {
-                          case "每日礼包": //每日随机礼盒: 打开后获得随机3个物品 每天获得一个
+                          case "Daily Gift Pack":
                               var moneylimit = Math.Min(20000, (50 * (imw.GameSavesData.GameSave.LevelMax + 1) + imw.GameSavesData.GameSave.Level +1) * 50);
                               var chosenfood = imw.Foods.FindAll(x=>x.Price > 10 && x.Price < moneylimit);
                               if(chosenfood.Count == 0)
@@ -233,7 +222,7 @@ namespace VPet_Simulator.Windows
                       return false;
                   },
                    (imw,Item) =>
-                  {//邮件: 打开后获得物品
+                  {
                      var lps = new LpsDocument(Item.Data);
                       List<string> itemnames = new List<string>();
                       foreach(var line in lps)
@@ -245,16 +234,16 @@ namespace VPet_Simulator.Windows
                       }
                       if(itemnames.Count != 0)
                       {
-                          Main.SayRnd("你打开了{0},获得了物品".Translate(Item.Name) +"\n" + string.Join(',',itemnames));
+                          Main.SayRnd("You opened {0} and obtained an item".Translate(Item.Name) +"\n" + string.Join(',',itemnames));
                       }
                       Item.Consume(this);
                      return true;
                   }]);
                 Item.UseAction.Add("Tool", [(imw,Item) =>
-                  {//工具: 每个工具有自己的使用方法
+                  {
                      switch (Item.Name)
                       {
-                          case "指南针":
+                          case "Compass":
                                imw.Main.DisplayMove();
                               return true;
                       }
@@ -287,7 +276,6 @@ namespace VPet_Simulator.Windows
             CloseConfirm = false;
             try
             {
-                //关闭所有插件
                 foreach (MainPlugin mp in Plugins)
                     mp.EndGame();
             }
@@ -314,7 +302,7 @@ namespace VPet_Simulator.Windows
             {
                 Task.Run(() =>
                 {
-                    Thread.Sleep(10000);//等待10秒不退出强退
+                    Thread.Sleep(10000);
                     Environment.Exit(0);
                 });
                 try
@@ -433,7 +421,6 @@ namespace VPet_Simulator.Windows
 
             }
             GameSavesData = new GameSave_v2(petname.Translate());
-            //看看有没有备份,和备份对比下 (新建游戏)
             CheckBackupConsistency(GameSavesData, "New Game");
             Core.Save = GameSavesData.GameSave;
             HashCheck = HashCheck;
@@ -441,7 +428,6 @@ namespace VPet_Simulator.Windows
         }
 
         /// <summary>
-        /// 尝试加载指定存档文件
         /// </summary>
         /// <param name="saveFilePath"></param>
         /// <returns></returns>
@@ -455,7 +441,6 @@ namespace VPet_Simulator.Windows
 #endif
             var content = File.ReadAllText(saveFilePath);
             GameSave_v2 gs = new GameSave_v2(new LPS(content));
-            // 检查备份一致性
             CheckBackupConsistency(gs, new FileInfo(saveFilePath).Name);
 
             if (SavesLoad(new LPS(content)))
@@ -464,14 +449,13 @@ namespace VPet_Simulator.Windows
             }
             catch (Exception ex)
             {
-                MessageBoxX.Show("存档损毁,无法加载该存档\n可能是数据溢出/超模导致的" + '\n' + ex.Message, "存档损毁".Translate());
+                MessageBoxX.Show("Archive damage, unable to load the archive\\nIt may be caused by data overflow/overmodel" + '\n' + ex.Message, "Archive damage".Translate());
             }
 #endif
             return false;
         }
 
         /// <summary>
-        /// 与最新备份对比并提示用户
         /// </summary>
         private void CheckBackupConsistency(GameSave_v2 gs, string currentName)
         {
@@ -490,16 +474,14 @@ namespace VPet_Simulator.Windows
                             gs2.GameSave.Exp == gs.GameSave.Exp &&
                             gs2.GameSave.Money == gs.GameSave.Money))
                         {
-                            //和备份不一样,说明可能有问题, 提示用户
-                            MessageBox.Show("检测到存档和备份不一致\n当前存档:{0} Lv{1} ${4:f0}\n备份存档:{2} Lv{3} ${5:f0}\n如需还原请在设置中加载备份还原存档"
+                            MessageBox.Show("Detected discrepancy between save and backup.\\nCurrent Save: {0} Lv{1} ${4:f0}\\nBackup Save: {2} Lv{3} ${5:f0}\\nTo restore, please load the backup from settings."
                                 .Translate(currentName, gs.GameSave.Level, bks.Name, gs2.GameSave.Level, gs.GameSave.Money, gs2.GameSave.Money)
-                                , "存档不一致提示".Translate());
+                                , "".Translate());
 
                         }
                     }
                     catch
                     {
-                        //备份损坏了,那就不管了
                     }
                 }
             }
@@ -553,7 +535,6 @@ namespace VPet_Simulator.Windows
             CloseConfirm = false;
             try
             {
-                //关闭所有插件
                 foreach (MainPlugin mp in Plugins)
                     mp.EndGame();
             }
@@ -576,11 +557,6 @@ namespace VPet_Simulator.Windows
             //SetWindowLong(hwnd, GWL_EXSTYLE, extendedStyle | WS_EX_TRANSPARENT);
             ((HwndSource)PresentationSource.FromVisual(this)).AddHook((IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) =>
             {
-                //想要让窗口透明穿透鼠标和触摸等，需要同时设置 WS_EX_LAYERED 和 WS_EX_TRANSPARENT 样式，
-                //确保窗口始终有 WS_EX_LAYERED 这个样式，并在开启穿透时设置 WS_EX_TRANSPARENT 样式
-                //但是WPF窗口在未设置 AllowsTransparency = true 时，会自动去掉 WS_EX_LAYERED 样式（在 HwndTarget 类中)，
-                //如果设置了 AllowsTransparency = true 将使用WPF内置的低性能的透明实现，
-                //所以这里通过 Hook 的方式，在不使用WPF内置的透明实现的情况下，强行保证这个样式存在。
                 if (msg == (int)Win32.WM.STYLECHANGING && (long)wParam == (long)Win32.GetWindowLongFields.GWL_EXSTYLE)
                 {
                     var styleStruct = (STYLESTRUCT)Marshal.PtrToStructure(lParam, typeof(STYLESTRUCT));
@@ -611,7 +587,6 @@ namespace VPet_Simulator.Windows
             }
         }
         /// <summary>
-        /// 设置点击穿透到后面透明的窗口
         /// </summary>
         public void SetTransparentHitThrough()
         {
@@ -649,15 +624,7 @@ namespace VPet_Simulator.Windows
             petHelper?.SetLocation();
         }
         /// <summary>
-        /// 显示输入框
         /// </summary>
-        /// <param name="title">标题</param>
-        /// <param name="text">文本</param>
-        /// <param name="defaulttext">默认文本</param>
-        /// <param name="ENDAction">结束事件</param>
-        /// <param name="AllowMutiLine">是否允许多行输入</param>
-        /// <param name="TextCenter">文本居中</param>
-        /// <param name="CanHide">能否隐藏</param>
         public void ShowInputBox(string title, string text, string defaulttext, Action<string> ENDAction, bool AllowMutiLine = false, bool TextCenter = true, bool CanHide = false)
         {
             winInputBox.Show(this, title, text, defaulttext, ENDAction, AllowMutiLine, TextCenter, CanHide);

@@ -14,7 +14,6 @@ using VPet_Simulator.Core;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// winReport.xaml 的交互逻辑
     /// </summary>
     public partial class winReport : WindowX
     {
@@ -27,7 +26,7 @@ namespace VPet_Simulator.Windows
             mainw.Windows.Add(this);
             InitializeComponent();
             mw = mainw;
-            Title = "反馈中心".Translate() + ' ' + mw.PrefixSave;
+            Title = "Feedback".Translate() + ' ' + mw.PrefixSave;
             save = mw?.Core?.Save?.ToLine().ToString() + mw.Set?.ToString();
             if (errmsg != null)
             {
@@ -43,18 +42,18 @@ namespace VPet_Simulator.Windows
         }
 
         private void tUpload_Click(object sender, RoutedEventArgs e)
-        {//游戏设置比存档更重要,桌宠大部分内容存设置里了,所以一起上传
+        {
             if (tUpload.IsChecked == true)
                 save = mw.Core.Save.ToLine().ToString() + mw.Set.ToString();
             else
-                save = "玩家取消上传存档".Translate();
+                save = "Player cancels uploading saved".Translate();
         }
 
         private void btn_upload(object sender, RoutedEventArgs e)
         {
             if (tDescription.Text == "" && tType.SelectedIndex != 0)
             {
-                MessageBoxX.Show("问题详细描述是反馈具体问题\n例如如何触发这个报错,游戏有什么地方不合理等".Translate(), "请填写问题描述".Translate());
+                MessageBoxX.Show("Detailed description of the problem is feedback on the specific problem\\nLike how to get this errors, What is unreasonable about the game.".Translate(), "Please fill in a description of the problem".Translate());
                 return;
             }
             MainGrid.IsEnabled = false;
@@ -66,7 +65,6 @@ namespace VPet_Simulator.Windows
 #else
                 string _url = "https://report.exlb.net/VPET/Report";
 #endif
-            //参数
             StringBuilder sb = new StringBuilder();
             sb.Append("action=error");
             sb.Append("&type=" + HttpUtility.UrlEncode(tType.Text));
@@ -95,29 +93,29 @@ namespace VPet_Simulator.Windows
                         gridLoading.Visibility = Visibility.Collapsed;
                         if (responseString == "Report Error Success")
                         {
-                            MessageBoxX.Show("您的反馈已提交成功,感谢您的反馈与提交\nVOS将会尽快处理您的反馈并做的更好".Translate(), "感谢您的反馈和提交".Translate());
+                            MessageBoxX.Show("Feedback success submitted. Thank you for your feedback and submit\\nVOS will process your feedback as soon as possible and do better".Translate(), "Thank you for your feedback and submit".Translate());
                             Close();
                         }
                         else if (responseString == "IP times Max")
                         {
                             mw.Set.DiagnosisDayEnable = false;
-                            MessageBoxX.Show("您今天的反馈次数已达上限,请明天再来反馈.\n或欢迎加入虚拟主播模拟器群430081239反馈问题".Translate(), "您今天的反馈次数已达上限".Translate(), MessageBoxButton.OK, MessageBoxIcon.Error);
+                            MessageBoxX.Show("You've reached your maximum number of feedback today, please come back tomorrow for feedback.\\nOr go the https://github.com/LorisYounger/VPet for feedback problem".Translate(), "You've reached your maximum number of feedback today".Translate(), MessageBoxButton.OK, MessageBoxIcon.Error);
                         }
                         else if (responseString.StartsWith("ReportMessage:"))
                         {
-                            MessageBoxX.Show(responseString.Substring(14), "感谢您的反馈和提交".Translate());
+                            MessageBoxX.Show(responseString.Substring(14), "Thank you for your feedback and submit".Translate());
                             Close();
                         }
                         else
                         {
-                            MessageBoxX.Show("反馈上传失败\n欢迎加入虚拟主播模拟器群430081239手动反馈问题\n服务器消息:".Translate() + responseString, "反馈提交失败,遇到错误".Translate(), MessageBoxButton.OK, MessageBoxIcon.Error);
+                            MessageBoxX.Show("Feedback submit failed\\nWelcome to the https://github.com/LorisYounger/VPet for feedback\\nServer Message".Translate() + responseString, "Feedback submit failed with error".Translate(), MessageBoxButton.OK, MessageBoxIcon.Error);
                         }
                         MainGrid.IsEnabled = true;
                     });
                 }
                 catch (Exception exp)
                 {
-                    Dispatcher.Invoke(() => MessageBoxX.Show("反馈上传失败,可能是网络或其他问题导致无法上传\n欢迎加入虚拟主播模拟器群430081239手动反馈问题\n".Translate() + exp.ToString(), "反馈提交失败,遇到错误".Translate(), MessageBoxButton.OK, MessageBoxIcon.Error));
+                    Dispatcher.Invoke(() => MessageBoxX.Show("Feedback submit failed, may be a network or other issue preventing the upload\\nWelcome to the https://github.com/LorisYounger/VPet for feedback\\n".Translate() + exp.ToString(), "Feedback submit failed with error".Translate(), MessageBoxButton.OK, MessageBoxIcon.Error));
                 }
                 Dispatcher.Invoke(() => MainGrid.IsEnabled = true);
             });
@@ -165,7 +163,7 @@ namespace VPet_Simulator.Windows
                     tContent.Text = sb.ToString();
                     if (string.IsNullOrEmpty(tContent.Text))
                     {
-                        tContent.Text = "没有需要提交的翻译的内容".Translate();
+                        tContent.Text = "There are no translations that need to be submitted".Translate();
                     }
                     tUpload.IsChecked = false;
                 }

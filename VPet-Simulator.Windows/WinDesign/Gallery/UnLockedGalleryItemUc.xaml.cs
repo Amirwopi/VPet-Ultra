@@ -19,7 +19,6 @@ using VPet_Simulator.Windows.Interface;
 namespace VPet_Simulator.Windows.WinDesign.Gallery
 {
     /// <summary>
-    /// UnLockedGalleryItemUc.xaml 的交互逻辑
     /// </summary>
     public partial class UnLockedGalleryItemUc : UserControl
     {

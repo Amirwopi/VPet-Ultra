@@ -12,10 +12,8 @@ namespace VPet_Simulator.Windows.Interface
     public static class ExtensionFunction
     {
         /// <summary>
-        /// 工作获取效率
         /// </summary>
-        /// <param name="work">工作</param>
-        /// <returns>工作获取效率</returns>
+        /// <param name="Work">Work</param>
         public static double Get(this Work work)
         {
             if (work.Type == Work.WorkType.Work)
@@ -24,35 +22,32 @@ namespace VPet_Simulator.Windows.Interface
                 return MathPow((Math.Abs(work.MoneyBase) * (1 + work.FinishBonus / 2) + 1) / 10, 1.25);
         }
         /// <summary>
-        /// 求幂(带符号)
         /// </summary>
         public static double MathPow(double value, double pow)
         {
             return Math.Pow(Math.Abs(value), pow) * Math.Sign(value);
         }
         /// <summary>
-        /// 工作花费效率
+        /// WorkSpendEfficiency
         /// </summary>
-        /// <param name="work">工作</param>
-        /// <returns>工作花费效率</returns>
+        /// <param name="Work">Work</param>
+        /// <returns>WorkSpendEfficiency</returns>
         public static double Spend(this Work work)
         {
             return (MathPow(work.StrengthFood, 1.5) / 3 + MathPow(work.StrengthDrink, 1.5) / 4 + MathPow(work.Feeling, 1.5) / 4 +
                 work.LevelLimit / 10.0 + MathPow(work.StrengthFood + work.StrengthDrink + work.Feeling, 1.5) / 10) * 3;
         }
         /// <summary>
-        /// 判断这个工作是否超模
         /// </summary>
-        /// <param name="work">工作</param>
-        /// <returns>是否超模</returns>
+        /// <param name="Work">Work</param>
         public static bool IsOverLoad(this Work work)
-        {//判断这个工作是否超模
+        {
             if (work.LevelLimit < 0)
                 work.LevelLimit = 0;
             if (work.FinishBonus < 0)
                 work.FinishBonus = 0;
             if (work.Type == Work.WorkType.Play && work.Feeling > 0)
-                work.Feeling *= -1;//旧版本代码兼容
+                work.Feeling *= -1;
             if (work.Time < 10)
                 work.Time = 10;
             if (work.FinishBonus > 2)
@@ -66,12 +61,11 @@ namespace VPet_Simulator.Windows.Interface
             var lvlimit = 1.1 * work.LevelLimit + 10;
             if (work.Type != Work.WorkType.Work)
                 lvlimit *= 10;
-            if (Math.Abs(work.MoneyBase) > lvlimit) //等级获取速率限制
+            if (Math.Abs(work.MoneyBase) > lvlimit)
                 return true;
-            return rel > 1.4; // 推荐rel为1左右 超过1.3就是超模
+            return rel > 1.4;
         }
         /// <summary>
-        /// 为所有工作进行1.2倍效率修正
         /// </summary>
         /// <param name="work"></param>
         public static void FixOverLoad(this Work work)
@@ -81,7 +75,7 @@ namespace VPet_Simulator.Windows.Interface
             if (work.FinishBonus < 0)
                 work.FinishBonus = 0;
             if (work.Type == Work.WorkType.Play && work.Feeling > 0)
-                work.Feeling *= -1;//旧版本代码兼容
+                work.Feeling *= -1;
             if (work.Time < 10)
                 work.Time = 10;
             if (work.FinishBonus > 2)
@@ -107,7 +101,6 @@ namespace VPet_Simulator.Windows.Interface
                 work.MoneyBase = Math.Min(work.MoneyBase, lvlimit);
             }
 
-            // 如果仍然不合理，设定一个默认值
             if (work.IsOverLoad())
             {
                 switch (work.Type)
@@ -140,7 +133,6 @@ namespace VPet_Simulator.Windows.Interface
             }
         }
         /// <summary>
-        /// 将工作的属性值翻倍
         /// </summary>
         public static Work Double(this Work work, int value)
         {
@@ -158,23 +150,21 @@ namespace VPet_Simulator.Windows.Interface
         {
             var dic = new List<Tuple<string, double, string>>()
             {
-                    new Tuple<string, double, string>(LocalizeCore.Translate("经验值"), food.Exp, ValueToPlusPlus(food.Exp, 1 / 4, 5)),
-                     new Tuple<string, double, string>(LocalizeCore.Translate("饱腹度"),food.StrengthFood, ValueToPlusPlus(food.StrengthFood, 1 / 2, 5)) ,
-                     new Tuple<string, double, string>(LocalizeCore.Translate("口渴度"), food.StrengthDrink, ValueToPlusPlus(food.StrengthDrink, 1 / 2.5, 5)),
-                     new Tuple<string, double, string>(LocalizeCore.Translate("体力"),food.Strength, ValueToPlusPlus(food.Strength, 1 / 4, 5)),
-                     new Tuple<string, double, string>(LocalizeCore.Translate("心情"), food.Feeling, ValueToPlusPlus(food.Feeling, 1 / 3, 5)),
-                    new Tuple<string, double, string>(LocalizeCore.Translate("健康"),food.Health, ValueToPlusPlus(food.Health, 1, 5)) ,
-                     new Tuple<string, double, string>(LocalizeCore.Translate("好感度"),food.Likability, ValueToPlusPlus(food.Likability, 1.5, 5))
+                    new Tuple<string, double, string>(LocalizeCore.Translate("EXP"), food.Exp, ValueToPlusPlus(food.Exp, 1 / 4, 5)),
+                     new Tuple<string, double, string>(LocalizeCore.Translate("Hunger"),food.StrengthFood, ValueToPlusPlus(food.StrengthFood, 1 / 2, 5)) ,
+                     new Tuple<string, double, string>(LocalizeCore.Translate("Thirst"), food.StrengthDrink, ValueToPlusPlus(food.StrengthDrink, 1 / 2.5, 5)),
+                     new Tuple<string, double, string>(LocalizeCore.Translate("Stamina"),food.Strength, ValueToPlusPlus(food.Strength, 1 / 4, 5)),
+                     new Tuple<string, double, string>(LocalizeCore.Translate("Mood"), food.Feeling, ValueToPlusPlus(food.Feeling, 1 / 3, 5)),
+                    new Tuple<string, double, string>(LocalizeCore.Translate("Health"),food.Health, ValueToPlusPlus(food.Health, 1, 5)) ,
+                     new Tuple<string, double, string>(LocalizeCore.Translate("Likeablilty"),food.Likability, ValueToPlusPlus(food.Likability, 1.5, 5))
                 };
             var dic2 = dic.Where(kv => kv.Item2 != 0)
                          .Select(x => x.Item1 + x.Item3);
             return string.Join("\n", dic2);
         }
         /// <summary>
-        /// 把值变成++
         /// </summary>
-        /// <param name="value">值</param>
-        /// <param name="magnification">倍率</param>
+        /// <param name="value">Value</param>
         /// <returns></returns>
         public static string ValueToPlusPlus(double value, double magnification, int max = 10)
         {
@@ -189,7 +179,6 @@ namespace VPet_Simulator.Windows.Interface
         }
 
         /// <summary>
-        /// 启动URL
         /// </summary>
         public static void StartURL(string url)
         {
@@ -213,11 +202,8 @@ namespace VPet_Simulator.Windows.Interface
         }
 
         /// <summary>
-        /// 吃食物 附带倍率
         /// </summary>
-        /// <param name="save">存档</param>
-        /// <param name="food">食物</param>
-        /// <param name="buff">默认1倍</param>
+        /// <param name="Food">Food</param>
         public static void EatFood(this IGameSave save, IFood food, double buff)
         {
             save.Exp += food.Exp * buff;
@@ -236,20 +222,14 @@ namespace VPet_Simulator.Windows.Interface
         }
     }
     /// <summary>
-    /// 扩展值
     /// </summary>
     public static partial class ExtensionValue
     {
         /// <summary>
-        /// 当前运行目录
         /// </summary>
         public static string BaseDirectory = new FileInfo(System.Reflection.Assembly.GetExecutingAssembly().Location).DirectoryName;
         /// <summary>
-        /// 获取MOD存储目录 (会自动创建/Steam云同步)
-        /// 但是还是建议以LPS形式存在Setting/Save里 不保证完整可靠性(可能会因为切换电脑等导致数据丢失)
         /// </summary>
-        /// <param name="modName">MOD名字</param>
-        /// <returns>目录地址</returns>
         public static string GetMODStorage(string modName)
         {
             var path = Path.Combine(BaseDirectory, "ModData");

@@ -14,15 +14,13 @@ using static VPet_Simulator.Windows.Interface.ScheduleTask;
 namespace VPet_Simulator.Windows;
 
 public partial class MainWindow
-{//主窗口部分数据
+{
 
 
     /// <summary>
-    /// 版本号
     /// </summary>
     public int version { get; } = 11068;
     /// <summary>
-    /// 版本号
     /// </summary>
     public string Version => $"{version / 10000}.{version % 10000 / 100}.{version % 100:00}";
     public List<LowText> LowFoodText { get; set; } = new List<LowText>();
@@ -33,7 +31,6 @@ public partial class MainWindow
 
     public List<ClickText> ClickTexts { get; set; } = new List<ClickText>();
     /// <summary>
-    /// 所有食物
     /// </summary>
     public List<Food> Foods { get; } = new List<Food>();
     public List<Photo> Photos { get; } = new List<Photo>();
@@ -78,46 +75,38 @@ public partial class MainWindow
     public ImageResources ImageSources { get; set; } = new ImageResources();
     public Resources FileSources { get; set; } = new Resources();
     /// <summary>
-    /// 动态资源, 用于给插件MOD存储共享的数据
     /// </summary>
     public Dictionary<string, object> DynamicResources { get; set; } = new Dictionary<string, object>();
 
     /// <summary>
-    /// 所有三方插件
     /// </summary>
     public List<MainPlugin> Plugins { get; } = new List<MainPlugin>();
     /// <summary>
-    /// 所有字体(位置)
     /// </summary>
     public List<IFont> Fonts { get; } = new List<IFont>();
     /// <summary>
-    /// 所有主题
     /// </summary>
     public List<Theme> Themes = new List<Theme>();
     /// <summary>
-    /// 当前启用主题
     /// </summary>
     public Theme Theme = null;
 
     /// <summary>
-    /// 日程表
+    /// Schedule
     /// </summary>
     public ScheduleTask ScheduleTask { get; set; }
 
     /// <summary>
-    /// 物品栏 桌宠有的物品
     /// </summary>
     public List<Item> Items { get; set; } = new List<Item>();
 
     
 
     /// <summary>
-    /// 所有可用套餐
     /// </summary>
     public List<PackageFull> SchedulePackage { get; set; } = new List<PackageFull>();
 
     /// <summary>
-    /// 活动日志 不会保存
     /// </summary>
     public ObservableCollection<ActivityLog> ActivityLogs { get; set; } = new ObservableCollection<ActivityLog>();
 }

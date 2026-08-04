@@ -25,7 +25,6 @@ using static VPet_Simulator.Windows.Win32;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// winGameSetting.xaml 的交互逻辑
     /// </summary>
     public partial class winGameSetting : WindowX
     {
@@ -43,7 +42,7 @@ namespace VPet_Simulator.Windows
             ////ImageWHY.Source = bit;
             //Console.WriteLine(DateTime.Now.ToString("mm:ss.fff"));
 
-            Title = "设置".Translate() + ' ' + mw.PrefixSave;
+            Title = "Settings".Translate() + ' ' + mw.PrefixSave;
             SettingMenuWidth.Width = new GridLength(LocalizeCore.GetDouble("SettingMenuWidth", 150));
             TopMostBox.IsChecked = mw.Set.TopMost;
             if (mw.Set.IsBiggerScreen)
@@ -181,13 +180,13 @@ namespace VPet_Simulator.Windows
             OpacitySlider.Value = mw.Set.Opacity;
 
 #if X64
-            GameVerison.Content = "游戏版本".Translate() + $"v{mw.Version} x64";
+            GameVerison.Content = "Game version ".Translate() + $"v{mw.Version} x64";
 #else
-            GameVerison.Content = "游戏版本".Translate() + $"v{mw.Version} x86";
+            GameVerison.Content = "Game version ".Translate() + $"v{mw.Version} x86";
 #endif
-            //关于ui
+            // Aboutui
             runUserName.Text = Environment.UserName;
-            runActivate.Text = "独立运行模式".Translate();
+            runActivate.Text = "Standalone mode".Translate();
             btn_fixdata.Visibility = Visibility.Collapsed;
             //CGPT
             if (mw.TalkAPI.Count > 0)
@@ -199,7 +198,7 @@ namespace VPet_Simulator.Windows
             }
             else
             {
-                cbChatAPISelect.Items.Add("暂无聊天API, 您可以通过订阅MOD添加".Translate());
+                cbChatAPISelect.Items.Add("There is no chat API yet, you can add it by subscribing to the mod.".Translate());
                 cbChatAPISelect.SelectedIndex = 0;
                 cbChatAPISelect.IsEnabled = false;
             }
@@ -207,27 +206,26 @@ namespace VPet_Simulator.Windows
             {
                 //case "API":
                 //    RBCGPTUseAPI.IsChecked = true;
-                //    BtnCGPTReSet.Content = "打开 ChatGPT API 设置".Translate();
+                // BtnCGPTReSet.Content = "Open ChatGPT API Settings".Translate();
                 //    break;
                 case "DIY":
                     RBCGPTDIY.IsChecked = true;
-                    BtnCGPTReSet.Content = "打开 {0} 设置".Translate(mw.TalkBoxCurr?.APIName ?? "Steam Workshop");
+                    BtnCGPTReSet.Content = "Open {0} Settings".Translate(mw.TalkBoxCurr?.APIName ?? "Steam Workshop");
                     break;
                 case "LB":
                     RBCGPTUseLB.IsChecked = true;
-                    BtnCGPTReSet.Content = "初始化桌宠聊天程序".Translate();
+                    BtnCGPTReSet.Content = "Initialize VPET chat program".Translate();
                     //if (!mf.IsSteamUser)
                     //    BtnCGPTReSet.IsEnabled = false;
                     break;
                 case "OFF":
                 default:
                     RBCGPTClose.IsChecked = true;
-                    BtnCGPTReSet.Content = "聊天框已关闭".Translate();
+                    BtnCGPTReSet.Content = "Chat Box Closed".Translate();
                     break;
             }
             runabVer.Text = $"v{mw.Version} ({mw.version})";
 
-            //mod列表
             ShowModList();
             ListMod.SelectedIndex = 0;
             ShowMod((string)((ListBoxItem)ListMod.SelectedItem).Content);
@@ -238,33 +236,32 @@ namespace VPet_Simulator.Windows
             };
             voicetimer.Tick += Voicetimer_Tick;
 
-            //为侧边添加目录           
-            ListMenuItems.Add(listmenuswith("置于顶层", 0, TopMostBox));
-            ListMenuItems.Add(listmenuswith("开机启动", 0, StartUpBox));
-            ListMenuItems.Add(listmenuswith("宠物动画", 0, PetBox));
-            ListMenuItems.Add(listmenuswith("隐藏窗口", 0, SwitchHideFromTaskControl));
+            ListMenuItems.Add(listmenuswith("Always On Top", 0, TopMostBox));
+            ListMenuItems.Add(listmenuswith("Auto-start", 0, StartUpBox));
+            ListMenuItems.Add(listmenuswith("Pet animation", 0, PetBox));
+            ListMenuItems.Add(listmenuswith("Hide Window", 0, SwitchHideFromTaskControl));
 
-            ListMenuItems.Add(listmenuswith("自动保存频率", 1, CBAutoSave));
-            ListMenuItems.Add(listmenuswith("从备份中还原", 1, numBackupSaveMaxNum));
-            ListMenuItems.Add(listmenuswith("聊天设置", 1, RBCGPTUseLB));
-            ListMenuItems.Add(listmenuswith("游戏操作", 1, btn_cleancache));
-            ListMenuItems.Add(listmenuswith("桌宠多开", 1, btn_mutidel));
+            ListMenuItems.Add(listmenuswith("Autosave Frequency", 1, CBAutoSave));
+            ListMenuItems.Add(listmenuswith("Restore from backup", 1, numBackupSaveMaxNum));
+            ListMenuItems.Add(listmenuswith("Chat Settings", 1, RBCGPTUseLB));
+            ListMenuItems.Add(listmenuswith("Game operation", 1, btn_cleancache));
+            ListMenuItems.Add(listmenuswith("VPet Multiple ", 1, btn_mutidel));
 
-            ListMenuItems.Add(listmenuswith("互动设置", 2, CalFunctionBox));
-            ListMenuItems.Add(listmenuswith("计算间隔", 2, CalSlider));
-            ListMenuItems.Add(listmenuswith("桌宠移动", 2, MoveEventBox));
-            ListMenuItems.Add(listmenuswith("操作设置", 2, PressLengthSlider));
-            ListMenuItems.Add(listmenuswith("桌宠名字", 2, TextBoxPetName));
-            ListMenuItems.Add(listmenuswith("音乐识别设置", 2, VoiceMaxSilder));
+            ListMenuItems.Add(listmenuswith("Interaction Settings", 2, CalFunctionBox));
+            ListMenuItems.Add(listmenuswith("Computation interval", 2, CalSlider));
+            ListMenuItems.Add(listmenuswith("Pet Moving", 2, MoveEventBox));
+            ListMenuItems.Add(listmenuswith("Operation Settings", 2, PressLengthSlider));
+            ListMenuItems.Add(listmenuswith("Desktop Pet Name", 2, TextBoxPetName));
+            ListMenuItems.Add(listmenuswith("Music Recognition Settings", 2, VoiceMaxSilder));
 
-            ListMenuItems.Add(listmenuswith("自定义链接", 3, btn_DIY));
+            ListMenuItems.Add(listmenuswith("Custom Links", 3, btn_DIY));
 
-            ListMenuItems.Add(listmenuswith("自动超模MOD优化", 4, swAutoCal));
-            ListMenuItems.Add(listmenuswith("诊断与反馈", 4, RBDiagnosisYES));
+            ListMenuItems.Add(listmenuswith("Automatic supermodel MOD optimization", 4, swAutoCal));
+            ListMenuItems.Add(listmenuswith("Diagnostic & Feedback", 4, RBDiagnosisYES));
 
-            ListMenuItems.Add(listmenuswith("MOD管理", 5, ButtonOpenModFolder));
+            ListMenuItems.Add(listmenuswith("MOD Management", 5, ButtonOpenModFolder));
 
-            ListMenuItems.Add(listmenuswith("关于", 6, ImageWHY));
+            ListMenuItems.Add(listmenuswith("About", 6, ImageWHY));
 
             foreach (var v in ListMenuItems)
                 ListMenu.Items.Add(v);
@@ -395,20 +392,20 @@ namespace VPet_Simulator.Windows
                 {
                     if (mod.GameVer / 1000 == mw.version / 1000)
                     {
-                        runMODGameVer.Text += " (兼容)".Translate();
+                        runMODGameVer.Text += "  (Compatible)".Translate();
                     }
                     else
                     {
-                        runMODGameVer.Text += " (版本低)".Translate();
+                        runMODGameVer.Text += "  (Low Version)".Translate();
                         runMODGameVerInfo.Visibility = Visibility.Visible;
                         if (mod.Tag.Contains("plugin"))
                         {
                             runMODGameVer.Foreground = new SolidColorBrush(Color.FromRgb(190, 0, 0));
-                            runMODGameVerInfo.ToolTip = "MOD对应游戏版本比当前游戏版本低, 因为包含代码插件, 可能有严重的兼容性问题.\n请联系MOD作者更新MOD".Translate()
+                            runMODGameVerInfo.ToolTip = "The MOD corresponds to a game version lower than the current game version, and may have serious compatibility issues due to the inclusion of code plugins.\\nPlease contact the MOD author to update the MOD".Translate()
                                 + $"\nv{CoreMOD.INTtoVER(mod.GameVer)} < v{mw.Version}";
                         }
                         else
-                            runMODGameVerInfo.ToolTip = "MOD对应游戏版本比当前游戏版本低, 但是游戏的兼容功能可能会生效, MOD可能可以正常使用.\n为确保最佳体验,请联系MOD作者更新MOD".Translate()
+                            runMODGameVerInfo.ToolTip = "The MOD corresponds to a game version lower than the current game version, but the compatibility function of the game may take effect, and the MOD may work normally.\\nTo ensure the best experience, please contact the MOD author to update the MOD".Translate()
                                + $"\nv{CoreMOD.INTtoVER(mod.GameVer)} < v{mw.Version}";
                     }
                 }
@@ -416,15 +413,15 @@ namespace VPet_Simulator.Windows
                 {
                     if (mod.GameVer / 1000 == mw.version / 1000)
                     {
-                        runMODGameVer.Text += " (兼容)".Translate();
+                        runMODGameVer.Text += "  (Compatible)".Translate();
                         runMODGameVer.Foreground = Function.ResourcesBrush(Function.BrushType.PrimaryText);
                     }
                     else
                     {
-                        runMODGameVer.Text += " (版本高)".Translate();
+                        runMODGameVer.Text += "  (Version High)".Translate();
                         runMODGameVerInfo.Visibility = Visibility.Visible;
                         runMODGameVer.Foreground = new SolidColorBrush(Color.FromRgb(190, 0, 0));
-                        runMODGameVerInfo.ToolTip = "MOD对应游戏版本比当前游戏版本高, 可能会有兼容性问题.\n请更新游戏".Translate()
+                        runMODGameVerInfo.ToolTip = "The MOD corresponds to a game version higher than the current game version, and may have compatibility issues.\\nPlease update the game".Translate()
                             + $"\nv{CoreMOD.INTtoVER(mod.GameVer)} > v{mw.Version}";
                     }
                 }
@@ -566,7 +563,7 @@ namespace VPet_Simulator.Windows
         {
             if (mod.Name == "Core")
             {
-                MessageBoxX.Show("模组 Core 为<虚拟桌宠模拟器>核心文件,无法停用".Translate(), "停用失败".Translate());
+                MessageBoxX.Show("Core is <VPet-Simulator> core file, cannot be disenable".Translate(), "DisEnable failed".Translate());
                 return;
             }
             else if (CoreMOD.OnModDefList.Contains(mod.Name))
@@ -579,8 +576,8 @@ namespace VPet_Simulator.Windows
 
         private void ButtonAllow_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBoxX.Show("是否启用 {0} 的代码插件?\n一经启用,该插件将会允许访问该系统(包括外部系统)的所有数据\n如果您不确定,请先使用杀毒软件查杀检查".Translate(mod.Name),
-                "启用 {0} 的代码插件?".Translate(mod.Name), MessageBoxButton.YesNo, MessageBoxIcon.Warning) == MessageBoxResult.Yes)
+            if (MessageBoxX.Show("enable code plugin for {0}? \\nOnce enabled, plug-in will allow access to all data of the system (including external systems)\\nIf you are not sure, please use Antivirus software to check".Translate(mod.Name),
+                "Enable code plugins for {0}?".Translate(mod.Name), MessageBoxButton.YesNo, MessageBoxIcon.Warning) == MessageBoxResult.Yes)
             {
                 mw.Set.PassMod(mod.Name);
                 ShowMod(mod.Name);
@@ -590,7 +587,7 @@ namespace VPet_Simulator.Windows
 
         private void ButtonRestart_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBoxX.Show("是否退出游戏<虚拟桌宠模拟器>?\n请注意保存游戏".Translate(), "重启游戏".Translate(), MessageBoxButton.YesNo, MessageBoxIcon.Warning) == MessageBoxResult.Yes)
+            if (MessageBoxX.Show("Exit <VPet-Simulator>?\\nPlease pay attention to saving the game".Translate(), "Restart the game".Translate(), MessageBoxButton.YesNo, MessageBoxIcon.Warning) == MessageBoxResult.Yes)
             {
                 mw.Restart();
             }
@@ -601,12 +598,12 @@ namespace VPet_Simulator.Windows
             var mwCtrl = mw.Core.Controller as MWController;
             if (mwCtrl.IsPrimaryScreen && !mwCtrl.AutoChangeWindow)
             {
-                textMoveArea.Text = "主屏幕".Translate();
+                textMoveArea.Text = "Home Screen".Translate();
                 return;
             }
             else if (mwCtrl.AutoChangeWindow)
             {
-                textMoveArea.Text = "自动选择窗口".Translate();
+                textMoveArea.Text = "".Translate();
                 return;
             }
             var rect = mwCtrl.ScreenBorder;
@@ -801,7 +798,7 @@ namespace VPet_Simulator.Windows
                 }
                 catch
                 {
-                    MessageBox.Show("创建快捷方式失败,权限不足\n请以管理员身份运行后重试".Translate(), "权限不足".Translate());
+                    MessageBox.Show("Failed to create shortcut, insufficient permissions\\nPlease run as administrator and try again".Translate(), "Insufficient permissions".Translate());
                 }
             }
             else
@@ -815,7 +812,7 @@ namespace VPet_Simulator.Windows
             if (!AllowChange)
                 return;
             if (StartUpBox.IsChecked == true)
-                if (MessageBoxX.Show("该游戏随着开机启动该程序\r如需卸载游戏\r请关闭该选项".Translate() + "\n------\n" + "我已确认,并在卸载游戏前会关闭该功能".Translate(), "开机启动重要消息".Translate(),
+                if (MessageBoxX.Show("Game auto-start on login\\rDisable this option before uninstalling".Translate() + "\n------\n" + "I have confirmed and will disable it before uninstalling the game.".Translate(), "Important news about startup.".Translate(),
                     MessageBoxButton.YesNo, MessageBoxIcon.Warning) != MessageBoxResult.Yes)
                 {
                     StartUpBox.IsChecked = false;
@@ -824,8 +821,7 @@ namespace VPet_Simulator.Windows
             //else
             //{
             //    mf.Set["SingleTips"][(gint)"open"] = 1;
-            //    MessageBoxX.Show("游戏开机启动的实现方式是创建快捷方式,不是注册表,更健康,所以游戏卸了也不知道\n如果游戏打不开,可以去这里手动删除游戏开机启动快捷方式:\n%appdata%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\".Translate()
-            //        , "关于卸载不掉的问题是因为开启了开机启动".Translate(), MessageBoxIcon.Info);
+            //        , "The problem of uninstallation is due to the startup being turned on.".Translate(), MessageBoxIcon.Info);
             //}
 
             mw.Set.StartUPBoot = StartUpBox.IsChecked == true;
@@ -845,9 +841,9 @@ namespace VPet_Simulator.Windows
             {
                 var rn = str.Translate();
                 if (str == "")
-                    rn = "默认存档".Translate();
+                    rn = "Default archive".Translate();
                 if (str == mw.PrefixSave.Trim('-'))
-                    rn += " (" + "当前存档".Translate() + ')';
+                    rn += " (" + "Current archive".Translate() + ')';
                 LBHave.Items.Add(rn);
             }
         }
@@ -860,19 +856,18 @@ namespace VPet_Simulator.Windows
             petloader ??= mw.Pets[0];
 
             if (mw.PrefixSave == "" && petloader.PetName != mw.Pets[PetBox.SelectedIndex].PetName)
-            {//多一个名称判断, 如果宠物名称一致,则切换皮肤不提示多开
-                switch (MessageBoxX.Show("是否多开一个新的桌宠使用 {0} 皮肤\n各自存档独立保存,互不影响\n支持同时显示多个宠物".Translate(mw.Pets[PetBox.SelectedIndex].Name.Translate()),
-                    "是否多开".Translate(), MessageBoxButton.YesNoCancel))
+            {
+                switch (MessageBoxX.Show("Whether to open a new VPet to use {0} skin\\nEach archive is saved independently and does not affect each other\\nSupports displaying multiple pets at the same time".Translate(mw.Pets[PetBox.SelectedIndex].Name.Translate()),
+                    "Whether to open multiple".Translate(), MessageBoxButton.YesNoCancel))
                 {
                     case MessageBoxResult.Yes:
                         var savename = mw.Pets[PetBox.SelectedIndex].Name;
                         petbox_back();
-                        //如果有这个皮肤的多开,自动多开
                         if (App.MutiSaves.Contains(savename))
                         {
                             if (App.MainWindows.FirstOrDefault(x => x.PrefixSave.Trim('-') == savename) != null)
                             {
-                                MessageBoxX.Show("当前多开已经加载".Translate());
+                                MessageBoxX.Show("Currently loaded".Translate());
                             }
                             else
                                 new MainWindow(savename, mw).Show();
@@ -881,7 +876,7 @@ namespace VPet_Simulator.Windows
                         foreach (var c in @"()#:|/\?*<>-")
                             if (savename.Contains(c))
                             {
-                                MessageBoxX.Show("存档名不能包括特殊符号".Translate());
+                                MessageBoxX.Show("Archive name cannot include special symbols".Translate());
                                 return;
                             }
                         var lps = new LPS(mw.Set.ToString());
@@ -956,7 +951,7 @@ namespace VPet_Simulator.Windows
                     //    if (((TalkBox)mf.TalkBox).ChatGPT_Reset())
                     //    {
                     //        ((TalkBox)mf.TalkBox).btn_startup.Visibility = Visibility.Visible;
-                    //        MessageBoxX.Show("桌宠重置成功".Translate());
+                    //        MessageBoxX.Show("Desktop pet reset successful".Translate());
                     //    }
                     //});
                     //((TalkSelect)mf.TalkBox).RelsTime
@@ -993,7 +988,7 @@ namespace VPet_Simulator.Windows
             {
                 //case "API":
                 //    BtnCGPTReSet.IsEnabled = true;
-                //    BtnCGPTReSet.Content = "打开 ChatGPT API 设置".Translate();
+                // BtnCGPTReSet.Content = "Open ChatGPT API Settings".Translate();
                 //    if (mf.TalkBox != null)
                 //        mf.Main.ToolBar.MainGrid.Children.Remove(mf.TalkBox);
                 //    mf.TalkBox = new TalkBoxAPI(mf);
@@ -1002,13 +997,13 @@ namespace VPet_Simulator.Windows
                 case "DIY":
                     BtnCGPTReSet.IsEnabled = true;
                     mw.RemoveTalkBox();
-                    BtnCGPTReSet.Content = "打开 {0} 设置".Translate(mw.TalkBoxCurr?.APIName ?? "Steam Workshop");
+                    BtnCGPTReSet.Content = "Open {0} Settings".Translate(mw.TalkBoxCurr?.APIName ?? "Steam Workshop");
                     mw.LoadTalkDIY();
                     break;
                 case "LB":
                     mw.RemoveTalkBox();
                     BtnCGPTReSet.IsEnabled = true;
-                    BtnCGPTReSet.Content = "初始化桌宠聊天程序".Translate();
+                    BtnCGPTReSet.Content = "Initialize VPET chat program".Translate();
                     mw.TalkBox = new TalkSelect(mw);
                     mw.Main.ToolBar.MainGrid.Children.Add(mw.TalkBox);
                     break;
@@ -1016,7 +1011,7 @@ namespace VPet_Simulator.Windows
                 default:
                     mw.RemoveTalkBox();
                     BtnCGPTReSet.IsEnabled = false;
-                    BtnCGPTReSet.Content = "聊天框已关闭".Translate();
+                    BtnCGPTReSet.Content = "Chat Box Closed".Translate();
                     break;
             }
         }
@@ -1079,7 +1074,6 @@ namespace VPet_Simulator.Windows
         {
             if (!AllowChange)
                 return;
-            //MessageBoxX.Show("由于没做完,暂不支持数据计算\n敬请期待后续更新", "没做完!", MessageBoxButton.OK, MessageBoxIcon.Warning);
             if (CalFunctionBox.IsChecked == true)
             {
                 mw.Set.EnableFunction = true;
@@ -1128,7 +1122,7 @@ namespace VPet_Simulator.Windows
                     list.Add(str.Trim());
             }
             list = list.Distinct().ToList();
-            MessageBoxX.Show(string.Join("\n", list), "感谢以下MOD开发人员".Translate());
+            MessageBoxX.Show(string.Join("\n", list), "Thanks to the following mod developers".Translate());
         }
 
         private void Using_Click(object sender, RoutedEventArgs e)
@@ -1150,7 +1144,7 @@ namespace VPet_Simulator.Windows
                     : $"> {name}.dll")
                 .ToList();
 
-            MessageBoxX.Show(string.Join("\n", rows), "DLL引用名单".Translate());
+            MessageBoxX.Show(string.Join("\n", rows), "DLL Reference List".Translate());
         }
 
         private void combCalFunState_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1208,17 +1202,17 @@ namespace VPet_Simulator.Windows
             voicetimer.Stop();
             switch (MainTab.SelectedIndex)
             {
-                case 2://启动音量探测
+                case 2:
                     voicetimer.Start();
                     break;
                 case 4:
                     if (mw.HashCheck)
                     {
-                        RHashCheck.Text = "通过".Translate();
+                        RHashCheck.Text = "Pass".Translate();
                     }
                     else
                     {
-                        RHashCheck.Text = "失败".Translate();
+                        RHashCheck.Text = "Fail".Translate();
                     }
                     break;
             }
@@ -1236,7 +1230,7 @@ namespace VPet_Simulator.Windows
         private void cleancache_click(object sender, RoutedEventArgs e)
         {
             mw.Set.LastCacheDate = DateTime.MinValue;
-            MessageBoxX.Show("清理指令已下达,下次启动桌宠时生效".Translate());
+            MessageBoxX.Show("The cleanup command has been issued and will take effect the next time the table pet is started".Translate());
         }
 
         private void SliderResolution_MouseUp(object sender, MouseButtonEventArgs e)
@@ -1248,7 +1242,7 @@ namespace VPet_Simulator.Windows
         private void save_click(object sender, RoutedEventArgs e)
         {
             mw.Save();
-            MessageBoxX.Show("保存成功".Translate());
+            MessageBoxX.Show("Save successfully".Translate());
         }
 
         private void swAutoCal_Checked(object sender, RoutedEventArgs e)
@@ -1260,14 +1254,14 @@ namespace VPet_Simulator.Windows
 
         private void restart_click(object sender, RoutedEventArgs e)
         {
-            if (MessageBoxX.Show("是否重置游戏数据重新开始?".Translate(), "重新开始".Translate(), MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (MessageBoxX.Show("Reset the game data to restart?".Translate(), "Restart New Game".Translate(), MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 var oldsave = mw.GameSavesData;
                 mw.GameSavesData = new GameSave_v2(mw.Core.Save.Name);
                 mw.Core.Save = mw.GameSavesData.GameSave;
                 mw.GameSavesData.GameSave.Event_LevelUp += mw.LevelUP;
 
-                if (oldsave.HashCheck) // 对于重开无作弊的玩家保留统计
+                if (oldsave.HashCheck)
                 {
                     mw.GameSavesData.Statistics = oldsave.Statistics;
                     if (oldsave.GameSave.Money > 10000000 || oldsave.GameSave.Money < -1000000000 || oldsave.GameSave.Exp > 100000000 || oldsave.GameSave.Exp < -10000000000)
@@ -1277,7 +1271,7 @@ namespace VPet_Simulator.Windows
                     }
                 }
                 mw.HashCheck = true;
-                MessageBoxX.Show("重置成功".Translate());
+                MessageBoxX.Show("Reset successfully".Translate());
             }
         }
 
@@ -1289,7 +1283,7 @@ namespace VPet_Simulator.Windows
             mw.Set["CGPT"][(gstr)"DIY"] = mw.TalkBoxCurr?.APIName ?? "";
             if (RBCGPTDIY.IsChecked == true)
                 mw.LoadTalkDIY();
-            BtnCGPTReSet.Content = "打开 {0} 设置".Translate(mw.TalkBoxCurr?.APIName ?? "Steam Workshop");
+            BtnCGPTReSet.Content = "Open {0} Settings".Translate(mw.TalkBoxCurr?.APIName ?? "Steam Workshop");
 
         }
 
@@ -1300,7 +1294,7 @@ namespace VPet_Simulator.Windows
             var str = App.MutiSaves[LBHave.SelectedIndex];
             if (str.EndsWith(")") || App.MainWindows.FirstOrDefault(x => x.PrefixSave.Trim('-') == str) != null)
             {
-                MessageBoxX.Show("当前多开已经加载".Translate());
+                MessageBoxX.Show("Currently loaded".Translate());
                 return;
             }
             new MainWindow(str, mw).Show();
@@ -1312,12 +1306,12 @@ namespace VPet_Simulator.Windows
             foreach (var c in @"()#:|/\?*<>-")
                 if (savename.Contains(c))
                 {
-                    MessageBoxX.Show("存档名不能包括特殊符号".Translate());
+                    MessageBoxX.Show("Archive name cannot include special symbols".Translate());
                     return;
                 }
             if (App.MutiSaves.FirstOrDefault(x => x.ToLowerInvariant() == savename.ToLowerInvariant()) != null)
             {
-                MessageBoxX.Show("存档名重复".Translate());
+                MessageBoxX.Show("Duplicate archive name".Translate());
                 return;
             }
 
@@ -1333,14 +1327,14 @@ namespace VPet_Simulator.Windows
             if (LBHave.SelectedIndex == -1)
                 return;
             var str = App.MutiSaves[LBHave.SelectedIndex];
-            if (str == "默认存档".Translate())
+            if (str == "Default archive".Translate())
             {
-                MessageBoxX.Show("默认存档无法删除,请使用重新开始功能重新开始游戏".Translate());
+                MessageBoxX.Show("Default archive cannot be deleted, please restart the game using the restart function.".Translate());
                 return;
             }
             if (str.EndsWith(")") || App.MainWindows.FirstOrDefault(x => x.PrefixSave.Trim('-') == str) != null)
             {
-                MessageBoxX.Show("当前多开已经加载,请先关闭改多开后重试".Translate());
+                MessageBoxX.Show("Please close the multicomputer and try again.".Translate());
                 return;
             }
             if (!App.MutiSaves.Contains(str))
@@ -1348,7 +1342,7 @@ namespace VPet_Simulator.Windows
                 LoadMutiUI();
                 return;
             }
-            if (MessageBoxX.Show("是否删除当前选择({0})的多开存档?".Translate(str), "删除前确认".Translate(), MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (MessageBoxX.Show("Do you want to delete the currently selected ({0}) multi save?".Translate(str), "Confirm before deleting".Translate(), MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 File.Delete(ExtensionValue.BaseDirectory + @$"\Setting-{str}.lps");
                 App.MutiSaves.Remove(str);
@@ -1367,12 +1361,12 @@ namespace VPet_Simulator.Windows
             }
             if (str != "")
                 File.Create(ExtensionValue.BaseDirectory + @"\startup_" + str).Close();
-            MessageBoxX.Show("已将当前选择 {0} 设为默认启动存档".Translate(str.Translate()));
+            MessageBoxX.Show("The current selection {0} has been set as the default startup archive".Translate(str.Translate()));
         }
 
         private void btn_fixdata_Click(object sender, RoutedEventArgs e)
         {
-            MessageBoxX.Show("独立运行模式不支持数据修复(需要Steam服务器记录的游戏时间)".Translate(), "功能不可用".Translate(), MessageBoxIcon.Info);
+            MessageBoxX.Show("Standalone mode does not support data repair (requires Steam server recorded game time)".Translate(), "Feature unavailable".Translate(), MessageBoxIcon.Info);
         }
 
         private void ConsoleBox_Checked(object sender, RoutedEventArgs e)

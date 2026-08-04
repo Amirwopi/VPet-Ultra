@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" Foreground="{StaticResource PrimaryText}"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ll="clr-namespace:LinePutScript.Localization.WPF;assembly=LinePutScript.Localization.WPF"
-        xmlns:local="clr-namespace:VPet_Simulator.Windows" mc:Ignorable="d" Title="{ll:Str 工作面板}"
+        xmlns:local="clr-namespace:VPet_Simulator.Windows" mc:Ignorable="d" Title="{ll:Str Work Panel}"
         Height="{ll:Dbe WorkMenuHeight_400, DefValue=400}" Style="{DynamicResource BaseWindowXStyle}"
         Background="{DynamicResource PrimaryLighter}" Width="{ll:Dbe WorkMenuWidth_650, DefValue=650}"
         ResizeMode="CanMinimize" Closed="Window_Closed">
@@ -28,18 +28,18 @@
             </Grid.ColumnDefinitions>
             <Border Background="{DynamicResource DARKPrimaryText}" />
             <StackPanel Margin="12, 10">
-                <TextBlock Text="{ll:Str 工作面板}" FontSize="18" Margin="5" Foreground="{DynamicResource DARKPrimary}" />
+                <TextBlock Text="{ll:Str Work Panel}" FontSize="18" Margin="5" Foreground="{DynamicResource DARKPrimary}" />
 
                 <ListBox x:Name="LsbCategory" Grid.Row="1" Margin="-12,10,-12,0" Background="Transparent"
                         BorderThickness="0" SelectedIndex="0" pu:ListBoxHelper.ItemsPadding="15,8"
                         pu:ListBoxHelper.ItemsSelectedBackground="{DynamicResource DARKPrimary}"
                         pu:ListBoxHelper.ItemsSelectedForeground="{DynamicResource DARKPrimaryText}"
                         SelectionChanged="LsbCategory_SelectionChanged">
-                    <ListBoxItem x:Name="LsbiWork" Content="{ll:Str '工作'}" />
-                    <ListBoxItem x:Name="LsbiStudy" Content="{ll:Str '学习'}" />
-                    <ListBoxItem x:Name="LsbiPlay" Content="{ll:Str '玩耍'}" />
-                    <ListBoxItem x:Name="LsbiStar" Content="{ll:Str '收藏'}" />
-                    <ListBoxItem x:Name="LsbiAutoWork" Content="{ll:Str '日程表'}" />
+                    <ListBoxItem x:Name="LsbiWork" Content="{ll:Str 'Work'}" />
+                    <ListBoxItem x:Name="LsbiStudy" Content="{ll:Str 'Learning'}" />
+                    <ListBoxItem x:Name="LsbiPlay" Content="{ll:Str 'Play'}" />
+                    <ListBoxItem x:Name="LsbiStar" Content="{ll:Str 'Favorites'}" />
+                    <ListBoxItem x:Name="LsbiAutoWork" Content="{ll:Str 'Schedule'}" />
                 </ListBox>
             </StackPanel>
             <Grid Grid.Column="1" Margin="15">
@@ -55,7 +55,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition />
                         </Grid.RowDefinitions>
-                        <TextBlock Text="{ll:Str 工作内容}"
+                        <TextBlock Text="{ll:Str Work content}"
                                 FontSize="{Binding FontSize, Source={x:Static pu:GlobalSettings.Setting}}" />
                         <ComboBox x:Name="detailTypes" Grid.Row="1" Margin="0,3,0,0"
                                 Style="{DynamicResource StandardComboBoxStyle}"
@@ -78,11 +78,11 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <CheckBox x:Name="cbDIYName" ToolTip="{ll:Str '自定义显示的名称\&#13;让桌宠和你一起干活,学习和玩耍'}"
+                        <CheckBox x:Name="cbDIYName" ToolTip="{ll:Str 'DIYName\&#13;,LearningPlay'}"
                                 Checked="cbDIYName_Checked" Unchecked="cbDIYName_Checked">
                             <TextBox x:Name="tbDIYName" FontSize="14" pu:IconHelper.Margin="5,0,0,0" Width="180" Height="22"
                                     MaxLength="100" IsEnabled="{Binding IsChecked, ElementName=cbDIYName}"
-                                    pu:TextBoxHelper.Watermark="自定义{0}名称" Style="{DynamicResource StandardTextBoxStyle}" />
+                                    pu:TextBoxHelper.Watermark="Customize {0} Name" Style="{DynamicResource StandardTextBoxStyle}" />
                         </CheckBox>
                         <ToggleButton x:Name="tbtn_star" VerticalAlignment="Top" HorizontalAlignment="Right"
                                 Content="&#xF18B;" FontFamily="pack://application:,,,/Res/#remixicon"
@@ -111,28 +111,28 @@
 
                             <TextBlock x:Name="tbGain" VerticalAlignment="Bottom"
                                     Foreground="{DynamicResource PrimaryDarker}"
-                                    FontSize="{Binding FontSize, Converter={x:Static pu:Converters.DoublePlusConverter}, ConverterParameter=6, Source={x:Static pu:GlobalSettings.Setting}}">$金钱</TextBlock>
+                                    FontSize="{Binding FontSize, Converter={x:Static pu:Converters.DoublePlusConverter}, ConverterParameter=6, Source={x:Static pu:GlobalSettings.Setting}}">$Money</TextBlock>
                             <TextBlock x:Name="tbSpeed" Grid.Column="2" VerticalAlignment="Bottom"
-                                    Foreground="{DynamicResource PrimaryDarker}" Text="+ 4/t" ToolTip="{ll:Str 获得效率}" />
-                            <TextBlock Grid.Row="2" Text="{ll:Str 饱腹消耗}" />
+                                    Foreground="{DynamicResource PrimaryDarker}" Text="+ 4/t" ToolTip="{ll:Str Efficiency}" />
+                            <TextBlock Grid.Row="2" Text="{ll:Str Hunger use}" />
                             <TextBlock x:Name="tbFood" Grid.Row="2" Grid.Column="2"
                                     Foreground="{DynamicResource DangerBrush}" Text="- 1/t" />
-                            <TextBlock Grid.Row="3" Text="{ll:Str 口渴消耗}" />
+                            <TextBlock Grid.Row="3" Text="{ll:Str Thirst use}" />
                             <TextBlock x:Name="tbDrink" Grid.Row="3" Grid.Column="2"
                                     Foreground="{DynamicResource DangerBrush}" Text="- 4/t" />
-                            <TextBlock Grid.Row="4" Text="{ll:Str 心情消耗}" />
+                            <TextBlock Grid.Row="4" Text="{ll:Str Mood use}" />
                             <TextBlock x:Name="tbSpirit" Grid.Row="4" Grid.Column="2"
                                     Foreground="{DynamicResource DangerBrush}" Text="- 4/t" />
-                            <TextBlock Grid.Row="5" Text="{ll:Str 等级限制}" />
+                            <TextBlock Grid.Row="5" Text="{ll:Str Level limit}" />
                             <TextBlock x:Name="tbLvLimit" Grid.Row="5" Grid.Column="2"
                                     Foreground="{DynamicResource PrimaryDarker}" Text="- 4/t" />
-                            <TextBlock Grid.Row="6" Text="{ll:Str 花费时间}" />
+                            <TextBlock Grid.Row="6" Text="{ll:Str Time spent}" />
                             <TextBlock x:Name="tbTime" Grid.Row="6" Grid.Column="2"
                                     Foreground="{DynamicResource PrimaryDarker}" Text="10 t" />
-                            <TextBlock Grid.Row="7" Text="{ll:Str 奖励倍率}" />
+                            <TextBlock Grid.Row="7" Text="{ll:Str Reward muti}" />
                             <TextBlock x:Name="tbBonus" Grid.Row="7" Grid.Column="2"
                                     Foreground="{DynamicResource PrimaryDarker}" Text="x2" />
-                            <TextBlock Grid.Row="8" Text="{ll:Str 倍率调整}" />
+                            <TextBlock Grid.Row="8" Text="{ll:Str Muti adjust}" />
                             <TextBlock x:Name="tbRatio" Grid.Row="8" Grid.Column="2"
                                     Foreground="{DynamicResource PrimaryDarker}" Text="x2" />
                             <Slider x:Name="wDouble" pu:SliderHelper.ThumbWidth="10"
@@ -142,10 +142,10 @@
                                     TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="wDouble_ValueChanged"
                                     LargeChange="1" Style="{DynamicResource StandardSliderStyle}" TickPlacement="Both" />
                         </Grid>
-                        <Button x:Name="btnAddAuto" Grid.Row="2" Content="{ll:Str 添加至日程表}" Padding="0"
+                        <Button x:Name="btnAddAuto" Grid.Row="2" Content="{ll:Str Add to Schedule}" Padding="0"
                                 Style="{DynamicResource ThemedButtonStyle}" Background="{DynamicResource PrimaryDarker}"
                                 Click="btnAddAuto_Click" Margin="5" Height="25" IsEnabled="False" />
-                        <Button x:Name="btnStart" Grid.Row="3" Height="30" Content="{ll:Str 开始工作}"
+                        <Button x:Name="btnStart" Grid.Row="3" Height="30" Content="{ll:Str Start Working}"
                                 Style="{DynamicResource ThemedButtonStyle}" Background="{DynamicResource PrimaryDarker}"
                                 Click="btnStart_Click" FontSize="16" FontWeight="Bold" />
                     </Grid>
@@ -161,7 +161,7 @@
                             pu:TabControlHelper.ItemsSelectedForeground="{DynamicResource DARKPrimaryText}"
                             Background="Transparent" BorderThickness="0" Foreground="{DynamicResource PrimaryText}"
                             SelectedIndex="0">
-                        <TabItem Header="{ll:Str '机构签署'}">
+                        <TabItem Header="{ll:Str 'Institutional Signature'}">
                             <Grid Margin="7,3">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />
@@ -191,11 +191,11 @@
                                             </Style>
                                         </UniformGrid.Resources>
                                         <ToggleButton x:Name="tbtnAgencyJob"
-                                                pu:ToggleButtonHelper.CornerRadius="4,0,0,4" Content="{ll:Str '工作中介'}"
+                                                pu:ToggleButtonHelper.CornerRadius="4,0,0,4" Content="{ll:Str 'Work Int'}"
                                                 IsChecked="True" Checked="tbtn_Agency_CheckChanged"
                                                 PreviewMouseLeftButtonDown="tbtnAgency_PreviewMouseLeftButtonDown" />
                                         <ToggleButton x:Name="tbtnAgencyTraning"
-                                                pu:ToggleButtonHelper.CornerRadius="0,4,4,0" Content="{ll:Str '培训机构'}"
+                                                pu:ToggleButtonHelper.CornerRadius="0,4,4,0" Content="{ll:Str 'Training Ins'}"
                                                 Checked="tbtn_Agency_CheckChanged"
                                                 PreviewMouseLeftButtonDown="tbtnAgency_PreviewMouseLeftButtonDown" />
                                     </UniformGrid>
@@ -204,10 +204,10 @@
                                             Source="/Res/img/r_singleexp_3.png" />
                                     <ToggleButton x:Name="tbtnCurrentPlan" Grid.Row="3" HorizontalAlignment="Right"
                                             Style="{DynamicResource StandardToggleButtonStyle}" Padding="5,3"
-                                            Content="{ll:Str '当前套餐'}">
+                                            Content="{ll:Str 'Current package'}">
                                         <pu:ToggleButtonHelper.CheckedContent>
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="{ll:Str '当前套餐'}" />
+                                                <TextBlock Text="{ll:Str 'Current package'}" />
                                                 <TextBlock Margin="3,0,0,0" VerticalAlignment="Center"
                                                         FontFamily="{StaticResource RemixIcon}">&#xeb97;</TextBlock>
                                             </StackPanel>
@@ -228,10 +228,10 @@
                                         </Grid.RowDefinitions>
                                         <ComboBox x:Name="combTaskType" Margin="0,3,0,0"
                                                 Style="{DynamicResource StandardComboBoxStyle}"
-                                                pu:ComboBoxHelper.Watermark="--请选择套餐--"
+                                                pu:ComboBoxHelper.Watermark="-- Please select Package--"
                                                 SelectionChanged="combTaskType_SelectionChanged" />
                                         <TextBlock Grid.Row="1" Margin="0,7,0,0" VerticalAlignment="Bottom"
-                                                Text="{ll:Str 选择等级}" />
+                                                Text="{ll:Str Select level}" />
                                         <TextBlock Grid.Row="1" Margin="0,7,0,0" FontSize="16"
                                                 HorizontalAlignment="Right" Foreground="{DynamicResource DARKPrimary}">
                                         <Run Text="Lv." />
@@ -256,33 +256,33 @@
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock x:Name="rTaskType">抽成</TextBlock>
+                                            <TextBlock x:Name="rTaskType">Percentage</TextBlock>
                                             <TextBlock x:Name="rCommissions" Grid.Column="2" HorizontalAlignment="Right"
                                                     Foreground="{DynamicResource DARKPrimary}" Text="20%" />
-                                            <TextBlock Grid.Row="1" Text="{ll:Str '可用等级'}" />
+                                            <TextBlock Grid.Row="1" Text="{ll:Str 'Available levels'}" />
                                             <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right"
                                                     Foreground="{DynamicResource DARKPrimary}">
                                                 Lv <Run x:Name="rLevelNeed" Text="100" />
                                             </TextBlock>
-                                            <TextBlock Grid.Row="2" Text="{ll:Str '持续时间'}" />
+                                            <TextBlock Grid.Row="2" Text="{ll:Str 'Duration'}" />
                                             <TextBlock Grid.Row="2" Grid.Column="2" HorizontalAlignment="Right"
                                                     Foreground="{DynamicResource DARKPrimary}">
-                                                <Run x:Name="rDuration" Text="7" /> <Run Text="{ll:Str '天'}" />
+                                                <Run x:Name="rDuration" Text="7" /> <Run Text="{ll:Str 'day'}" />
                                             </TextBlock>
-                                            <TextBlock Grid.Row="3" Text="{ll:Str '描述'}" />
+                                            <TextBlock Grid.Row="3" Text="{ll:Str 'descriptions'}" />
                                             <ScrollViewer Grid.Row="3" Grid.ColumnSpan="2" Grid.Column="1">
                                                 <TextBlock x:Name="rDescribe"
-                                                        Text="游玩《虚拟桌宠模拟器》，参加桌宠 ChatVPet 项目。任务目标，即刻拯救桌宠！"
+                                                        Text="Play VPet-Simulator, join the ChatVPet project. Mission objective: save the desktop pet now!"
                                                         TextWrapping="Wrap" FontSize="12" />
                                             </ScrollViewer>
-                                            <TextBlock Grid.Row="4" Text="{ll:Str '办理费用'}" VerticalAlignment="Bottom" />
+                                            <TextBlock Grid.Row="4" Text="{ll:Str 'Handling fees'}" VerticalAlignment="Bottom" />
                                             <TextBlock x:Name="rpPrice" Grid.Row="4" Grid.Column="2"
                                                     HorizontalAlignment="Right" VerticalAlignment="Center"
                                                     Foreground="{DynamicResource DARKPrimary}" Text="100000"
                                                     FontSize="26" />
                                         </Grid>
                                         <Button x:Name="btnSignAgency" Grid.Row="6" Margin="0,5,0,0" Height="30"
-                                                Content="{ll:Str 签署}" Style="{DynamicResource ThemedButtonStyle}"
+                                                Content="{ll:Str sign}" Style="{DynamicResource ThemedButtonStyle}"
                                                 Background="{DynamicResource PrimaryDarker}" Click="btnSignAgency_Click"
                                                 FontSize="16" FontWeight="Bold" />
                                     </Grid>
@@ -293,8 +293,8 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition />
                                         </Grid.RowDefinitions>
-                                        <TextBlock Text="{ll:Str '当前套餐'}" Opacity="0.7" />
-                                        <TextBlock x:Name="rpnName" Grid.Row="1" Text="{ll:Str '暂无签署套餐'}" FontSize="24"
+                                        <TextBlock Text="{ll:Str 'Current package'}" Opacity="0.7" />
+                                        <TextBlock x:Name="rpnName" Grid.Row="1" Text="{ll:Str 'No subscription package has been signed'}" FontSize="24"
                                                 Foreground="{DynamicResource DARKPrimary}" />
                                         <Grid Grid.Row="2" Margin="0,7,0,0">
                                             <Grid.RowDefinitions>
@@ -315,22 +315,22 @@
                                             <TextBlock x:Name="rpnCommissions" Grid.Column="2"
                                                     HorizontalAlignment="Right"
                                                     Foreground="{DynamicResource DARKPrimary}" Text="20%" />
-                                            <TextBlock Grid.Row="1" Text="{ll:Str '可用等级'}" />
+                                            <TextBlock Grid.Row="1" Text="{ll:Str 'Available levels'}" />
                                             <TextBlock Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right"
                                                     Foreground="{DynamicResource DARKPrimary}">
                                         <Run Text="Lv" /> 
                                         <Run x:Name="rpnLevelInNeed" Text="100" />
                                             </TextBlock>
-                                            <TextBlock Grid.Row="2" Text="{ll:Str '剩余时间'}" />
+                                            <TextBlock Grid.Row="2" Text="{ll:Str 'Remaining time'}" />
                                             <TextBlock Grid.Row="2" Grid.Column="2" HorizontalAlignment="Right"
                                                     Foreground="{DynamicResource DARKPrimary}">
-                                                <Run x:Name="rpnEndDay" Text="7" /> <Run Text="{ll:Str '小时'}" />
+                                                <Run x:Name="rpnEndDay" Text="7" /> <Run Text="{ll:Str 'Hour'}" />
                                             </TextBlock>
-                                            <TextBlock Grid.Row="3" Text="{ll:Str '截止日期'}" />
+                                            <TextBlock Grid.Row="3" Text="{ll:Str 'Deadline'}" />
                                             <TextBlock x:Name="rpnEndDate" Grid.Row="3" Grid.Column="2"
                                                     HorizontalAlignment="Right"
                                                     Foreground="{DynamicResource DARKPrimary}" Text="05/27" />
-                                            <TextBlock Grid.Row="4" Text="{ll:Str '自动续费'}" />
+                                            <TextBlock Grid.Row="4" Text="{ll:Str 'Auto-Renewal'}" />
                                             <pu:Switch x:Name="rpnAutoRenew" Grid.Row="4" Background="Transparent"
                                                     BorderBrush="{DynamicResource PrimaryDark}" BoxHeight="18"
                                                     BoxWidth="35" Foreground="{DynamicResource DARKPrimary}"
@@ -341,14 +341,14 @@
                                                     ToggleShadowColor="{x:Null}" ToggleSize="14" Grid.Column="2"
                                                     HorizontalAlignment="Right" ContentPlacement="Left"
                                                     Checked="rpnAutoRenew_Checked" Unchecked="rpnAutoRenew_Checked" />
-                                            <TextBlock Grid.Row="5" Text="{ll:Str '描述'}" />
+                                            <TextBlock Grid.Row="5" Text="{ll:Str 'descriptions'}" />
                                             <ScrollViewer Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="2"
                                                     Margin="10,0,0,0">
                                                 <TextBlock x:Name="rpnDescribe"
-                                                        Text="游玩《虚拟桌宠模拟器》，参加桌宠 ChatVPet 项目。任务目标，即刻拯救桌宠！"
+                                                        Text="Play VPet-Simulator, join the ChatVPet project. Mission objective: save the desktop pet now!"
                                                         TextWrapping="Wrap" />
                                             </ScrollViewer>
-                                            <TextBlock Grid.Row="6" Text="{ll:Str '办理费用'}" VerticalAlignment="Bottom" />
+                                            <TextBlock Grid.Row="6" Text="{ll:Str 'Handling fees'}" VerticalAlignment="Bottom" />
                                             <TextBlock x:Name="rpnPrice" Grid.Row="6" Grid.Column="2"
                                                     HorizontalAlignment="Right" VerticalAlignment="Center"
                                                     Foreground="{DynamicResource DARKPrimary}" Text="100000"
@@ -358,7 +358,7 @@
                                 </Grid>
                             </Grid>
                         </TabItem>
-                        <TabItem Header="{ll:Str '日程表'}">
+                        <TabItem Header="{ll:Str 'Schedule'}">
                             <Grid Margin="3">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />
@@ -371,7 +371,7 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition />
                                         </Grid.RowDefinitions>
-                                        <TextBlock Margin="7,7,0,0" Text="{ll:Str '日程安排'}" />
+                                        <TextBlock Margin="7,7,0,0" Text="{ll:Str 'Schedule of Events'}" />
                                         <ScrollViewer Grid.Row="1">
                                             <Grid IsEnabled="{Binding IsChecked, ElementName=btnStartSchedule, Converter={x:Static pu:Converters.TrueToFalseConverter}}">
                                                 <StackPanel Margin="20,7,7,7">
@@ -383,7 +383,7 @@
                                                                     <Button Margin="-20,-5,0,-5" HorizontalAlignment="Left"
                                                                         Visibility="{Binding IsPreviousIsRest, Converter={x:Static pu:Converters.TrueToCollapseConverter}}"
                                                                         Style="{DynamicResource IconButtonStyle}"
-                                                                        ToolTip="{ll:Str 添加休息}"
+                                                                        ToolTip="{ll:Str Add a break}"
                                                                         Click="btn_addRest_Click">&#xea11;</Button>
                                                                     <Border Height="90" CornerRadius="5"
                                                                         Background="{DynamicResource DARKPrimaryTrans4}">
@@ -398,35 +398,35 @@
                                                                                 VerticalAlignment="Center">
                                                                                 <Button Margin="0,0,0,0" Padding="0"
                                                                                     Style="{DynamicResource IconButtonStyle}"
-                                                                                    ToolTip="{ll:Str 上移}"
+                                                                                    ToolTip="{ll:Str Move up}"
                                                                                     Click="btn_scheduleUp_Click">&#xea76;</Button>
                                                                                 <Button Margin="0,0,0,0" Padding="0"
                                                                                     Style="{DynamicResource IconButtonStyle}"
-                                                                                    ToolTip="{ll:Str 下移}"
+                                                                                    ToolTip="{ll:Str Move down}"
                                                                                     Click="btn_scheduleDown_Click">&#xea4c;</Button>
                                                                             </StackPanel>
                                                                             <Image Stretch="Uniform"
                                                                                 Source="{Binding Image}" Margin="5" />
                                                                             <StackPanel Grid.Column="1"
                                                                                 VerticalAlignment="Center">
-                                                                                <TextBlock Text="{ll:Str '工作内容'}" />
+                                                                                <TextBlock Text="{ll:Str 'Work content'}" />
                                                                                 <TextBlock FontSize="16">
                                                                                 <Run Text="{Binding WorkName}"
                                                                                         Foreground="{DynamicResource DARKPrimaryDark}" /> 
                                                                                 <Run Text="{Binding WorkLevel}"
                                                                                         Foreground="{DynamicResource DARKPrimaryLight}" />
                                                                                 </TextBlock>
-                                                                                <TextBlock Text="{ll:Str '持续时间'}" />
+                                                                                <TextBlock Text="{ll:Str 'Duration'}" />
                                                                                 <TextBlock FontSize="16"
                                                                                     Foreground="{DynamicResource DARKPrimary}">
                                                                                  <Run Text="{Binding WorkTime}" />
-                                                                                 <Run Text="{ll:Str '分钟'}" />
+                                                                                 <Run Text="{ll:Str 'Min'}" />
                                                                                 </TextBlock>
                                                                             </StackPanel>
                                                                             <Button Grid.Column="2"
                                                                                 HorizontalAlignment="Right"
                                                                                 VerticalAlignment="Center"
-                                                                                ToolTip="{ll:Str '删除'}"
+                                                                                ToolTip="{ll:Str 'Delete'}"
                                                                                 Background="Transparent" FontSize="20"
                                                                                 Foreground="{DynamicResource DangerBrush}"
                                                                                 FontFamily="{StaticResource RemixIcon}"
@@ -434,7 +434,7 @@
                                                                             <Button Grid.Column="2" Margin="0,0,0,10"
                                                                                 HorizontalAlignment="Right"
                                                                                 VerticalAlignment="Bottom"
-                                                                                ToolTip="{ll:Str '套餐等级不足'}"
+                                                                                ToolTip="{ll:Str 'Insufficient package level'}"
                                                                                 FontWeight="Bold" FontSize="20"
                                                                                 Background="Transparent"
                                                                                 Content="&#xECA1;"
@@ -445,7 +445,7 @@
                                                                             <Button Grid.Column="2" Margin="0,10,0,0"
                                                                                 HorizontalAlignment="Right"
                                                                                 VerticalAlignment="Top"
-                                                                                ToolTip="{ll:Str '当前日程进度'}"
+                                                                                ToolTip="{ll:Str 'Current Schedule progress'}"
                                                                                 FontWeight="Bold" FontSize="20"
                                                                                 Background="Transparent"
                                                                                 Content="&#xEC42;"
@@ -461,7 +461,7 @@
                                                                     <Button Margin="-20,-5,0,-5" HorizontalAlignment="Left"
                                                                         Visibility="{Binding IsPreviousIsRest, Converter={x:Static pu:Converters.TrueToCollapseConverter}}"
                                                                         Style="{DynamicResource IconButtonStyle}"
-                                                                        ToolTip="{ll:Str 添加休息}"
+                                                                        ToolTip="{ll:Str Add a break}"
                                                                         Click="btn_addRest_Click">&#xea11;</Button>
                                                                     <Border Height="90" CornerRadius="5"
                                                                         Background="{DynamicResource DARKPrimaryTrans4}">
@@ -476,35 +476,35 @@
                                                                                 VerticalAlignment="Center">
                                                                                 <Button Margin="0,0,0,0" Padding="0"
                                                                                     Style="{DynamicResource IconButtonStyle}"
-                                                                                    ToolTip="{ll:Str 上移}"
+                                                                                    ToolTip="{ll:Str Move up}"
                                                                                     Click="btn_scheduleUp_Click">&#xea76;</Button>
                                                                                 <Button Margin="0,0,0,0" Padding="0"
                                                                                     Style="{DynamicResource IconButtonStyle}"
-                                                                                    ToolTip="{ll:Str 下移}"
+                                                                                    ToolTip="{ll:Str Move down}"
                                                                                     Click="btn_scheduleDown_Click">&#xea4c;</Button>
                                                                             </StackPanel>
                                                                             <Image Stretch="Uniform"
                                                                                 Source="{Binding Image}" Margin="5" />
                                                                             <StackPanel Grid.Column="1"
                                                                                 VerticalAlignment="Center">
-                                                                                <TextBlock Text="{ll:Str '学习内容'}" />
+                                                                                <TextBlock Text="{ll:Str 'Learning content'}" />
                                                                                 <TextBlock FontSize="16">
                                                                                 <Run Text="{Binding WorkName}"
                                                                                         Foreground="{DynamicResource DARKPrimaryDark}" /> 
                                                                                 <Run Text="{Binding WorkLevel}"
                                                                                         Foreground="{DynamicResource DARKPrimaryLight}" />
                                                                                 </TextBlock>
-                                                                                <TextBlock Text="{ll:Str '持续时间'}" />
+                                                                                <TextBlock Text="{ll:Str 'Duration'}" />
                                                                                 <TextBlock FontSize="16"
                                                                                     Foreground="{DynamicResource DARKPrimary}">
                                                                                  <Run Text="{Binding WorkTime}" />
-                                                                                 <Run Text="{ll:Str '分钟'}" />
+                                                                                 <Run Text="{ll:Str 'Min'}" />
                                                                                 </TextBlock>
                                                                             </StackPanel>
                                                                             <Button Grid.Column="2"
                                                                                 HorizontalAlignment="Right"
                                                                                 VerticalAlignment="Center"
-                                                                                ToolTip="{ll:Str '删除'}"
+                                                                                ToolTip="{ll:Str 'Delete'}"
                                                                                 Background="Transparent" FontSize="20"
                                                                                 Foreground="{DynamicResource DangerBrush}"
                                                                                 FontFamily="{StaticResource RemixIcon}"
@@ -512,7 +512,7 @@
                                                                             <Button Grid.Column="2" Margin="0,0,0,10"
                                                                                 HorizontalAlignment="Right"
                                                                                 VerticalAlignment="Bottom"
-                                                                                ToolTip="{ll:Str '套餐等级不足'}"
+                                                                                ToolTip="{ll:Str 'Insufficient package level'}"
                                                                                 FontWeight="Bold" FontSize="20"
                                                                                 Background="Transparent"
                                                                                 Content="&#xECA1;"
@@ -523,7 +523,7 @@
                                                                             <Button Grid.Column="2" Margin="0,10,0,0"
                                                                                 HorizontalAlignment="Right"
                                                                                 VerticalAlignment="Top"
-                                                                                ToolTip="{ll:Str '当前日程进度'}"
+                                                                                ToolTip="{ll:Str 'Current Schedule progress'}"
                                                                                 FontWeight="Bold" FontSize="20"
                                                                                 Background="Transparent"
                                                                                 Content="&#xEC42;"
@@ -539,7 +539,7 @@
                                                                     <Button Margin="-20,-5,0,-5" HorizontalAlignment="Left"
                                                                         Visibility="{Binding IsPreviousIsRest, Converter={x:Static pu:Converters.TrueToCollapseConverter}}"
                                                                         Style="{DynamicResource IconButtonStyle}"
-                                                                        ToolTip="{ll:Str 添加休息}"
+                                                                        ToolTip="{ll:Str Add a break}"
                                                                         Click="btn_addRest_Click">&#xea11;</Button>
                                                                     <Border Height="90" CornerRadius="5"
                                                                         Background="{DynamicResource DARKPrimaryTrans4}">
@@ -554,34 +554,34 @@
                                                                                 VerticalAlignment="Center">
                                                                                 <Button Margin="0,0,0,0" Padding="0"
                                                                                     Style="{DynamicResource IconButtonStyle}"
-                                                                                    ToolTip="{ll:Str 上移}"
+                                                                                    ToolTip="{ll:Str Move up}"
                                                                                     Click="btn_scheduleUp_Click">&#xea76;</Button>
                                                                                 <Button Margin="0,0,0,0" Padding="0"
                                                                                     Style="{DynamicResource IconButtonStyle}"
-                                                                                    ToolTip="{ll:Str 下移}"
+                                                                                    ToolTip="{ll:Str Move down}"
                                                                                     Click="btn_scheduleDown_Click">&#xea4c;</Button>
                                                                             </StackPanel>
                                                                             <Image Stretch="Uniform"
                                                                                 Source="{Binding Image}" Margin="5" />
                                                                             <StackPanel Grid.Column="1"
                                                                                 VerticalAlignment="Center">
-                                                                                <TextBlock Text="{ll:Str '玩耍内容'}" />
+                                                                                <TextBlock Text="{ll:Str 'Play content'}" />
                                                                                 <TextBlock FontSize="16">
                                                                                 <Run Text="{Binding WorkName}"
                                                                                         Foreground="{DynamicResource DARKPrimaryDark}" /> 
                                                                                 <Run Text="{Binding WorkLevel}"
                                                                                         Foreground="{DynamicResource DARKPrimaryLight}" />
                                                                                 </TextBlock>
-                                                                                <TextBlock Text="{ll:Str '持续时间'}" />
+                                                                                <TextBlock Text="{ll:Str 'Duration'}" />
                                                                                 <TextBlock FontSize="16"
                                                                                     Foreground="{DynamicResource DARKPrimary}">
                                                                                  <Run Text="{Binding WorkTime}" />
-                                                                                 <Run Text="{ll:Str '分钟'}" />
+                                                                                 <Run Text="{ll:Str 'Min'}" />
                                                                                 </TextBlock>
                                                                             </StackPanel>
                                                                             <Button Grid.Column="2"
                                                                                 HorizontalAlignment="Right"
-                                                                                ToolTip="{ll:Str '删除'}"
+                                                                                ToolTip="{ll:Str 'Delete'}"
                                                                                 VerticalAlignment="Center"
                                                                                 Background="Transparent" FontSize="20"
                                                                                 Foreground="{DynamicResource DangerBrush}"
@@ -590,7 +590,7 @@
                                                                             <Button Grid.Column="2" Margin="0,0,0,10"
                                                                                 HorizontalAlignment="Right"
                                                                                 VerticalAlignment="Bottom"
-                                                                                ToolTip="{ll:Str '套餐等级不足'}"
+                                                                                ToolTip="{ll:Str 'Insufficient package level'}"
                                                                                 FontWeight="Bold" FontSize="20"
                                                                                 Background="Transparent"
                                                                                 Content="&#xECA1;"
@@ -601,7 +601,7 @@
                                                                             <Button Grid.Column="2" Margin="0,10,0,0"
                                                                                 HorizontalAlignment="Right"
                                                                                 VerticalAlignment="Top"
-                                                                                ToolTip="{ll:Str '当前日程进度'}"
+                                                                                ToolTip="{ll:Str 'Current Schedule progress'}"
                                                                                 FontWeight="Bold" FontSize="20"
                                                                                 Background="Transparent"
                                                                                 Content="&#xEC42;"
@@ -624,7 +624,7 @@
                                                                         </Grid.ColumnDefinitions>
                                                                         <StackPanel Orientation="Horizontal" Margin="7,0">
                                                                             <TextBlock VerticalAlignment="Center"
-                                                                                Text="{ll:Str '休息'}" />
+                                                                                Text="{ll:Str 'Have a rest'}" />
                                                                             <pu:NumberInput Minimum="0" Interval="1"
                                                                                 StepFactor="5"
                                                                                 IsSnapToIntervalEnabled="True"
@@ -644,16 +644,16 @@
                                                                             </pu:NumberInput>
                                                                             <TextBlock VerticalAlignment="Center"
                                                                                 Foreground="{DynamicResource DARKPrimary}"
-                                                                                FontSize="16" Text="{ll:Str '分钟'}" />
+                                                                                FontSize="16" Text="{ll:Str 'Min'}" />
                                                                         </StackPanel>
                                                                         <Button Grid.Column="2" VerticalAlignment="Center"
-                                                                            ToolTip="{ll:Str '删除'}"
+                                                                            ToolTip="{ll:Str 'Delete'}"
                                                                             Background="Transparent" FontSize="20"
                                                                             Foreground="{DynamicResource DangerBrush}"
                                                                             FontFamily="{StaticResource RemixIcon}"
                                                                             Click="btn_removeSchedule_Click">&#xeb97;</Button>
                                                                         <Button Grid.Column="1" VerticalAlignment="Center"
-                                                                            ToolTip="{ll:Str '当前日程进度'}"
+                                                                            ToolTip="{ll:Str 'Current Schedule progress'}"
                                                                             Visibility="{Binding IsNowVisibility}"
                                                                             FontWeight="Bold" FontSize="20"
                                                                             Background="Transparent" Content="&#xEC42;"
@@ -666,7 +666,7 @@
                                                     </ItemsControl>
                                                     <Button Margin="-20,-5,0,-5" HorizontalAlignment="Left"
                                                         Style="{DynamicResource IconButtonStyle}" Content="&#xea11;"
-                                                        ToolTip="{ll:Str 添加休息}" Click="btn_addRest_Click" />
+                                                        ToolTip="{ll:Str Add a break}" Click="btn_addRest_Click" />
                                                 </StackPanel>
                                             </Grid>
                                         </ScrollViewer>
@@ -680,7 +680,7 @@
                                         <RowDefinition />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock Text="{ll:Str 合计}" />
+                                    <TextBlock Text="{ll:Str Total amount}" />
                                     <Grid Grid.Row="1" Margin="0,7,0,0">
                                         <pu:RingProgressBar x:Name="rpgbSchedule"
                                                 Height="{Binding ActualWidth, RelativeSource={RelativeSource Self}}"
@@ -690,17 +690,17 @@
                                                 Minimum="0" Maximum="100" Value="0" />
                                         <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <StackPanel>
-                                                <TextBlock Opacity="0.5" Text="{ll:Str '工作时间'}" />
+                                                <TextBlock Opacity="0.5" Text="{ll:Str 'Working time'}" />
                                                 <TextBlock Foreground="{DynamicResource DARKPrimary}"
                                                         HorizontalAlignment="Right">
                                                     <Run x:Name="runScheduleWork" FontSize="22">0</Run>
-                                                    <Run Text="{ll:Str '分钟'}" />
+                                                    <Run Text="{ll:Str 'Min'}" />
                                                 </TextBlock>
-                                                <TextBlock Opacity="0.5" Text="{ll:Str 休息时间}" />
+                                                <TextBlock Opacity="0.5" Text="{ll:Str Rest time}" />
                                                 <TextBlock Foreground="{DynamicResource DARKPrimary}"
                                                         HorizontalAlignment="Right">
                                                     <Run x:Name="runScheduleRest" FontSize="22">0</Run>
-                                                    <Run Text="{ll:Str '分钟'}" />
+                                                    <Run Text="{ll:Str 'Min'}" />
                                                 </TextBlock>
                                             </StackPanel>
                                         </Grid>
@@ -710,7 +710,7 @@
                                             Text="100%" FontWeight="Bold" />
                                     <ToggleButton x:Name="btnStartSchedule" Grid.Row="4"
                                             Style="{DynamicResource ThemedToggleButtonStyle}" Height="30"
-                                            pu:ToggleButtonHelper.CheckedContent="{ll:Str 停止日程}" Content="{ll:Str 开始日程}"
+                                            pu:ToggleButtonHelper.CheckedContent="{ll:Str Stop Schedule}" Content="{ll:Str Start Schedule}"
                                             Background="{DynamicResource PrimaryDarker}" FontSize="16" FontWeight="Bold"
                                             Click="btnStartSchedule_Click" />
 
@@ -718,7 +718,7 @@
                             </Grid>
                         </TabItem>
                     </TabControl>
-                    <Label x:Name="blockTask" Content="{ll:Str '日程表将在15级开放'}"
+                    <Label x:Name="blockTask" Content="{ll:Str 'Schedule opens at lv15'}"
                             Background="{DynamicResource DARKPrimaryTransA}"
                             Foreground="{DynamicResource DARKPrimaryText}" FontSize="36" FontWeight="Bold" Margin="-15"
                             VerticalContentAlignment="Center" HorizontalContentAlignment="Center"

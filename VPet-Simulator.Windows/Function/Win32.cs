@@ -50,10 +50,7 @@ namespace VPet_Simulator.Windows
             void GetCurFile([MarshalAs(UnmanagedType.LPWStr)] out string ppszFileName);
         }
         /// <summary>
-        /// 扩展的窗口风格
-        /// 这是 long 类型的，如果想要使用 int 类型请使用 <see cref="WindowExStyles"/> 类
         /// </summary>
-        /// 代码：[Extended Window Styles (Windows)](https://msdn.microsoft.com/en-us/library/windows/desktop/ff700543(v=vs.85).aspx )
         /// code from [Extended Window Styles (Windows)](https://msdn.microsoft.com/en-us/library/windows/desktop/ff700543(v=vs.85).aspx )
         [Flags]
         public enum ExtendedWindowStyles : long
@@ -197,80 +194,51 @@ namespace VPet_Simulator.Windows
         public static partial class User32
         {
             /// <summary>
-            /// 获得指定窗口的信息
             /// </summary>
-            /// <param name="hWnd">指定窗口的句柄</param>
-            /// <param name="nIndex">需要获得的信息的类型 请使用<see cref="GetWindowLongFields"/></param>
             /// <returns></returns>
             // This static method is required because Win32 does not support
             // GetWindowLongPtr directly
             public static IntPtr GetWindowLongPtr(IntPtr hWnd, GetWindowLongFields nIndex) => GetWindowLongPtr(hWnd, (int)nIndex);
 
             /// <summary>
-            /// 获得指定窗口的信息
             /// </summary>
-            /// <param name="hWnd">指定窗口的句柄</param>
-            /// <param name="nIndex">需要获得的信息的类型 请使用<see cref="GetWindowLongFields"/></param>
             /// <returns></returns>
             // This static method is required because Win32 does not support
             // GetWindowLongPtr directly
             public static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
             {
                 return IntPtr.Size > 4
-#pragma warning disable CS0618 // 类型或成员已过时
+#pragma warning disable CS0618
                     ? GetWindowLongPtr_x64(hWnd, nIndex)
                     : new IntPtr(GetWindowLong(hWnd, nIndex));
-#pragma warning restore CS0618 // 类型或成员已过时
+#pragma warning restore CS0618
             }
 
             /// <summary>
-            /// 获得指定窗口的信息
             /// </summary>
-            /// <param name="hWnd">指定窗口的句柄</param>
-            /// <param name="nIndex">需要获得的信息的类型 请使用<see cref="GetWindowLongFields"/></param>
             /// <returns></returns>
-            [Obsolete("请使用 GetWindowLongPtr 解决 x86 和 x64 需要使用不同方法")]
+            [Obsolete("Use GetWindowLongPtr to handle x86 and x64 needing different methods")]
             [DllImport(LibraryName, CharSet = Properties.BuildCharSet)]
             public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
             /// <summary>
-            /// 获得指定窗口的信息
             /// </summary>
-            /// <param name="hWnd">指定窗口的句柄</param>
-            /// <param name="nIndex">需要获得的信息的类型 请使用<see cref="GetWindowLongFields"/></param>
             /// <returns></returns>
-            [Obsolete("请使用 GetWindowLongPtr 解决 x86 和 x64 需要使用不同方法")]
+            [Obsolete("Use GetWindowLongPtr to handle x86 and x64 needing different methods")]
             [DllImport(LibraryName, CharSet = Properties.BuildCharSet, EntryPoint = "GetWindowLongPtr")]
             public static extern IntPtr GetWindowLongPtr_x64(IntPtr hWnd, int nIndex);
 
             /// <summary>
-            /// 改变指定窗口的属性
             /// </summary>
-            /// <param name="hWnd">窗口句柄</param>
             /// <param name="nIndex">
-            /// 指定将设定的大于等于0的偏移值。有效值的范围从0到额外类的存储空间的字节数减4：例如若指定了12或多于12个字节的额外窗口存储空间，则应设索引位8来访问第三个4字节，同样设置0访问第一个4字节，4访问第二个4字节。要设置其他任何值，可以指定下面值之一
-            /// 从 GetWindowLongFields 可以找到所有的值
             /// </param>
-            /// <param name="dwNewLong">指定的替换值</param>
             /// <returns></returns>
             public static IntPtr SetWindowLongPtr(IntPtr hWnd, GetWindowLongFields nIndex, IntPtr dwNewLong) => SetWindowLongPtr(hWnd, (int)nIndex, dwNewLong);
 
             /// <summary>
-            /// 改变指定窗口的属性
             /// </summary>
-            /// <param name="hWnd">窗口句柄</param>
-            /// <param name="nIndex">指定将设定的大于等于0的偏移值。有效值的范围从0到额外类的存储空间的字节数减4：例如若指定了12或多于12个字节的额外窗口存储空间，则应设索引位8来访问第三个4字节，同样设置0访问第一个4字节，4访问第二个4字节。要设置其他任何值，可以指定下面值之一
-            /// 从 GetWindowLongFields 可以找到所有的值
             /// <para>
-            /// GetWindowLongFields.GWL_EXSTYLE             -20    设定一个新的扩展风格。 </para>
-            /// <para>GWL_HINSTANCE     -6	   设置一个新的应用程序实例句柄。</para>
-            /// <para>GWL_ID            -12    设置一个新的窗口标识符。</para>
-            /// <para>GWL_STYLE         -16    设定一个新的窗口风格。</para>
-            /// <para>GWL_USERDATA      -21    设置与窗口有关的32位值。每个窗口均有一个由创建该窗口的应用程序使用的32位值。</para>
-            /// <para>GWL_WNDPROC       -4    为窗口设定一个新的处理函数。</para>
-            /// <para>GWL_HWNDPARENT    -8    改变子窗口的父窗口,应使用SetParent函数</para>
             /// </param>
-            /// <param name="dwNewLong">指定的替换值</param>
             /// <returns></returns>
             // This static method is required because Win32 does not support
             // GetWindowLongPtr directly
@@ -278,52 +246,28 @@ namespace VPet_Simulator.Windows
             {
 
                 return IntPtr.Size > 4
-#pragma warning disable CS0618 // 类型或成员已过时
+#pragma warning disable CS0618
                     ? SetWindowLongPtr_x64(hWnd, nIndex, dwNewLong)
                     : new IntPtr(SetWindowLong(hWnd, nIndex, dwNewLong.ToInt32()));
-#pragma warning restore CS0618 // 类型或成员已过时
+#pragma warning restore CS0618
             }
 
             /// <summary>
-            /// 改变指定窗口的属性
             /// </summary>
-            /// <param name="hWnd">窗口句柄</param>
-            /// <param name="nIndex">指定将设定的大于等于0的偏移值。有效值的范围从0到额外类的存储空间的字节数减4：例如若指定了12或多于12个字节的额外窗口存储空间，则应设索引位8来访问第三个4字节，同样设置0访问第一个4字节，4访问第二个4字节。要设置其他任何值，可以指定下面值之一
-            /// 从 GetWindowLongFields 可以找到所有的值
             /// <para>
-            /// GetWindowLongFields.GWL_EXSTYLE             -20    设定一个新的扩展风格。 </para>
-            /// <para>GWL_HINSTANCE     -6	   设置一个新的应用程序实例句柄。</para>
-            /// <para>GWL_ID            -12    设置一个新的窗口标识符。</para>
-            /// <para>GWL_STYLE         -16    设定一个新的窗口风格。</para>
-            /// <para>GWL_USERDATA      -21    设置与窗口有关的32位值。每个窗口均有一个由创建该窗口的应用程序使用的32位值。</para>
-            /// <para>GWL_WNDPROC       -4    为窗口设定一个新的处理函数。</para>
-            /// <para>GWL_HWNDPARENT    -8    改变子窗口的父窗口,应使用SetParent函数</para>
             /// </param>
-            /// <param name="dwNewLong">指定的替换值</param>
             /// <returns></returns>
-            [Obsolete("请使用 SetWindowLongPtr 解决 x86 和 x64 需要使用不同方法")]
+            [Obsolete("Use SetWindowLongPtr to handle x86 and x64 needing different methods")]
             [DllImport(LibraryName, CharSet = Properties.BuildCharSet)]
             public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
             /// <summary>
-            /// 改变指定窗口的属性
             /// </summary>
-            /// <param name="hWnd">窗口句柄</param>
-            /// <param name="nIndex">指定将设定的大于等于0的偏移值。有效值的范围从0到额外类的存储空间的字节数减4：例如若指定了12或多于12个字节的额外窗口存储空间，则应设索引位8来访问第三个4字节，同样设置0访问第一个4字节，4访问第二个4字节。要设置其他任何值，可以指定下面值之一
-            /// 从 GetWindowLongFields 可以找到所有的值
             /// <para>
-            /// GetWindowLongFields.GWL_EXSTYLE             -20    设定一个新的扩展风格。 </para>
-            /// <para>GWL_HINSTANCE     -6	   设置一个新的应用程序实例句柄。</para>
-            /// <para>GWL_ID            -12    设置一个新的窗口标识符。</para>
-            /// <para>GWL_STYLE         -16    设定一个新的窗口风格。</para>
-            /// <para>GWL_USERDATA      -21    设置与窗口有关的32位值。每个窗口均有一个由创建该窗口的应用程序使用的32位值。</para>
-            /// <para>GWL_WNDPROC       -4    为窗口设定一个新的处理函数。</para>
-            /// <para>GWL_HWNDPARENT    -8    改变子窗口的父窗口,应使用SetParent函数</para>
             /// </param>
-            /// <param name="dwNewLong">指定的替换值</param>
             /// <returns></returns>
             [DllImport(LibraryName, CharSet = Properties.BuildCharSet, EntryPoint = "SetWindowLongPtr")]
-            [Obsolete("请使用 SetWindowLongPtr 解决 x86 和 x64 需要使用不同方法")]
+            [Obsolete("Use SetWindowLongPtr to handle x86 and x64 needing different methods")]
             public static extern IntPtr SetWindowLongPtr_x64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
             public const string LibraryName = "user32";
         }
@@ -338,49 +282,40 @@ namespace VPet_Simulator.Windows
         }
 
         /// <summary>
-        /// 用于在 <see cref="Win32.GetWindowLong"/> 的 int index 传入
         /// </summary>
-        /// 代码：[GetWindowLong function (Windows)](https://msdn.microsoft.com/en-us/library/windows/desktop/ms633584(v=vs.85).aspx )
         public enum GetWindowLongFields
         {
             /// <summary>
-            /// 设定一个新的扩展风格
             /// Retrieves the extended window styles
             /// </summary>
             GWL_EXSTYLE = -20,
 
             /// <summary>
-            /// 设置一个新的应用程序实例句柄
             /// Retrieves a handle to the application instance
             /// </summary>
             GWL_HINSTANCE = -6,
 
             /// <summary>
-            /// 改变子窗口的父窗口
             /// Retrieves a handle to the parent window, if any
             /// </summary>
             GWL_HWNDPARENT = -8,
 
             /// <summary>
-            ///  设置一个新的窗口标识符
             /// Retrieves the identifier of the window
             /// </summary>
             GWL_ID = -12,
 
             /// <summary>
-            /// 设定一个新的窗口风格
             /// Retrieves the window styles
             /// </summary>
             GWL_STYLE = -16,
 
             /// <summary>
-            /// 设置与窗口有关的32位值。每个窗口均有一个由创建该窗口的应用程序使用的32位值
             /// Retrieves the user data associated with the window. This data is intended for use by the application that created the window. Its value is initially zero
             /// </summary>
             GWL_USERDATA = -21,
 
             /// <summary>
-            /// 为窗口设定一个新的处理函数
             /// Retrieves the address of the window procedure, or a handle representing the address of the window procedure. You must use the CallWindowProc function to call the window procedure
             /// </summary>
             GWL_WNDPROC = -4,

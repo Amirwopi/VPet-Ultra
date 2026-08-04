@@ -18,7 +18,6 @@ namespace VPet_Simulator.Windows
     internal class CoreMOD : IModInfo
     {
         /// <summary>
-        /// 自动启用MOD名称
         /// </summary>
         public static readonly string[] OnModDefList = new string[] { "Core", "PCat" };
 
@@ -35,11 +34,9 @@ namespace VPet_Simulator.Windows
         public string Name { get; set; }
         public string Author { get; set; }
         /// <summary>
-        /// 如果是上传至Steam,则为SteamUserID
         /// </summary>
         public long AuthorID { get; set; }
         /// <summary>
-        /// 上传至Steam的ItemID
         /// </summary>
         public ulong ItemID { get; set; }
         public string Intro { get; set; }
@@ -53,17 +50,14 @@ namespace VPet_Simulator.Windows
         public static string INTtoVER(int ver) => ver < 10000 ? $"{ver / 100}.{ver % 100:00}" : $"{ver / 10000}.{ver % 10000 / 100}.{ver % 100:00}";
         public static void LoadImage(MainWindow mw, DirectoryInfo di, string pre = "")
         {
-            //加载其他放在文件夹的图片
             foreach (FileInfo fi in di.EnumerateFiles("*.png"))
             {
                 mw.ImageSources.AddSource(pre + fi.Name.ToLowerInvariant().Substring(0, fi.Name.Length - 4), fi.FullName);
             }
-            //加载其他放在文件夹中文件夹的图片
             foreach (DirectoryInfo fordi in di.EnumerateDirectories())
             {
                 LoadImage(mw, fordi, pre + fordi.Name + "_");
             }
-            //加载标志好的图片和图片设置
             foreach (FileInfo fi in di.EnumerateFiles("*.lps"))
             {
                 var tmp = new LpsDocument(File.ReadAllText(fi.FullName));
@@ -76,12 +70,10 @@ namespace VPet_Simulator.Windows
         }
         public static void LoadFile(MainWindow mw, DirectoryInfo di, string pre = "")
         {
-            //加载其他放在文件夹的文件
             foreach (FileInfo fi in di.EnumerateFiles())
             {
                 mw.FileSources.AddSource(pre + fi.Name, fi.FullName);
             }
-            //加载其他放在文件夹中文件夹的文件
             foreach (DirectoryInfo fordi in di.EnumerateDirectories())
             {
                 LoadFile(mw, fordi, pre + fordi.Name + "_");
@@ -115,11 +107,10 @@ namespace VPet_Simulator.Windows
                 LoadedDLL.Add(skip.Name);
             }
             if (CacheDate > DateTime.Now)
-            {//去掉不合理的清理缓存日期
+            {
                 CacheDate = DateTime.MinValue;
             }
 
-            //MOD未加载时支持翻译
             foreach (var line in modlps.FindAllLine("lang"))
             {
                 List<ILine> ls = new List<ILine>();
@@ -132,14 +123,14 @@ namespace VPet_Simulator.Windows
 
             if (mw.CoreMODs.FirstOrDefault(x => x.Name == Name) != null)
             {
-                Name += $"({"MOD名称重复".Translate()})";
-                ErrorMessage = "MOD名称重复".Translate();
+                Name += $"({"Mod name duplicated".Translate()})";
+                ErrorMessage = "Mod name duplicated".Translate();
                 return;
             }
 
             if (!IsOnMOD(mw))
             {
-                Tag.Add("该模组已停用");
+                Tag.Add("This mod is Disable");
                 foreach (DirectoryInfo di in Path.EnumerateDirectories())
                     Tag.Add(di.Name.ToLowerInvariant());
                 return;
@@ -164,7 +155,6 @@ namespace VPet_Simulator.Windows
                             if (oldtheme != null)
                                 mw.Themes.Remove(oldtheme);
                             mw.Themes.Add(tmp);
-                            //加载图片包
                             DirectoryInfo tmpdi = new DirectoryInfo(di.FullName + '\\' + tmp.Image);
                             if (tmpdi.Exists)
                             {
@@ -183,15 +173,14 @@ namespace VPet_Simulator.Windows
                         }
                         break;
                     case "pet":
-                        //宠物模型                           
                         foreach (FileInfo fi in di.EnumerateFiles("*.lps"))
                         {
                             LpsDocument lps = new LpsDocument(File.ReadAllText(fi.FullName));
                             if (lps.First().Name.ToLowerInvariant() == "pet")
                             {
                                 var name = lps.First().Info;
-                                if (name == "默认虚拟桌宠")
-                                    name = "vup";//旧版本名称兼容
+                                if (name == "Default desktop pet")
+                                    name = "vup";
 
                                 var p = mw.Pets.FirstOrDefault(x => x.Name == name);
                                 if (p == null)
@@ -363,16 +352,16 @@ namespace VPet_Simulator.Windows
                                         && certificate.Issuer == "CN=DigiCert Trusted G4 Code Signing RSA4096 SHA384 2021 CA1, O=\"DigiCert, Inc.\", C=US")
                                         || (certificate.Subject == "CN=\"Shenzhen Zero Edition Computer Technology Co., Ltd.\", O=\"Shenzhen Zero Edition Computer Technology Co., Ltd.\", L=Shenzhen, S=Guangdong, C=CN, SERIALNUMBER=91440300MA5H8REU3K, OID.1.3.6.1.4.1.311.60.2.1.1=Shenzhen, OID.1.3.6.1.4.1.311.60.2.1.2=Guangdong, OID.1.3.6.1.4.1.311.60.2.1.3=CN, OID.2.5.4.15=Private Organization"
                                         && certificate.Issuer == "CN=Certum Extended Validation Code Signing 2021 CA, O=Asseco Data Systems S.A., C=PL"))
-                                    {//LBGame 信任的证书
+                                    {
                                         if (authtype != "FAIL")
-                                            authtype = "[认证]".Translate();
+                                            authtype = "[Certificated]".Translate();
                                     }
                                     else if (!(certificate.Issuer.Contains("Microsoft Corporation") ||
                                         certificate.Issuer.Contains(".NET Foundation Projects") ||
                                         certificate.Issuer == "CN=DigiCert Trusted G4 Code Signing RSA4096 SHA384 2021 CA1, O=\"DigiCert, Inc.\", C=US" ||
                                         certificate.Issuer == "CN=Certum Extended Validation Code Signing 2021 CA, O=Asseco Data Systems S.A., C=PL")
                                         && !IsPassMOD(mw))
-                                    {//不是通过模组,不加载
+                                    {
                                         SuccessLoad = false;
                                         continue;
                                     }
@@ -381,7 +370,7 @@ namespace VPet_Simulator.Windows
                                 {
                                     authtype = "FAIL";
                                     if (!IsPassMOD(mw))
-                                    {//不是通过模组,不加载
+                                    {
                                         SuccessLoad = false;
                                         Author = modlps.FindSub("author").Info.Split('[').First();
                                         continue;
@@ -421,7 +410,7 @@ namespace VPet_Simulator.Windows
             {
                 Console.WriteLine("{Name}:Error {e.Message}");
                 ErrorMessage = e.Message;
-                Tag.Add("该模组已损坏");
+                Tag.Add("The module is corrupted.");
                 SuccessLoad = false;
             }
 #endif

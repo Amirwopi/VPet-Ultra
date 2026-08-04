@@ -13,7 +13,7 @@
     </pu:WindowX.Background>
     <!--<pu:WindowX.ContextMenu>
         <ContextMenu>
-            <MenuItem Header="{ll:Str '设置'}" />
+            <MenuItem Header="{ll:Str 'Settings'}" />
         </ContextMenu>
     </pu:WindowX.ContextMenu>-->
     <WindowChrome.WindowChrome>

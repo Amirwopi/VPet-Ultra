@@ -17,7 +17,6 @@ using static VPet_Simulator.Windows.Interface.ScheduleTask;
 
 namespace VPet_Simulator.Windows;
 /// <summary>
-/// winWorkMenu.xaml 的交互逻辑
 /// </summary>
 public partial class winWorkMenu : WindowX
 {
@@ -78,7 +77,7 @@ public partial class winWorkMenu : WindowX
         CalculateSceduleTime();
         imgAgency.Source = mw.ImageSources.FindImage("work_" + mw.Set.PetGraph + "_agency_job", "work_agency_job");
         tbtnAgencyTraning.IsChecked = false;
-        rTaskType.Text = "抽成".Translate();
+        rTaskType.Text = "Percentage".Translate();
         cbDIYName.IsChecked = mw.Set["workmenu"].GetBool("DIY_Enable");
         tbDIYName.Text = mw.Set["workmenu"].GetString("DIY_TEXT" + LsbCategory.SelectedIndex);
         foreach (var v in mw.SchedulePackage.FindAll(x => x.WorkType == Work.WorkType.Work))
@@ -99,9 +98,9 @@ public partial class winWorkMenu : WindowX
         combTaskType.SelectedIndex = 0;
 
 
-        ComboBoxHelper.SetWatermark(detailTypes, "---" + "请选择".Translate() + "---");
+        ComboBoxHelper.SetWatermark(detailTypes, "---" + " Please select ".Translate() + "---");
 
-        ComboBoxHelper.SetWatermark(combTaskType, "---" + "请选择".Translate() + "套餐".Translate() + "---");
+        ComboBoxHelper.SetWatermark(combTaskType, "---" + " Please select ".Translate() + "Package".Translate() + "---");
 
     }
     public bool IsWorkStar(Work work) => mw.Set["work_star"].GetBool(work.Name);
@@ -113,7 +112,6 @@ public partial class winWorkMenu : WindowX
     {
         AllowChange = false;
         btnStart.IsEnabled = true;
-        //判断倍率
         if (nowwork.LevelLimit > mw.GameSavesData.GameSave.Level)
         {
             wDouble.Visibility = Visibility.Collapsed;
@@ -152,11 +150,9 @@ public partial class winWorkMenu : WindowX
         }
         nowworkdisplay = work;
 
-        //显示图像
         string source = mw.ImageSources.FindSource("work_" + mw.Set.PetGraph + "_" + work.Graph) ?? mw.ImageSources.FindSource("work_" + mw.Set.PetGraph + "_" + work.Name);
         if (source == null)
         {
-            //尝试显示默认图像
             ShowImageDefault(work.Type);
         }
         else
@@ -164,9 +160,9 @@ public partial class winWorkMenu : WindowX
             WorkViewImage.Source = Interface.ImageResources.NewSafeBitmapImage(source);
         }
         if (work.Type == Work.WorkType.Work)
-            tbGain.Text = "金钱".Translate();
+            tbGain.Text = "Money".Translate();
         else
-            tbGain.Text = "经验".Translate();
+            tbGain.Text = "EXP".Translate();
         tbSpeed.Text = work.Get().ToString("f2");
         tbFood.Text = work.StrengthFood.ToString("f2");
         tbDrink.Text = work.StrengthDrink.ToString("f2");
@@ -197,27 +193,27 @@ public partial class winWorkMenu : WindowX
             {
                 case 0:
                     detailTypes.ItemsSource = _workDetails;
-                    btnStart.Content = "开始工作".Translate();
-                    ComboBoxHelper.SetWatermark(detailTypes, "---" + "请选择".Translate() + "工作".Translate() + "---");
-                    TextBoxHelper.SetWatermark(tbDIYName, "自定义{0}名称".Translate("工作".Translate()));
+                    btnStart.Content = "Start Working".Translate();
+                    ComboBoxHelper.SetWatermark(detailTypes, "---" + " Please select ".Translate() + "Work".Translate() + "---");
+                    TextBoxHelper.SetWatermark(tbDIYName, "Customize {0} Name".Translate("Work".Translate()));
                     break;
                 case 1:
                     detailTypes.ItemsSource = _studyDetails;
-                    btnStart.Content = "开始学习".Translate();
-                    ComboBoxHelper.SetWatermark(detailTypes, "---" + "请选择".Translate() + "学习".Translate() + "---");
-                    TextBoxHelper.SetWatermark(tbDIYName, "自定义{0}名称".Translate("学习".Translate()));
+                    btnStart.Content = "Start Learning".Translate();
+                    ComboBoxHelper.SetWatermark(detailTypes, "---" + " Please select ".Translate() + "Learning".Translate() + "---");
+                    TextBoxHelper.SetWatermark(tbDIYName, "Customize {0} Name".Translate("Learning".Translate()));
                     break;
                 case 2:
                     detailTypes.ItemsSource = _playDetails;
-                    btnStart.Content = "开始玩耍".Translate();
-                    ComboBoxHelper.SetWatermark(detailTypes, "---" + "请选择".Translate() + "玩耍".Translate() + "---");
-                    TextBoxHelper.SetWatermark(tbDIYName, "自定义{0}名称".Translate("玩耍".Translate()));
+                    btnStart.Content = "Start Playing".Translate();
+                    ComboBoxHelper.SetWatermark(detailTypes, "---" + " Please select ".Translate() + "Play".Translate() + "---");
+                    TextBoxHelper.SetWatermark(tbDIYName, "Customize {0} Name".Translate("Play".Translate()));
                     break;
                 case 3:
                     detailTypes.ItemsSource = _starDetails;
-                    btnStart.Content = "开始活动".Translate();
-                    ComboBoxHelper.SetWatermark(detailTypes, "---" + "请选择".Translate() + "---");
-                    TextBoxHelper.SetWatermark(tbDIYName, "自定义{0}名称".Translate(""));
+                    btnStart.Content = "Start activity".Translate();
+                    ComboBoxHelper.SetWatermark(detailTypes, "---" + " Please select ".Translate() + "---");
+                    TextBoxHelper.SetWatermark(tbDIYName, "Customize {0} Name".Translate(""));
                     break;
                 case 4:
                     gdWork.Visibility = Visibility.Collapsed;
@@ -318,7 +314,6 @@ public partial class winWorkMenu : WindowX
         mw.Main.ToolBar.MenuStudy.Items.Clear();
         mw.Main.ToolBar.MenuWork.Items.Clear();
         mw.Main.ToolBar.MenuPlay.Items.Clear();
-        //更新星标
         foreach (var v in mw.WorkStar())
         {
             _starDetails.Add(v.NameTrans);
@@ -365,7 +360,7 @@ public partial class winWorkMenu : WindowX
         {
             if (sworkTime / (double)(sworkTime + srestTime) > 0.71)
             {
-                MessageBoxX.Show("工作时间过长,请添加更多的休息时间".Translate(), "工作时间过长".Translate());
+                MessageBoxX.Show("The working hours are too long. Please add more rest time".Translate(), "Working hours are too long".Translate());
                 btnStartSchedule.IsChecked = false;
                 return;
             }
@@ -413,7 +408,7 @@ public partial class winWorkMenu : WindowX
     {
         if (package == null)
         {
-            rpnDescribe.Text = rpnName.Text = "暂无签署套餐".Translate();
+            rpnDescribe.Text = rpnName.Text = "No subscription package has been signed".Translate();
             rpnEndDate.Text = rpnPrice.Text = rpnCommissions.Text = "-";
             rpnEndDay.Text = "0";
             pack = null;
@@ -465,13 +460,12 @@ public partial class winWorkMenu : WindowX
         {
             imgAgency.Source = mw.ImageSources.FindImage("work_" + mw.Set.PetGraph + "_agency_job", "work_agency_job");
             tbtnAgencyTraning.IsChecked = false;
-            //加载套餐combTaskType
-            rTaskType.Text = "抽成".Translate();
+            // LoadPackagecombTaskType
+            rTaskType.Text = "Percentage".Translate();
             combTaskType.Items.Clear();
             foreach (var v in mw.SchedulePackage.FindAll(x => x.WorkType == Work.WorkType.Work))
                 combTaskType.Items.Add(v);
             combTaskType.SelectedIndex = 0;
-            //加载现有套餐
             rpnDisplay(mw.ScheduleTask.PackageWork, nowselefull?.WorkType ?? Work.WorkType.Work);
             tbtnCurrentPlan.IsChecked = mw.ScheduleTask.PackageWork?.IsActive() == true;
         }
@@ -480,12 +474,11 @@ public partial class winWorkMenu : WindowX
             imgAgency.Source = mw.ImageSources.FindImage("work_" + mw.Set.PetGraph + "_agency_training", "work_agency_training");
             tbtnAgencyJob.IsChecked = false;
 
-            rTaskType.Text = "效率".Translate();
+            rTaskType.Text = "Efficiency".Translate();
             combTaskType.Items.Clear();
             foreach (var v in mw.SchedulePackage.FindAll(x => x.WorkType == Work.WorkType.Study))
                 combTaskType.Items.Add(v);
             combTaskType.SelectedIndex = 0;
-            //加载现有套餐
             rpnDisplay(mw.ScheduleTask.PackageStudy, nowselefull?.WorkType ?? Work.WorkType.Study);
             tbtnCurrentPlan.IsChecked = mw.ScheduleTask.PackageStudy?.IsActive() == true;
         }
@@ -507,16 +500,15 @@ public partial class winWorkMenu : WindowX
         double refound = 0;
         if (package.Price > mw.Core.Save.Money)
         {
-            MessageBoxX.Show("金钱不足".Translate(), "签署失败".Translate());
+            MessageBoxX.Show("Lack of money".Translate(), "Signing failed".Translate());
             return;
         }
         if (nowselefull.WorkType == Work.WorkType.Work)
         {
             if (mw.ScheduleTask.PackageWork?.IsActive() == true)
             {
-                if (MessageBoxX.Show("工作套餐已激活,是否替换?".Translate(), "套餐已激活".Translate(), MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                if (MessageBoxX.Show("The work package has been activated. Do you want to replace it?".Translate(), "The package has been activated".Translate(), MessageBoxButton.YesNo) != MessageBoxResult.Yes)
                     return;
-                //计算价格,给剩下的退款
                 double lefttime = (mw.ScheduleTask.PackageWork.EndTime - DateTime.Now).TotalDays / 2;
                 if (lefttime > 0.5)
                 {
@@ -536,9 +528,8 @@ public partial class winWorkMenu : WindowX
         {
             if (mw.ScheduleTask.PackageStudy?.IsActive() == true)
             {
-                if (MessageBoxX.Show("学习套餐已激活,是否替换?".Translate(), "套餐已激活".Translate(), MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                if (MessageBoxX.Show("The learning package has been activated. Do you want to replace it?".Translate(), "The package has been activated".Translate(), MessageBoxButton.YesNo) != MessageBoxResult.Yes)
                     return;
-                //计算价格,给剩下的退款
                 double lefttime = (mw.ScheduleTask.PackageStudy.EndTime - DateTime.Now).TotalDays / 2;
                 if (lefttime > 0.5)
                 {
@@ -556,8 +547,8 @@ public partial class winWorkMenu : WindowX
         }
         tbtnCurrentPlan.IsChecked = true;
         mw.Core.Save.Money -= package.Price - refound;
-        MessageBoxX.Show("套餐 {0} 签署成功".Translate(package.NameTrans) + (refound == 0 ? "" :
-          '\n' + "获得 {0:f1} 退款".Translate(refound)), "签署成功".Translate());
+        MessageBoxX.Show("Package {0} signed successfully".Translate(package.NameTrans) + (refound == 0 ? "" :
+          '\n' + "Get {0:f1} Refund".Translate(refound)), "Signed successfully".Translate());
     }
 
     private void btn_addRest_Click(object sender, RoutedEventArgs e)
@@ -646,19 +637,18 @@ public partial class winWorkMenu : WindowX
     private void btnAddAuto_Click(object sender, RoutedEventArgs e)
     {
         if (nowwork != null || nowworkdisplay != null)
-            //看看套餐
             switch (nowwork.Type)
             {
                 case Work.WorkType.Work:
                     if (mw.ScheduleTask.PackageWork?.IsActive() != true)
                     {
-                        MessageBoxX.Show("工作套餐未激活,请前往日程表签署工作中介套餐".Translate(), "套餐未激活".Translate());
+                        MessageBoxX.Show("The work package is not activated. Please go to the Schedule to sign up for the work intermediary package".Translate(), "The package is not activated".Translate());
                         return;
                     }
                     else if (mw.ScheduleTask.PackageWork.Level < nowworkdisplay.LevelLimit)
                     {
-                        MessageBoxX.Show("工作套餐等级不足({0}/{1}),\n请选择更低等级要求/倍率的工作或前往日程表签署新的工作中介套餐".Translate(mw.ScheduleTask.PackageWork.Level,
-                            nowworkdisplay.LevelLimit), "套餐等级不足".Translate());
+                        MessageBoxX.Show("The work package level is insufficient ({0}/{1}),\\nPlease select a lower level requirement/ratio work or go to the Schedule to sign a new work intermediary package".Translate(mw.ScheduleTask.PackageWork.Level,
+                            nowworkdisplay.LevelLimit), "Insufficient package level".Translate());
                         return;
                     }
                     mw.ScheduleTask.AddWork(nowwork, (int)wDouble.Value);
@@ -666,13 +656,13 @@ public partial class winWorkMenu : WindowX
                 case Work.WorkType.Study:
                     if (mw.ScheduleTask.PackageStudy?.IsActive() != true)
                     {
-                        MessageBoxX.Show("学习套餐未激活,请前往日程表签署培训机构套餐".Translate(), "套餐未激活".Translate());
+                        MessageBoxX.Show("The learning package has not been activated. Please go to the Schedule to sign up for the training institution package".Translate(), "The package is not activated".Translate());
                         return;
                     }
                     else if (mw.ScheduleTask.PackageStudy.Level < nowworkdisplay.LevelLimit)
                     {
-                        MessageBoxX.Show("学习套餐等级不足({0}/{1}),\n请选择更低等级要求/倍率的学习或前往日程表签署新的培训机构套餐".Translate(mw.ScheduleTask.PackageStudy.Level,
-                            nowworkdisplay.LevelLimit), "套餐等级不足".Translate());
+                        MessageBoxX.Show("The learning package level is insufficient ({0}/{1}),\\nPlease choose a lower level requirement/rate of learning or go to the Schedule to sign up for a new training institution package".Translate(mw.ScheduleTask.PackageStudy.Level,
+                            nowworkdisplay.LevelLimit), "Insufficient package level".Translate());
                         return;
                     }
                     mw.ScheduleTask.AddStudy(nowwork, (int)wDouble.Value);
@@ -680,7 +670,7 @@ public partial class winWorkMenu : WindowX
                 case Work.WorkType.Play:
                     if (mw.Core.Save.Level < 15)
                     {
-                        MessageBoxX.Show("等级不足15级,无法使用日程表".Translate(), "等级不足".Translate());
+                        MessageBoxX.Show("You cannot use the Schedule if your level is less than 15".Translate(), "Insufficient level".Translate());
                         return;
                     }
                     mw.ScheduleTask.AddPlay(nowwork, (int)wDouble.Value);

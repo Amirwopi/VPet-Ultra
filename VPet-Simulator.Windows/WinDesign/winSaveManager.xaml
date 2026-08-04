@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:pu="clr-namespace:Panuon.WPF.UI;assembly=Panuon.WPF.UI"
         xmlns:ll="clr-namespace:LinePutScript.Localization.WPF;assembly=LinePutScript.Localization.WPF" mc:Ignorable="d"
-        Width="900" Height="540" FontSize="16" Foreground="{StaticResource PrimaryText}" Title="{ll:Str '存档管理器'}"
+        Width="900" Height="540" FontSize="16" Foreground="{StaticResource PrimaryText}" Title="{ll:Str 'Saves Management'}"
         Style="{DynamicResource BaseWindowXStyle}" WindowStartupLocation="CenterOwner">
     <Grid Margin="10">
         <Grid.RowDefinitions>
@@ -26,15 +26,15 @@
                 <ColumnDefinition Width="160" />
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
-            <TextBlock VerticalAlignment="Center" Text="{ll:Str '筛选来源:'}" FontWeight="Bold" />
+            <TextBlock VerticalAlignment="Center" Text="{ll:Str 'Filter Source'}" FontWeight="Bold" />
             <ComboBox x:Name="CBTypeFilter" Grid.Column="1" Margin="6,0,0,0" SelectedIndex="0"
                     SelectionChanged="Filter_Changed" Style="{DynamicResource StandardComboBoxStyle}">
-                <ComboBoxItem Content="{ll:Str '全部'}" Tag="all" />
-                <ComboBoxItem Content="{ll:Str '本地'}" Tag="local" ToolTip="{ll:Str '本地存档, 会被Steam自动同步'}" />
-                <ComboBoxItem Content="{ll:Str '离线备份'}" Tag="localbackup" ToolTip="{ll:Str '本地备份文件, 不会被steam云存档同步'}" />
-                <ComboBoxItem Content="{ll:Str 'Steam储存'}" Tag="steam" ToolTip="{ll:Str 'Steam云储存备份存档, 跟随Steam账号保存'}" />
+                <ComboBoxItem Content="{ll:Str 'All'}" Tag="all" />
+                <ComboBoxItem Content="{ll:Str 'Local'}" Tag="local" ToolTip="{ll:Str 'Local saves, will be automatically synced by Steam'}" />
+                <ComboBoxItem Content="{ll:Str 'Offline Backup'}" Tag="localbackup" ToolTip="{ll:Str 'Local backup files, will not be synced by Steam Cloud'}" />
+                <ComboBoxItem Content="{ll:Str 'Steam Storage'}" Tag="steam" ToolTip="{ll:Str 'Steam Storage backup saves, saved with your Steam account'}" />
             </ComboBox>
-            <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{ll:Str '筛选存档时间:'}" FontWeight="Bold" />
+            <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{ll:Str 'Filter Save Time'}" FontWeight="Bold" />
             <pu:DateTimePicker x:Name="DPStart" Grid.Column="4" Margin="6,0,0,0"
                     SelectedDateTimeChanged="Filter_Changed" CornerRadius="2" TextStringFormat="yyyy-MM-dd"
                     BorderBrush="{DynamicResource DARKPrimary}" />
@@ -47,22 +47,22 @@
                 SelectionMode="Single" SelectionUnit="FullRow" CanUserAddRows="False" CanUserDeleteRows="False"
                 CanUserSortColumns="True">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="{ll:Str '来源'}" Binding="{Binding SourceText}" Width="*">
+                <DataGridTextColumn Header="{ll:Str 'Source'}" Binding="{Binding SourceText}" Width="*">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="ToolTip" Value="{Binding SourceToolTip}" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
-                <DataGridTextColumn Header="{ll:Str '宠物名称'}" Binding="{Binding PetName}" Width="1.2*" />
-                <DataGridTextColumn Header="{ll:Str '存档时间'}" Binding="{Binding SaveTimeText}" Width="1.8*"
+                <DataGridTextColumn Header="{ll:Str 'Name'}" Binding="{Binding PetName}" Width="1.2*" />
+                <DataGridTextColumn Header="{ll:Str 'Save Time'}" Binding="{Binding SaveTimeText}" Width="1.8*"
                         SortMemberPath="SaveTime" />
-                <DataGridTextColumn Header="{ll:Str '等级'}" Binding="{Binding LevelText}" Width="*" />
-                <DataGridTextColumn Header="{ll:Str '金钱'}" Binding="{Binding MoneyText}" Width="*" />
+                <DataGridTextColumn Header="{ll:Str 'Grade'}" Binding="{Binding LevelText}" Width="*" />
+                <DataGridTextColumn Header="{ll:Str 'Money'}" Binding="{Binding MoneyText}" Width="*" />
                 <DataGridTextColumn Header="HashCheck" Binding="{Binding HashCheckText}" Width="*">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
-                            <Setter Property="ToolTip" Value="{ll:Str '是没有修改过存档/使用超模MOD的玩家专属标志'}" />
+                            <Setter Property="ToolTip" Value="{ll:Str 'Is there no modified archive/supermodel MOD player exclusive logo'}" />
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
@@ -71,11 +71,11 @@
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
             <Button Margin="0,0,8,0" Padding="16,4" Click="BtnRefresh_Click" pu:ButtonHelper.CornerRadius="4"
-                    Background="{DynamicResource SecondaryLight}" Content="{ll:Str '刷新'}" />
+                    Background="{DynamicResource SecondaryLight}" Content="{ll:Str ''}" />
             <Button Margin="0,0,8,0" Padding="16,4" Click="BtnLoad_Click" pu:ButtonHelper.CornerRadius="4"
-                    Background="{DynamicResource SecondaryLight}" Content="{ll:Str '加载'}" />
+                    Background="{DynamicResource SecondaryLight}" Content="{ll:Str 'Load'}" />
             <Button Padding="16,4" Click="BtnClose_Click" pu:ButtonHelper.CornerRadius="4"
-                    Background="{DynamicResource SecondaryLight}" Content="{ll:Str '关闭'}" />
+                    Background="{DynamicResource SecondaryLight}" Content="{ll:Str 'Close'}" />
         </StackPanel>
     </Grid>
 </pu:WindowX>

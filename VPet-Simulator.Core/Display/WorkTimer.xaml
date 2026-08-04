@@ -30,7 +30,7 @@
                 </Grid.RowDefinitions>
                 <Viewbox HorizontalAlignment="Right" VerticalAlignment="Center" Margin="45,0,5,0" Grid.ColumnSpan="2">
                     <TextBlock x:Name="tNow" Foreground="{DynamicResource Foreground}" FontSize="36" FontWeight="Bold"
-                            Text="当前已工作" />
+                            Text="Currently working" />
                 </Viewbox>
 
                 <Viewbox Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -38,14 +38,14 @@
                             Foreground="{DynamicResource Foreground}" />
                 </Viewbox>
 
-                <TextBlock x:Name="tNumberUnit" Text="分钟" Foreground="{DynamicResource Foreground}" Grid.Row="1"
+                <TextBlock x:Name="tNumberUnit" Text="Min" Foreground="{DynamicResource Foreground}" Grid.Row="1"
                         Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,15"
                         FontSize="36" />
                 <ProgressBar x:Name="PBLeft" Grid.Row="2" Grid.ColumnSpan="2" Background="{x:Null}"
                         Foreground="{DynamicResource ButtonBackgroundHover}" Value="20" />
                 <Button x:Name="btnStop" Grid.Row="2" Grid.ColumnSpan="2"
                         Foreground="{DynamicResource ButtonForeground}" Background="{DynamicResource ButtonBackground}"
-                        Content="{ll:Str 停止工作}" FontSize="24" Click="btnStop_Click"
+                        Content="{ll:Str Stop Working}" FontSize="24" Click="btnStop_Click"
                         pu:ButtonHelper.HoverBackground="{DynamicResource ButtonBackgroundHover}" />
             </Grid>
         </Border>

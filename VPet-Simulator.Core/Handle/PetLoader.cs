@@ -12,16 +12,13 @@ using static VPet_Simulator.Core.GraphCore;
 namespace VPet_Simulator.Core
 {
     /// <summary>
-    /// 宠物加载器
     /// </summary>
     public class PetLoader
     {
         /// <summary>
-        /// 动画数量
         /// </summary>
         public int GraphCount { get; private set; }
         /// <summary>
-        /// 宠物图像
         /// </summary>
         public GraphCore Graph(int Resolution, Dispatcher dispatcher)
         {
@@ -33,19 +30,15 @@ namespace VPet_Simulator.Core
             return g;
         }
         /// <summary>
-        /// 图像位置
         /// </summary>
         public List<string> path = new List<string>();
         /// <summary>
-        /// 宠物介绍名字
         /// </summary>
         public string Name;
         /// <summary>
-        /// 宠物介绍
         /// </summary>
         public string Intor;
         /// <summary>
-        /// 宠物默认名字
         /// </summary>
         public string PetName;
         public GraphCore.Config Config;
@@ -59,7 +52,6 @@ namespace VPet_Simulator.Core
         }
         public delegate void LoadGraphDelegate(GraphCore graph, FileSystemInfo path, ILine info);
         /// <summary>
-        /// 自定义图片加载方法
         /// </summary>
         public static Dictionary<string, LoadGraphDelegate> IGraphConvert = new Dictionary<string, LoadGraphDelegate>()
         {
@@ -69,11 +61,7 @@ namespace VPet_Simulator.Core
             { "foodanimation", FoodAnimation.LoadGraph },
         };
         /// <summary>
-        /// 加载图像动画
         /// </summary>
-        /// <param name="graph">要加载的动画核心</param>
-        /// <param name="di">当前历遍的目录</param>
-        /// <param name="startuppath">起始目录</param>
         public static int LoadGraph(GraphCore graph, DirectoryInfo di, string startuppath)
         {
             if (!di.Exists)
@@ -82,7 +70,6 @@ namespace VPet_Simulator.Core
             var list = di.EnumerateDirectories();
             if (File.Exists(di.FullName + @"\info.lps"))
             {
-                //如果自带描述信息,则手动加载
                 LpsDocument lps = new LpsDocument(File.ReadAllText(di.FullName + @"\info.lps"));
                 foreach (ILine line in lps)
                 {
@@ -112,7 +99,7 @@ namespace VPet_Simulator.Core
                 }
             }
             else if (list.Count() == 0)
-            {//开始自动生成
+            {
                 var paths = di.GetFiles();
                 if (paths.Length == 0)
                     return GraphCount;

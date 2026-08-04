@@ -15,7 +15,6 @@ using VPet_Simulator.Windows.Interface;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// winBetterBuy.xaml 的交互逻辑
     /// </summary>
     public partial class winBetterBuy : WindowX
     {
@@ -30,7 +29,7 @@ namespace VPet_Simulator.Windows
         {
             InitializeComponent();
             this.mw = mw;
-            Title = "更好买".Translate() + ' ' + mw.PrefixSave;
+            Title = "Better Buy".Translate() + ' ' + mw.PrefixSave;
             LsbSortRule.SelectedIndex = mw.Set["betterbuy"].GetInt("lastorder");
             LsbSortAsc.SelectedIndex = mw.Set["betterbuy"].GetBool("lastasc") ? 0 : 1;
             AllowChange = true;
@@ -44,7 +43,7 @@ namespace VPet_Simulator.Windows
             nibuytimes.Maximum = Math.Max(2, mw.Core.Save.StrengthMax / 100);
             nibuytimes.Value = mw.GameSavesData["betterbuysetting"].GetInt("double", 1);
 
-            showeatanm = true;//逃出
+            showeatanm = true;
             if (_searchTextBox != null)
                 _searchTextBox.Text = "";
             if (LsbCategory.SelectedIndex == (int)type)
@@ -54,7 +53,6 @@ namespace VPet_Simulator.Windows
             if (rMoney != null)
                 rMoney.Text = mw.Core.Save.Money.ToString("f2");
 
-            //喜好度刷新
             foreach (var sub in mw.GameSavesData["buytime"])
             {
                 var name = sub.Name;
@@ -65,16 +63,15 @@ namespace VPet_Simulator.Windows
                     food.NotifyOfPropertyChange("Description");
                 }
             }
-            //没钱了,宠物给你私房钱 (开罗传统)
             if (mw.Core.Save.Money <= 1)
             {
                 if (mw.GameSavesData[(gbol)"self"])
                 {
-                    MessageBoxX.Show("更好买老顾客大优惠!桌宠的食物钱我来出!\n更好买提示您:$1000以下的食物/药品等随便赊账\n(不包括大于1000经验值的食物或礼品)".Translate());
+                    MessageBoxX.Show("Better Buy offers great discounts for loyal customers! I'll cover the cost of the pet's food!\\nBetter Buy suggests: you can buy food/medicine under $1000 on credit\\n(excluding food or gifts with more than 1000 experience points)".Translate());
                 }
                 else
                 {
-                    MessageBoxX.Show("看到您囊中羞涩,{0}拿出了1000块私房钱出来给你".Translate(mw.Core.Save.Name));
+                    MessageBoxX.Show("Seeing that you are shy in your pocket, {0} has taken out $1000 of private money to give you".Translate(mw.Core.Save.Name));
                     mw.GameSavesData[(gbol)"self"] = true;
                     mw.Core.Save.Money += 1000;
                 }
@@ -83,7 +80,7 @@ namespace VPet_Simulator.Windows
             {
                 mw.Core.Save.Money -= 1000;
                 mw.GameSavesData[(gbol)"self"] = false;
-                MessageBoxX.Show("{0}偷偷藏了1000块私房钱".Translate(mw.Core.Save.Name));
+                MessageBoxX.Show("{0} secretly hid $1000 of private money".Translate(mw.Core.Save.Name));
             }
 
             Show();
@@ -210,7 +207,6 @@ namespace VPet_Simulator.Windows
             //PageDetail.RaiseEvent(eventArg);
         }
         /// <summary>
-        /// 是否显示吃东西动画
         /// </summary>
         public bool showeatanm = true;
 
@@ -218,23 +214,21 @@ namespace VPet_Simulator.Windows
         {
             var Button = sender as Button;
             var item = Button.DataContext as Food;
-            //看是什么模式
             if (mw.Set.EnableFunction)
-            {//$1000以内的食物允许赊账
+            {
                 for (int i = 0; i < (int)nibuytimes.Value; i++)
                 {                        
                     if ((item.Price >= 1000 || item.Exp >= 1000) && item.Price >= mw.Core.Save.Money)
-                    {//买不起
-                        MessageBoxX.Show("您没有足够金钱来购买 {0}\n您需要 {1:f2} 金钱来购买\n您当前 {2:f2} 拥有金钱"
+                    {
+                        MessageBoxX.Show("You do not have enough money to buy {0}\\nYou need {1:f2} money to buy\\nYou currently have {2:f2} money"
                             .Translate(item.TranslateName, item.Price, mw.Core.Save.Money)
-                            , "金钱不足".Translate());
+                            , "Lack of money".Translate());
                         return;
                     }
-                    //看看是否超模
                     if (mw.HashCheck && item.IsOverLoad())
                     {
-                        if (MessageBoxX.Show("当前食物/物品属性超模,是否继续使用?\n使用超模食物可能会导致游戏发生不可预料的错误\n使用超模食物不影响大部分成就解锁\n本物品推荐价格为{0:f0}"
-                            .Translate(item.RealPrice), "超模食物/物品使用提醒".Translate(), MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                        if (MessageBoxX.Show("The current food/item attribute supermodel, do you want to continue using it?\\nUsing supermodel food may cause unexpected errors in the game\\nUsing supermodel food does not affect the unlocking of most achievements\\nThe recommended price for this item is {0:f0}"
+                            .Translate(item.RealPrice), "Supermodel food/item use reminder".Translate(), MessageBoxButton.YesNo) != MessageBoxResult.Yes)
                         {
                             return;
                         }
@@ -370,7 +364,7 @@ namespace VPet_Simulator.Windows
             if (_puswitchautobuy.IsChecked.Value && mw.Core.Save.Money < 100)
             {
                 _puswitchautobuy.IsChecked = false;
-                MessageBoxX.Show(mw, "余额不足100，无法开启自动购买".Translate(), "更好买".Translate());
+                MessageBoxX.Show(mw, "Balance is less than 100, unable to open automatic purchase".Translate(), "Better Buy".Translate());
                 return;
             }
             if (_puswitchautobuy.IsChecked.Value)
@@ -402,7 +396,7 @@ namespace VPet_Simulator.Windows
 
         private void Button_Loaded(object sender, RoutedEventArgs e)
         {
-            ((Button)sender).Content = "更好买".Translate() + mw.PrefixSave;
+            ((Button)sender).Content = "Better Buy".Translate() + mw.PrefixSave;
             ;
         }
 

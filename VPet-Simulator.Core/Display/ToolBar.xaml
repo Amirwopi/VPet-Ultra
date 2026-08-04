@@ -40,7 +40,7 @@
                 <TextBlock x:Name="Tlv" Grid.ColumnSpan="3" VerticalAlignment="Center" x:FieldModifier="public"
                         Foreground="{DynamicResource DARKPrimary}" Text="Lv 14" />
                 <Button Grid.Column="2" Grid.ColumnSpan="3" HorizontalAlignment="Right" VerticalAlignment="Center"
-                        Background="Transparent" Click="MenuPanel_Click" Content="{ll:Str 详细}" Cursor="Hand"
+                        Background="Transparent" Click="MenuPanel_Click" Content="{ll:Str Detailed}" Cursor="Hand"
                         Foreground="{DynamicResource DARKPrimary}" Grid.Row="2">
                     <Button.ContentTemplate>
                         <DataTemplate>
@@ -49,15 +49,15 @@
                     </Button.ContentTemplate>
                 </Button>
                 <TextBlock x:Name="till" Grid.Row="1" Grid.ColumnSpan="5" Foreground="#FF4C4C"
-                        Text="{ll:Str 宠物已经生病\, 通过服用药物可以恢复}" ToolTip="{ll:Str 宠物已经生病\, 通过服用药物可以恢复}" TextWrapping="Wrap"
+                        Text="{ll:Str Pet is sick, take medicine to restore}" ToolTip="{ll:Str Pet is sick, take medicine to restore}" TextWrapping="Wrap"
                         x:FieldModifier="public" />
                 <TextBlock x:Name="tfun" Grid.Row="1" Grid.ColumnSpan="5" Foreground="#4caf50"
-                        Text="{ll:Str 已关闭数据计算\, 可放心挂机}" ToolTip="{ll:Str 已关闭数据计算\, 可放心挂机}" TextWrapping="Wrap"
+                        Text="{ll:Str 'CloseData Calculation\, '}" ToolTip="{ll:Str 'CloseData Calculation\, '}" TextWrapping="Wrap"
                         x:FieldModifier="public" />
-                <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{ll:Str 金钱}" />
+                <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{ll:Str Money}" />
                 <TextBlock x:Name="tMoney" Grid.Row="2" Grid.Column="2" Foreground="{DynamicResource DARKPrimary}"
                         Text="$100,000" />
-                <TextBlock Grid.Row="3" VerticalAlignment="Center" Text="{ll:Str 经验}" />
+                <TextBlock Grid.Row="3" VerticalAlignment="Center" Text="{ll:Str EXP}" />
                 <ProgressBar x:Name="pExp" Grid.Row="3" Grid.Column="2" Height="20" VerticalAlignment="Center"
                         pu:ProgressBarHelper.CornerRadius="10"
                         pu:ProgressBarHelper.GeneratingPercentText="PgbExperience_GeneratingPercentText"
@@ -65,7 +65,7 @@
                         Foreground="{DynamicResource ProgressBarForeground}" Value="40" />
                 <TextBlock x:Name="tExp" Grid.Row="3" Grid.Column="4" HorizontalAlignment="Right"
                         Foreground="{DynamicResource DARKPrimary}" Text="x1.0" />
-                <TextBlock Grid.Row="4" VerticalAlignment="Center" Text="{ll:Str 体力}" />
+                <TextBlock Grid.Row="4" VerticalAlignment="Center" Text="{ll:Str Stamina}" />
                 <ProgressBar x:Name="pStrength" Grid.Row="4" Grid.Column="2" Height="20" VerticalAlignment="Center"
                         pu:ProgressBarHelper.CornerRadius="10"
                         pu:ProgressBarHelper.GeneratingPercentText="PgbStrength_GeneratingPercentText"
@@ -73,7 +73,7 @@
                         Foreground="{DynamicResource ProgressBarForeground}" Maximum="100" Value="40" />
                 <TextBlock x:Name="tStrength" Grid.Row="4" Grid.Column="4" HorizontalAlignment="Right"
                         Foreground="{DynamicResource DARKPrimary}" Text="+1/t" />
-                <TextBlock Grid.Row="5" VerticalAlignment="Center" Text="{ll:Str 心情}" />
+                <TextBlock Grid.Row="5" VerticalAlignment="Center" Text="{ll:Str Mood}" />
                 <ProgressBar x:Name="pFeeling" Grid.Row="5" Grid.Column="2" Height="20" VerticalAlignment="Center"
                         pu:ProgressBarHelper.CornerRadius="10"
                         pu:ProgressBarHelper.GeneratingPercentText="PgbSpirit_GeneratingPercentText"
@@ -81,7 +81,7 @@
                         Foreground="{DynamicResource ProgressBarForeground}" Maximum="100" Value="60" />
                 <TextBlock x:Name="tFeeling" Grid.Row="5" Grid.Column="4" HorizontalAlignment="Right"
                         Foreground="{DynamicResource DARKPrimary}" Text="+1/t" />
-                <TextBlock Grid.Row="6" VerticalAlignment="Center" Text="{ll:Str 饱腹度}" />
+                <TextBlock Grid.Row="6" VerticalAlignment="Center" Text="{ll:Str Hunger}" />
                 <ProgressBar x:Name="pStrengthFoodMax" Grid.Row="6" Grid.Column="2" Height="20"
                         VerticalAlignment="Center" pu:ProgressBarHelper.CornerRadius="10" Background="#FFDDDDDD"
                         FontSize="20" Foreground="{DynamicResource ProgressBarForeground}" Maximum="100" Opacity="0.5"
@@ -94,7 +94,7 @@
 
                 <TextBlock x:Name="tStrengthFood" Grid.Row="6" Grid.Column="4" HorizontalAlignment="Right"
                         Foreground="{DynamicResource DARKPrimary}" Text="+1/t" />
-                <TextBlock Grid.Row="7" VerticalAlignment="Center" Text="{ll:Str 口渴度}" />
+                <TextBlock Grid.Row="7" VerticalAlignment="Center" Text="{ll:Str Thirst}" />
                 <ProgressBar x:Name="pStrengthDrinkMax" Grid.Row="7" Grid.Column="2" Height="20"
                         VerticalAlignment="Center" pu:ProgressBarHelper.CornerRadius="10" Background="#FFDDDDDD"
                         FontSize="20" Foreground="{DynamicResource ProgressBarForeground}" Maximum="100" Opacity="0.5"
@@ -121,22 +121,22 @@
                     <UniformGrid Columns="{Binding Tag, ElementName=ToolBarMenu}" />
                 </ItemsPanelTemplate>
             </Menu.ItemsPanel>
-            <MenuItem x:Name="MenuFeed" Padding="0" x:FieldModifier="public" Header="{ll:Str 投喂}" />
-            <MenuItem x:Name="MenuPanel" Padding="0" Header="{ll:Str 面板}" MouseEnter="MenuPanel_MouseEnter"
+            <MenuItem x:Name="MenuFeed" Padding="0" x:FieldModifier="public" Header="{ll:Str Shop}" />
+            <MenuItem x:Name="MenuPanel" Padding="0" Header="{ll:Str Status}" MouseEnter="MenuPanel_MouseEnter"
                     MouseLeave="MenuPanel_MouseLeave" />
-            <MenuItem x:Name="MenuInteract" Padding="0" Header="{ll:Str 互动}" x:FieldModifier="public">
-                <MenuItem Click="Sleep_Click" Header="{ll:Str 睡觉}" />
-                <MenuItem x:Name="MenuStudy" Header="{ll:Str 学习}" ScrollViewer.VerticalScrollBarVisibility="Auto"
+            <MenuItem x:Name="MenuInteract" Padding="0" Header="{ll:Str Interact}" x:FieldModifier="public">
+                <MenuItem Click="Sleep_Click" Header="{ll:Str Sleep}" />
+                <MenuItem x:Name="MenuStudy" Header="{ll:Str Learning}" ScrollViewer.VerticalScrollBarVisibility="Auto"
                         pu:DropDownHelper.MaxHeight="100" x:FieldModifier="public" />
-                <MenuItem x:Name="MenuPlay" Header="{ll:Str 玩耍}" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                <MenuItem x:Name="MenuPlay" Header="{ll:Str Play}" ScrollViewer.VerticalScrollBarVisibility="Auto"
                         pu:DropDownHelper.MaxHeight="100" x:FieldModifier="public" />
-                <MenuItem x:Name="MenuWork" Header="{ll:Str 工作}" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                <MenuItem x:Name="MenuWork" Header="{ll:Str Work}" ScrollViewer.VerticalScrollBarVisibility="Auto"
                         pu:DropDownHelper.MaxHeight="100" x:FieldModifier="public" />
-                <!--<MenuItem Header="说话"  IsEnabled="False" />-->
+                <!--<MenuItem Header="Speak"  IsEnabled="False" />-->
             </MenuItem>
-            <MenuItem x:Name="MenuDIY" Padding="0" x:FieldModifier="public" Header="{ll:Str 自定}" />
-            <MenuItem x:Name="MenuSetting" Padding="0" x:FieldModifier="public" Header="{ll:Str 系统}">
-                <MenuItem x:Name="MenuMODConfig" x:FieldModifier="public" Header="{ll:Str MOD设置}" Visibility="Collapsed" />
+            <MenuItem x:Name="MenuDIY" Padding="0" x:FieldModifier="public" Header="{ll:Str DIY}" />
+            <MenuItem x:Name="MenuSetting" Padding="0" x:FieldModifier="public" Header="{ll:Str System}">
+                <MenuItem x:Name="MenuMODConfig" x:FieldModifier="public" Header="{ll:Str MOD Setting}" Visibility="Collapsed" />
             </MenuItem>
         </Menu>
     </Grid>

@@ -5,7 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:pw="https://opensource.panuon.com/wpf" xmlns:pu="https://opensource.panuon.com/wpf-ui"
-        xmlns:local="clr-namespace:VPet_Simulator.Windows" mc:Ignorable="d" Title="{ll:Str 照片图库}" MinWidth="450"
+        xmlns:local="clr-namespace:VPet_Simulator.Windows" mc:Ignorable="d" Title="{ll:Str Photo Gallery }" MinWidth="450"
         MinHeight="300" Height="{ll:Dbe GalleryHeight_625, DefValue=625}"
         Width="{ll:Dbe GalleryWidth_1000, DefValue=1000}" FontSize="14" WindowStartupLocation="CenterScreen"
         Background="{DynamicResource PrimaryLighter}" pu:WindowXCaption.Height="45"
@@ -80,7 +80,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="TbTitleSearch" Grid.ColumnSpan="2" VerticalAlignment="Center" Padding="7,0"
-                                pu:TextBoxHelper.Watermark="{ll:Str 搜索图片}" FontSize="14" Background="#33FFFFFF"
+                                pu:TextBoxHelper.Watermark="{ll:Str Search for images}" FontSize="14" Background="#33FFFFFF"
                                 Height="30" BorderThickness="0" pu:TextBoxHelper.CornerRadius="5"
                                 Loaded="TbTitleSearch_Loaded" Foreground="{DynamicResource DARKPrimaryText}" />
                         <Button Grid.Column="1" Margin="0,0,3,0" VerticalAlignment="Center" Height="28" Width="28"
@@ -90,7 +90,7 @@
                                 Foreground="{DynamicResource DARKPrimaryText}" FontSize="16" Cursor="Hand"
                                 Click="BtnSearch_Click" />
                     </Grid>
-                    <Label Content="{ll:Str '注: 照片图库内容禁止商用'}" Background="{x:Null}" Margin="30,0,0,0"
+                    <Label Content="{ll:Str 'Note: Only non-commercial use'}" Background="{x:Null}" Margin="30,0,0,0"
                             Foreground="{DynamicResource DARKPrimaryText}" VerticalAlignment="Center" FontSize="16" />
                 </StackPanel>
             </Grid>
@@ -117,12 +117,12 @@
                         <ColumnDefinition />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{ll:Str 图片详情}" FontSize="18" Margin="0, 5"
+                    <TextBlock Text="{ll:Str Picture details}" FontSize="18" Margin="0, 5"
                             Foreground="{DynamicResource DARKPrimary}" />
                     <StackPanel Grid.Column="2" Orientation="Horizontal">
-                        <Button Margin="7,0,0,0" VerticalAlignment="Center" Content="{ll:Str 复制到剪贴板}"
+                        <Button Margin="7,0,0,0" VerticalAlignment="Center" Content="{ll:Str Copy to clipboard}"
                                 Style="{DynamicResource ThemedButtonStyle}" Click="ButtonCopy_Click" />
-                        <Button Margin="7,0,0,0" VerticalAlignment="Center" Content="{ll:Str 保存}"
+                        <Button Margin="7,0,0,0" VerticalAlignment="Center" Content="{ll:Str Save}"
                                 Style="{DynamicResource ThemedButtonStyle}" Click="ButtonSave_Click" />
                         <Button Margin="7,0,0,0" VerticalAlignment="Center" Content="&#xEB99;" Padding="0"
                                 FontFamily="/VPet-Simulator.Windows;component/Res/#remixicon" FontSize="28"
@@ -163,15 +163,15 @@
                 <RowDefinition />
             </Grid.RowDefinitions>
             <StackPanel>
-                <TextBlock Text="{ll:Str 筛选条件}" FontSize="18" Margin="0, 5" Foreground="{DynamicResource DARKPrimary}" />
+                <TextBlock Text="{ll:Str Filter criteria}" FontSize="18" Margin="0, 5" Foreground="{DynamicResource DARKPrimary}" />
 
-                <TextBlock Text="{ll:Str 类型}" Margin="0, 3, 0, 0" />
+                <TextBlock Text="{ll:Str Type}" Margin="0, 3, 0, 0" />
                 <StackPanel Margin="0, 3, 0, 0" Orientation="Horizontal">
-                    <ToggleButton x:Name="ToggleButtonIllustration" Content="{ll:Str 插图}"
+                    <ToggleButton x:Name="ToggleButtonIllustration" Content="{ll:Str Illustration}"
                             Style="{DynamicResource TagToggleButtonStyle}"
                             Checked="ToggleButtonSearchParameters_CheckChanged"
                             Unchecked="ToggleButtonSearchParameters_CheckChanged" />
-                    <ToggleButton x:Name="ToggleButtonThumbnail" Content="{ll:Str 小图}"
+                    <ToggleButton x:Name="ToggleButtonThumbnail" Content="{ll:Str Picture}"
                             Style="{DynamicResource TagToggleButtonStyle}"
                             Checked="ToggleButtonSearchParameters_CheckChanged"
                             Unchecked="ToggleButtonSearchParameters_CheckChanged" />
@@ -181,30 +181,30 @@
                                  Checked="ToggleButtonSearchParameters_CheckChanged"
                                  Unchecked="ToggleButtonSearchParameters_CheckChanged" />-->
                 </StackPanel>
-                <TextBlock Text="{ll:Str 是否解锁}" Margin="0, 3, 0, 0" />
+                <TextBlock Text="{ll:Str Unlock or not}" Margin="0, 3, 0, 0" />
                 <StackPanel Margin="0, 3, 0, 0" Orientation="Horizontal">
-                    <ToggleButton x:Name="ToggleButtonUnlocked" Content="{ll:Str 已解锁}"
+                    <ToggleButton x:Name="ToggleButtonUnlocked" Content="{ll:Str Unlocked}"
                             Style="{DynamicResource TagToggleButtonStyle}" IsChecked="True"
                             Checked="ToggleButtonSearchParameters_CheckChanged"
                             Unchecked="ToggleButtonSearchParameters_CheckChanged" />
-                    <ToggleButton x:Name="ToggleButtonLocked" Content="{ll:Str 未解锁}"
+                    <ToggleButton x:Name="ToggleButtonLocked" Content="{ll:Str Locked}"
                             Style="{DynamicResource TagToggleButtonStyle}"
                             Checked="ToggleButtonSearchParameters_CheckChanged"
                             Unchecked="ToggleButtonSearchParameters_CheckChanged" />
                 </StackPanel>
-                <TextBlock Text="{ll:Str 排序方式}" Margin="0, 3, 0, 0" />
+                <TextBlock Text="{ll:Str Sort by}" Margin="0, 3, 0, 0" />
                 <ComboBox x:Name="OrderBox" Margin="0,3,0,2" FontSize="16"
                         SelectionChanged="ToggleButtonSearchParameters_CheckChanged"
                         Style="{DynamicResource StandardComboBoxStyle}">
-                    <ComboBoxItem IsSelected="True" Content="{ll:Str 默认}" />
-                    <ComboBoxItem Content="{ll:Str 名称}" />
-                    <ComboBoxItem Content="{ll:Str 解锁日期}" />
+                    <ComboBoxItem IsSelected="True" Content="{ll:Str Default}" />
+                    <ComboBoxItem Content="{ll:Str Name}" />
+                    <ComboBoxItem Content="{ll:Str Unlock Date}" />
                 </ComboBox>
-                <TextBlock Margin="0, 3, 0, 0" Text="{ll:Str 收藏}" />
+                <TextBlock Margin="0, 3, 0, 0" Text="{ll:Str Favorites}" />
                 <CheckBox x:Name="CheckBoxFavorite" Margin="0, 3, 0, 0" Style="{DynamicResource ThemedCheckBoxStyle}"
-                        Content="{ll:Str 只看我收藏的}" Checked="ToggleButtonSearchParameters_CheckChanged"
+                        Content="{ll:Str Only look collected}" Checked="ToggleButtonSearchParameters_CheckChanged"
                         Unchecked="ToggleButtonSearchParameters_CheckChanged" />
-                <TextBlock Text="{ll:Str 标签}" Margin="0, 5, 0, 0" />
+                <TextBlock Text="{ll:Str Tags}" Margin="0, 5, 0, 0" />
             </StackPanel>
             <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                 <pu:ToggleButtonGroup x:Name="ToggleButtonGroupTags" Margin="5,3,5,0"
@@ -223,7 +223,7 @@
                 Margin="10, 10, 0, 0" ItemsMinWidth="195" ItemsMinHeight="170" Changed="AutoUniformGridImages_Changed" />
 
         <Border x:Name="BorderEmpty" Grid.Column="1" Visibility="Collapsed">
-            <TextBlock Text="{ll:Str '这里什么都没有, 修改搜索条件试试?'}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+            <TextBlock Text="{ll:Str &quot;There's nothing here. Try modifying search criteria?&quot;}" VerticalAlignment="Center" HorizontalAlignment="Center" />
         </Border>
         <Border Grid.Row="1" Grid.Column="1" Height="40" Background="#fff">
             <Grid>
@@ -236,10 +236,10 @@
                         CurrentPageChanged="Pagination_CurrentPageChanged" />
                 <StackPanel Grid.Column="1" HorizontalAlignment="Right" Orientation="Horizontal">
                     <CheckBox x:Name="CheckBoxALL" Margin="7, 0, 7, 0" Style="{DynamicResource ThemedCheckBoxStyle}"
-                            Content="{ll:Str 全选}" Checked="CheckBoxALL_Checked" Unchecked="CheckBoxALL_Checked" />
-                    <Button Margin="7,0,7,0" VerticalAlignment="Center" Content="{ll:Str 导出选中项}"
+                            Content="{ll:Str Select All}" Checked="CheckBoxALL_Checked" Unchecked="CheckBoxALL_Checked" />
+                    <Button Margin="7,0,7,0" VerticalAlignment="Center" Content="{ll:Str Export selected items}"
                             Style="{DynamicResource ThemedButtonStyle}" Click="ButtonExportSele_Click" />
-                    <Button Margin="7,0,7,0" VerticalAlignment="Center" Content="{ll:Str 导出全部已解锁}"
+                    <Button Margin="7,0,7,0" VerticalAlignment="Center" Content="{ll:Str Export all unlocked items}"
                             Style="{DynamicResource ThemedButtonStyle}" Click="ButtonExportAll_Click" />
                 </StackPanel>
             </Grid>

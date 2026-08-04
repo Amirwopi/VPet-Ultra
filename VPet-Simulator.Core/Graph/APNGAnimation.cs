@@ -147,7 +147,6 @@ namespace VPet_Simulator.Core
 
                 long lastWrite = File.GetLastWriteTimeUtc(Path).Ticks;
                 SpriteSheetPath = System.IO.Path.Combine(GraphCore.CachePath, $"apng_{GraphCore.Resolution}_{Math.Abs(Sub.GetHashCode($"{Path}_{lastWrite}"))}_{parsed.Frames.Count}.png");
-                // 锁定路径，防止多线程同时生成精灵图
                 var sem = GraphCore.SpriteSheetBuildLocks.GetOrAdd(SpriteSheetPath, _ => new SemaphoreSlim(1, 1));
                 await sem.WaitAsync();
                 try

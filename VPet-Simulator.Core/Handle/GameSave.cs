@@ -6,37 +6,34 @@ using static VPet_Simulator.Core.IGameSave;
 namespace VPet_Simulator.Core
 {
     /// <summary>
-    /// 游戏存档
     /// </summary>
     public class GameSave : IGameSave
     {
         /// <summary>
-        /// 宠物名字
         /// </summary>
         [Line(name: "name")]
         public string Name { get; set; }
         public string HostName { get; set; }
 
         /// <summary>
-        /// 金钱
+        /// Money
         /// </summary>
         [Line(Type = LPSConvert.ConvertType.ToFloat, Name = "money")]
         public double Money { get; set; }
         /// <summary>
-        /// 经验值
+        /// EXP
         /// </summary>
         [Line(type: LPSConvert.ConvertType.ToFloat, name: "exp")] public double Exp { get; set; }
         /// <summary>
-        /// 等级
+        /// Grade
         /// </summary>
         public int Level => Exp < 0 ? 1 : (int)(Math.Sqrt(Exp) / 10) + 1;
         /// <summary>
-        /// 升级所需经验值
         /// </summary>
         /// <returns></returns>
         public int LevelUpNeed() => (int)(Math.Pow((Level) * 10, 2));
         /// <summary>
-        /// 体力 0-100
+        /// Stamina 0-100
         /// </summary>
         public double Strength { get => strength; set => strength = Math.Min(StrengthMax, Math.Max(0, value)); }
 
@@ -45,12 +42,9 @@ namespace VPet_Simulator.Core
         [Line(Type = LPSConvert.ConvertType.ToFloat, IgnoreCase = true)]
         protected double strength { get; set; }
         /// <summary>
-        /// 待补充的体力,随着时间缓慢加给桌宠
-        /// </summary>//让游戏更有游戏性
         [Line(Type = LPSConvert.ConvertType.ToFloat, IgnoreCase = true)]
         public double StoreStrength { get; set; }
         /// <summary>
-        /// 变化 体力
         /// </summary>
         public double ChangeStrength { get; set; } = 0;
         public void StrengthChange(double value)
@@ -59,7 +53,7 @@ namespace VPet_Simulator.Core
             Strength += value;
         }
         /// <summary>
-        /// 饱腹度
+        /// Hunger
         /// </summary>
         public double StrengthFood
         {
@@ -78,8 +72,6 @@ namespace VPet_Simulator.Core
         [Line(Type = LPSConvert.ConvertType.ToFloat)]
         protected double strengthFood { get; set; }
         /// <summary>
-        /// 待补充的饱腹度,随着时间缓慢加给桌宠
-        /// </summary>//让游戏更有游戏性
         [Line(Type = LPSConvert.ConvertType.ToFloat)]
         public double StoreStrengthFood { get; set; }
         public void StrengthChangeFood(double value)
@@ -88,11 +80,10 @@ namespace VPet_Simulator.Core
             StrengthFood += value;
         }
         /// <summary>
-        /// 变化 食物
         /// </summary>
         public double ChangeStrengthFood { get; set; } = 0;
         /// <summary>
-        /// 口渴度
+        /// Thirst
         /// </summary>
         public double StrengthDrink
         {
@@ -112,12 +103,9 @@ namespace VPet_Simulator.Core
         [Line(Type = LPSConvert.ConvertType.ToFloat)]
         protected double strengthDrink { get; set; }
         /// <summary>
-        /// 待补充的口渴度,随着时间缓慢加给桌宠
-        /// </summary>//让游戏更有游戏性
         [Line(Type = LPSConvert.ConvertType.ToFloat)]
         public double StoreStrengthDrink { get; set; }
         /// <summary>
-        /// 变化 口渴度
         /// </summary>
         public double ChangeStrengthDrink { get; set; } = 0;
         public void StrengthChangeDrink(double value)
@@ -126,7 +114,7 @@ namespace VPet_Simulator.Core
             StrengthDrink += value;
         }
         /// <summary>
-        /// 心情
+        /// Mood
         /// </summary>
         public double Feeling
         {
@@ -148,7 +136,6 @@ namespace VPet_Simulator.Core
         [Line(Type = LPSConvert.ConvertType.ToFloat)]
         protected double feeling { get; set; }       
         /// <summary>
-        /// 变化 心情
         /// </summary>
         public double ChangeFeeling { get; set; } = 0;
         public void FeelingChange(double value)
@@ -157,14 +144,12 @@ namespace VPet_Simulator.Core
             Feeling += value;
         }
         /// <summary>
-        /// 健康(生病)(隐藏)
         /// </summary>
         public double Health { get => health; set => health = Math.Min(100, Math.Max(0, value)); }
 
         [Line(Type = LPSConvert.ConvertType.ToFloat)]
         protected double health { get; set; }
         /// <summary>
-        /// 好感度(隐藏)(累加值)
         /// </summary>
         public double Likability
         {
@@ -186,7 +171,6 @@ namespace VPet_Simulator.Core
         protected double likability { get; set; }
 
         /// <summary>
-        /// 清除变化
         /// </summary>
         public void CleanChange()
         {
@@ -196,7 +180,6 @@ namespace VPet_Simulator.Core
             ChangeStrengthFood /= 2;
         }
         /// <summary>
-        /// 取回被储存的体力
         /// </summary>
         public void StoreTake()
         {
@@ -224,9 +207,7 @@ namespace VPet_Simulator.Core
                 StrengthChangeFood(s);
         }
         /// <summary>
-        /// 吃食物
         /// </summary>
-        /// <param name="food">食物类</param>
         public void EatFood(IFood food)
         {
             Exp += food.Exp;
@@ -244,7 +225,6 @@ namespace VPet_Simulator.Core
             Likability += food.Likability;
         }
         /// <summary>
-        /// 宠物当前状态
         /// </summary>
         [Line(name: "mode")]
         public ModeType Mode { get; set; } = ModeType.Nomal;
@@ -256,17 +236,14 @@ namespace VPet_Simulator.Core
         public double ExpBonus => 1;
 
         /// <summary>
-        /// 计算宠物当前状态
         /// </summary>
         public ModeType CalMode()
         {
             int realhel = 60 - (Feeling >= 80 ? 12 : 0) - (Likability >= 80 ? 12 : (Likability >= 40 ? 6 : 0));
-            //先从最次的开始
             if (Health <= realhel)
             {
-                //可以确认从状态不佳和生病二选一
                 if (Health <= realhel / 2)
-                {//生病
+                {
                     return ModeType.Ill;
                 }
                 else
@@ -274,7 +251,6 @@ namespace VPet_Simulator.Core
                     return ModeType.PoorCondition;
                 }
             }
-            //然后判断是高兴还是普通
             double realfel = .90 - (Likability >= 80 ? .20 : (Likability >= 40 ? .10 : 0));
             double felps = Feeling / FeelingMax;
             if (felps >= realfel)
@@ -288,7 +264,6 @@ namespace VPet_Simulator.Core
             return ModeType.Nomal;
         }
         /// <summary>
-        /// 新游戏
         /// </summary>
         public GameSave(string name)
         {
@@ -304,7 +279,6 @@ namespace VPet_Simulator.Core
             Mode = CalMode();
         }
         /// <summary>
-        /// 读档
         /// </summary>
         public GameSave()
         {
@@ -320,13 +294,10 @@ namespace VPet_Simulator.Core
             //Mode = CalMode();
         }
         /// <summary>
-        /// 读档
         /// </summary>
         public static GameSave Load(ILine data) => LPSConvert.DeserializeObject<GameSave>(data);
         /// <summary>
-        /// 存档
         /// </summary>
-        /// <returns>存档行</returns>
         public Line ToLine()
         {
             //Line save = new Line("vpet", Name);

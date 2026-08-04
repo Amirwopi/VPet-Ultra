@@ -10,7 +10,6 @@ using static VPet_Simulator.Core.WorkTimer.FinishWorkInfo;
 namespace VPet_Simulator.Core
 {
     /// <summary>
-    /// WorkTimer.xaml 的交互逻辑
     /// </summary>
     public partial class WorkTimer : Viewbox
     {
@@ -19,73 +18,54 @@ namespace VPet_Simulator.Core
         {
             InitializeComponent();
             this.m = m;
-            //数据相关计算挪到MainLogic
-            //这里只显示UI
             m.TimeUIHandle += M_TimeUIHandle;
         }
         /// <summary>
-        /// 显示模式
-        /// 0 = 默认
-        /// 1 = 剩余时间
-        /// 2 = 已获取(金钱/等级)
+        /// 0 = Default
+        /// 1 = Remaining time
         /// </summary>
         public int DisplayType = 0;
         /// <summary>
-        /// 累计获得的钱/经验值
         /// </summary>
         public double GetCount;
         /// <summary>
-        /// 开始时间
         /// </summary>
         public DateTime StartTime;
         /// <summary>
-        /// 完成工作信息
         /// </summary>
         public struct FinishWorkInfo
         {
             /// <summary>
-            /// 当前完成工作
             /// </summary>
             public Work work;
             /// <summary>
-            /// 当前完成工作收入
             /// </summary>
             public double count;
             /// <summary>
-            /// 当前完成工作花费时间 (分钟)
             /// </summary>
             public double spendtime;
             /// <summary>
-            /// 停止工作的原因
             /// </summary>
             public enum StopReason
             {
                 /// <summary>
-                /// 时间结束完成
                 /// </summary>
                 TimeFinish,
                 /// <summary>
-                /// 玩家手动停止
                 /// </summary>
                 MenualStop,
                 /// <summary>
-                /// 因为状态等停止
                 /// </summary>
                 StateFail,
                 /// <summary>
-                /// 其他原因
                 /// </summary>
                 Other,
             }
             /// <summary>
-            /// 停止原因
             /// </summary>
             public StopReason Reason;
             /// <summary>
-            /// 完成工作信息
             /// </summary>
-            /// <param name="work">当前工作</param>
-            /// <param name="count">当前盈利(自动计算附加)</param>
             public FinishWorkInfo(Work work, double count, StopReason reason)
             {
                 this.work = work;
@@ -94,10 +74,7 @@ namespace VPet_Simulator.Core
                 this.Reason = reason;
             }
             /// <summary>
-            /// 完成工作信息
             /// </summary>
-            /// <param name="work">当前工作</param>
-            /// <param name="count">当前盈利(自动计算附加)</param>
             public FinishWorkInfo(Work work, double count, DateTime starttime, StopReason reason)
             {
                 this.work = work;
@@ -107,7 +84,6 @@ namespace VPet_Simulator.Core
             }
         }
         /// <summary>
-        /// UI相关显示
         /// </summary>
         /// <param name="m"></param>
         private void M_TimeUIHandle(Main m)
@@ -117,7 +93,6 @@ namespace VPet_Simulator.Core
             TimeSpan tleft;
             if (ts.TotalMinutes > m.NowWork.Time)
             {
-                //学完了,停止
                 //ts = TimeSpan.FromMinutes(MaxTime);
                 //tleft = TimeSpan.Zero;
                 //PBLeft.Value = MaxTime;
@@ -125,13 +100,13 @@ namespace VPet_Simulator.Core
                 if (m.NowWork.Type == Work.WorkType.Work)
                 {
                     m.Core.Save.Money += GetCount * m.NowWork.FinishBonus;
-                    Stop(() => m.SayRnd(LocalizeCore.Translate("{2}完成啦, 累计赚了 {0:f2} 金钱\n共计花费了{1}分钟", fwi.count,
+                    Stop(() => m.SayRnd(LocalizeCore.Translate("{2} completed: earned {0:f2} Vpet-bucks", fwi.count,
                         fwi.spendtime, fwi.work.NameTrans), true), StopReason.TimeFinish);
                 }
                 else
                 {
                     m.Core.Save.Exp += GetCount * m.NowWork.FinishBonus;
-                    Stop(() => m.SayRnd(LocalizeCore.Translate("{2}完成啦, 累计获得 {0:f2} 经验\n共计花费了{1}分钟", fwi.count,
+                    Stop(() => m.SayRnd(LocalizeCore.Translate("{2} completed: earned {0:f2} experience\\n Total time spent: {1} minutes", fwi.count,
                         fwi.spendtime, fwi.work.NameTrans), true), StopReason.TimeFinish);
                 }
                 return;
@@ -151,7 +126,7 @@ namespace VPet_Simulator.Core
                 case 2:
                     tNumber.Text = GetCount.ToString("f0");
                     if (m.NowWork.Type == Work.WorkType.Work)
-                        tNumberUnit.Text = LocalizeCore.Translate("钱");
+                        tNumberUnit.Text = LocalizeCore.Translate("$");
                     else
                         tNumberUnit.Text = "EXP";
                     break;
@@ -164,17 +139,17 @@ namespace VPet_Simulator.Core
             if (ts.TotalSeconds < 90)
             {
                 tNumber.Text = ts.TotalSeconds.ToString("f1");
-                tNumberUnit.Text = LocalizeCore.Translate("秒");
+                tNumberUnit.Text = LocalizeCore.Translate("Sec");
             }
             else if (ts.TotalMinutes < 90)
             {
                 tNumber.Text = ts.TotalMinutes.ToString("f1");
-                tNumberUnit.Text = LocalizeCore.Translate("分钟");
+                tNumberUnit.Text = LocalizeCore.Translate("Min");
             }
             else
             {
                 tNumber.Text = ts.TotalHours.ToString("f1");
-                tNumberUnit.Text = LocalizeCore.Translate("小时");
+                tNumberUnit.Text = LocalizeCore.Translate("Hour");
             }
         }
         public void DisplayUI()
@@ -188,21 +163,21 @@ namespace VPet_Simulator.Core
             {
                 btnSwitch.Opacity = 1;
                 DisplayBorder.Visibility = Visibility.Visible;
-                btnStop.Content = LocalizeCore.Translate("停止") + m.NowWork.NameTrans;
+                btnStop.Content = LocalizeCore.Translate("Stop ") + m.NowWork.NameTrans;
                 switch (DisplayType)
                 {
                     default:
                     case 0:
-                        tNow.Text = LocalizeCore.Translate("当前已{0}", m.NowWork.NameTrans);
+                        tNow.Text = LocalizeCore.Translate("{0} for", m.NowWork.NameTrans);
                         break;
                     case 1:
-                        tNow.Text = LocalizeCore.Translate("剩余{0}时间", m.NowWork.NameTrans);
+                        tNow.Text = LocalizeCore.Translate("Remaining {0} time", m.NowWork.NameTrans);
                         break;
                     case 2:
                         if (m.NowWork.Type == Work.WorkType.Work)
-                            tNow.Text = LocalizeCore.Translate("累计金钱收益");
+                            tNow.Text = LocalizeCore.Translate("Earning money");
                         else
-                            tNow.Text = LocalizeCore.Translate("获得经验值");
+                            tNow.Text = LocalizeCore.Translate("Gain EXP");
                         break;
                 }
             }
@@ -233,7 +208,7 @@ namespace VPet_Simulator.Core
             DisplayUI();
         }
         /// <summary>
-        /// 停止工作
+        /// Stop Working
         /// </summary>
         /// <param name="then"></param>
         public void Stop(Action @then = null, StopReason reason = StopReason.MenualStop)
@@ -252,7 +227,6 @@ namespace VPet_Simulator.Core
             Stop(reason: StopReason.MenualStop);
         }
         /// <summary>
-        /// 任务完成时调用该参数
         /// </summary>
         public event Action<FinishWorkInfo> E_FinishWork;
     }

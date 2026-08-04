@@ -17,7 +17,6 @@ using VPet_Simulator.Windows.Interface;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// winSaveManager.xaml 的交互逻辑
     /// </summary>
     public partial class winSaveManager : WindowX
     {
@@ -29,7 +28,7 @@ namespace VPet_Simulator.Windows
             InitializeComponent();
             this.mw = mw;
             Owner = mw;
-            Title = "存档管理器".Translate() + ' ' + mw.PrefixSave;
+            Title = "Saves Management".Translate() + ' ' + mw.PrefixSave;
             DPStart.SelectedDateTime = DateTime.Now.AddYears(-1);
             RefreshSaveList();
 
@@ -46,16 +45,16 @@ namespace VPet_Simulator.Windows
             public SourceType Source { get; init; }
             public string SourceText => Source switch
             {
-                SourceType.Local => "本地".Translate(),
-                SourceType.Backup => "备份".Translate(),
-                SourceType.Steam => "Steam云".Translate(),
+                SourceType.Local => "Local".Translate(),
+                SourceType.Backup => "".Translate(),
+                SourceType.Steam => "Steam".Translate(),
                 _ => string.Empty
             };
             public string SourceToolTip => Source switch
             {
-                SourceType.Local => "本地存档, 会被Steam自动同步".Translate(),
-                SourceType.Backup => "本地备份文件, 不会被steam云存档同步".Translate(),
-                SourceType.Steam => "Steam云备份存档, 跟随Steam账号保存".Translate(),
+                SourceType.Local => "Local saves, will be automatically synced by Steam".Translate(),
+                SourceType.Backup => "Local backup files, will not be synced by Steam Cloud".Translate(),
+                SourceType.Steam => "Steam cloud backup saves, saved with Steam account".Translate(),
                 _ => string.Empty
             };
             public string SaveId { get; init; }
@@ -183,14 +182,14 @@ namespace VPet_Simulator.Windows
             string lpsText;
             if (!File.Exists(selected.FullPath))
             {
-                MessageBoxX.Show("存档文件不存在,请刷新后重试".Translate(), "加载失败".Translate(), MessageBoxIcon.Warning);
+                MessageBoxX.Show("Save file does not exist, please refresh and retry".Translate(), "LoadFail".Translate(), MessageBoxIcon.Warning);
                 return;
             }
             lpsText = File.ReadAllText(selected.FullPath);
 
-            var message = "存档名称:{0}\n保存时间:{1}\n存档等级:{2}\n存档金钱:{3}\nHashCheck:{4}\n是否加载该备份存档? 当前游戏数据会丢失"
+            var message = "Save name: {0}\nSave time: {1}\nSave level: {2}\nSave money: {3}\nHashCheck: {4}\nLoad the backup save? Current game data will be lost"
                 .Translate(selected.PetName, selected.SaveTimeText, selected.LevelText, selected.MoneyText, selected.HashCheck);
-            if (MessageBoxX.Show(message, "是否加载该备份存档? 当前游戏数据会丢失".Translate(), MessageBoxButton.YesNo, MessageBoxIcon.Info) != MessageBoxResult.Yes)
+            if (MessageBoxX.Show(message, "Load the backup save? Current game data will be lost".Translate(), MessageBoxButton.YesNo, MessageBoxIcon.Info) != MessageBoxResult.Yes)
                 return;
 
             try
@@ -202,13 +201,13 @@ namespace VPet_Simulator.Windows
                 }
 
                 if (!mw.SavesLoad(new LPS(lpsText)))
-                    MessageBoxX.Show("存档损毁,无法加载该存档\n可能是上次储存出错或Steam云同步导致的\n请在设置中加载备份还原存档", "存档损毁".Translate());
+                    MessageBoxX.Show("Archive damage, unable to load the archive\\nIt may be caused by an error in the last storage or Steam cloud synchronization\\nPlease load the backup in the settings to restore the archive", "Archive damage".Translate());
                 else
-                    MessageBoxX.Show("加载成功".Translate());
+                    MessageBoxX.Show("Load successful".Translate());
             }
             catch (Exception ex)
             {
-                MessageBoxX.Show("存档损毁,无法加载该存档\n可能是数据溢出/超模导致的" + '\n' + ex.Message, "存档损毁".Translate());
+                MessageBoxX.Show("Archive damage, unable to load the archive\\nIt may be caused by data overflow/overmodel" + '\n' + ex.Message, "Archive damage".Translate());
             }
         }
 

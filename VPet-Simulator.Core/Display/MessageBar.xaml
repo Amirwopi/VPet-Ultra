@@ -10,19 +10,19 @@
     </UserControl.Resources>
     <UserControl.ContextMenu>
         <ContextMenu Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
-            <MenuItem Header="{ll:Str 复制全文}" Click="MenuItemCopy_Click" />
-            <MenuItem Header="{ll:Str 关闭}" Click="MenuItemClose_Click" />
+            <MenuItem Header="{ll:Str Copy full text}" Click="MenuItemCopy_Click" />
+            <MenuItem Header="{ll:Str Close}" Click="MenuItemClose_Click" />
         </ContextMenu>
     </UserControl.ContextMenu>
     <Border x:Name="BorderMain" Background="{DynamicResource Primary}" BorderBrush="{DynamicResource DARKPrimaryDark}"
             BorderThickness="5" VerticalAlignment="Bottom" Padding="10" Margin="5" CornerRadius="5"
             MouseEnter="Border_MouseEnter" MouseLeave="Border_MouseLeave">
         <StackPanel>
-            <Label x:Name="LName" Content="虚拟桌宠名字:" Foreground="{DynamicResource PrimaryText}"
+            <Label x:Name="LName" Content="Virtual Desktop Pet Name:" Foreground="{DynamicResource PrimaryText}"
                     HorizontalAlignment="Left" Padding="0" FontWeight="Bold" Margin="0,0,0,6" FontSize="32"
                     Background="{x:Null}" />
             <ScrollViewer x:Name="sv" MaxHeight="400">
-                <TextBox x:Name="TText" Text="我说话长这样,这是我说的话巴拉巴拉巴拉巴拉巴拉巴拉巴拉巴拉巴拉巴拉巴拉巴拉巴拉巴拉" IsReadOnly="True"
+                <TextBox x:Name="TText" Text="I speak like this, this is what I say blah blah blah" IsReadOnly="True"
                         TextWrapping="WrapWithOverflow" FontSize="24" x:FieldModifier="public" Background="{x:Null}"
                         BorderBrush="{x:Null}" BorderThickness="0" SizeChanged="TText_SizeChanged" />
             </ScrollViewer>

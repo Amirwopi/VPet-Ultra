@@ -14,7 +14,6 @@ using static VPet_Simulator.Core.GraphInfo;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// winConsole.xaml 的交互逻辑
     /// </summary>
     public partial class winConsole : Window
     {
@@ -23,7 +22,7 @@ namespace VPet_Simulator.Windows
         {
             mw.Windows.Add(this);
             InitializeComponent();
-            Title = "桌宠管理开发控制台".Translate() + ' ' + mw.PrefixSave;
+            Title = "Desktop Pet Management Development Console".Translate() + ' ' + mw.PrefixSave;
             this.mw = mw;
             foreach (var v in mw.Core.Graph.GraphsList)
             {
@@ -64,10 +63,10 @@ namespace VPet_Simulator.Windows
             var graph = mw.Main.Core.Graph.FindGraph(kv[0], (AnimatType)Enum.Parse(typeof(AnimatType), kv[1]), (IGameSave.ModeType)ComboxMode.SelectedIndex);
             if (graph == null)
             {
-                LabelNowPlay.Content = "未找到对应类型图像资源".Translate();
+                LabelNowPlay.Content = "No sprite resources of the corresponding type were found".Translate();
                 return;
             }
-            LabelNowPlay.Content = "当前正在播放".Translate() + ": " + GraphListBox.SelectedItem;
+            LabelNowPlay.Content = "Currently playing".Translate() + ": " + GraphListBox.SelectedItem;
             DisplayLoop(graph);
         }
 
@@ -75,7 +74,7 @@ namespace VPet_Simulator.Windows
         {
             if (DisplayListBox.SelectedItem == null)
                 return;
-            LabelSuccess.Content = "当前正在运行".Translate() + ": " + (string)((ListBoxItem)DisplayListBox.SelectedItem).Content;
+            LabelSuccess.Content = "Currently running".Translate() + ": " + (string)((ListBoxItem)DisplayListBox.SelectedItem).Content;
             mw.RunAction((string)((ListBoxItem)DisplayListBox.SelectedItem).Content);
         }
 

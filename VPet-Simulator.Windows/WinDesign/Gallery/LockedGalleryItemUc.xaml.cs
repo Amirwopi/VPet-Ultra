@@ -9,7 +9,6 @@ using VPet_Simulator.Windows.Interface;
 namespace VPet_Simulator.Windows.WinDesign.Gallery
 {
     /// <summary>
-    /// LockedGalleryItemUc.xaml 的交互逻辑
     /// </summary>
     public partial class LockedGalleryItemUc : UserControl
     {
@@ -33,7 +32,7 @@ namespace VPet_Simulator.Windows.WinDesign.Gallery
                     if (Photo.UnlockAble.Check(mw.GameSavesData))
                     {
                         btnCan.Visibility = Visibility.Visible;
-                        rAnd.Text = "并".Translate();
+                        rAnd.Text = "AND".Translate();
                         clmoney.Text = convertk(photo.UnlockAble.SellPrice);
                     }
                     else
@@ -41,14 +40,14 @@ namespace VPet_Simulator.Windows.WinDesign.Gallery
                         btnCannot.Visibility = Visibility.Visible;
                         nlmoney.Text = convertk(photo.UnlockAble.SellPrice);
                     }
-                    ToolTip = "花费${0} 并 满足以下条件:".Translate(photo.UnlockAble.SellPrice) + '\n' + untxt;
+                    ToolTip = "Spend ${0} and meet the following conditions".Translate(photo.UnlockAble.SellPrice) + '\n' + untxt;
                 }
                 else
                 {
                     btnCan.Visibility = Visibility.Visible;
                     clmoney.Text = convertk(photo.UnlockAble.SellPrice);
-                    ToolTip = "花费${0} 或 满足以下条件:".Translate(photo.UnlockAble.SellPrice) + '\n' + untxt;
-                    rAnd.Text = "或".Translate();
+                    ToolTip = "Spend ${0} or meet the following conditions".Translate(photo.UnlockAble.SellPrice) + '\n' + untxt;
+                    rAnd.Text = "OR".Translate();
                 }
             }
             else
@@ -62,10 +61,10 @@ namespace VPet_Simulator.Windows.WinDesign.Gallery
             return (price / 1000).ToString("N0") + "k";
         }
         private void Button_Click(object sender, RoutedEventArgs e)
-        {//花钱解锁
+        {
             if (mw.GameSavesData.GameSave.Money < Photo.UnlockAble.SellPrice)
             {
-                mw.winGallery.Toast("金钱不足".Translate() + " " + convertk(Photo.UnlockAble.SellPrice),
+                mw.winGallery.Toast("Lack of money".Translate() + " " + convertk(Photo.UnlockAble.SellPrice),
                     icon: MessageBoxIcon.Warning);
                 return;
             }
@@ -76,7 +75,7 @@ namespace VPet_Simulator.Windows.WinDesign.Gallery
             mw.winGallery.AutoUniformGridImages.Children.Remove(this);
             mw.winGallery.AutoUniformGridImages.Children.Insert(i, new UnLockedGalleryItemUc(Photo, mw));
             mw.winGallery.Toast(
-            message: "已解锁".Translate() + " " + Photo.TranslateName,
+            message: "Unlocked".Translate() + " " + Photo.TranslateName,
             icon: MessageBoxIcon.Info
             );
         }

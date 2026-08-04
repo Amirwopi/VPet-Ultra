@@ -11,7 +11,6 @@ using VPet_Simulator.Windows.Interface;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// App.xaml 的交互逻辑
     /// </summary>
     public partial class App : Application
     {
@@ -27,7 +26,6 @@ namespace VPet_Simulator.Windows
         }
         public static string[] Args { get; set; }
         /// <summary>
-        /// 多存档系统名称
         /// </summary>
         public static List<string> MutiSaves { get; set; } = new List<string>();
 
@@ -39,7 +37,6 @@ namespace VPet_Simulator.Windows
         {
             Args = e.Args;
 
-            //旧版本多开bug修复
             if (File.Exists(ExtensionValue.BaseDirectory + @"\Setting-.lps"))
                 File.Delete(ExtensionValue.BaseDirectory + @"\Setting-.lps");
 
@@ -71,7 +68,7 @@ namespace VPet_Simulator.Windows
         {
             var expt = e.ToString();
             if (ErrorReport.Contains(expt))
-                return;//防止重复报错
+                return;
             ErrorReport.Add(expt);
             if (expt.Contains("MainWindow.Close") || expt.Contains("System.Windows.Window.DragMove") ||
                 expt.Contains("winConsole"))
@@ -81,31 +78,31 @@ namespace VPet_Simulator.Windows
                 ) && ((expt.ToLowerInvariant().Contains("value") && expt.ToLowerInvariant().Contains("nan")) ||
                 expt.Contains("System.OverflowException") || expt.Contains("System.DivideByZeroException")))
             {
-                MessageBox.Show("由于修改游戏数据导致数据溢出,存档可能会出错\n开发者提醒您请不要使用过于超模的MOD".Translate());
+                MessageBox.Show("Due to the modification of the game data caused by data overflow, the archive may be wrong\\nThe developer reminds you not to use too much supermodel MOD.".Translate());
                 return;
             }
             else if (expt.Contains("System.IO.FileNotFoundException") && expt.Contains("cache"))
             {
-                MessageBox.Show("缓存被其他软件删除,游戏无法继续运行\n请重启游戏重新生成缓存".Translate());
+                MessageBox.Show("Cache is deleted by other software, the game can not continue to run\\nPlease restart the game to regenerate the cache.".Translate());
                 return;
             }
             else if (expt.Contains("0x80070008"))
             {
-                MessageBox.Show("游戏内存不足,请修改设置中渲染分辨率以便降低内存使用".Translate());
+                MessageBox.Show("Game memory is insufficient, please modify the rendering resolution in the settings to reduce memory usage.".Translate());
                 return;
             }
             else if (expt.Contains("UnauthorizedAccessException"))
             {
-                MessageBox.Show("游戏权限不足,无法写入游戏存档和设置,请检查设置文件是否被其他软件占用".Translate());
+                MessageBox.Show("Insufficient game permissions, unable to write game archives and settings, please check if the settings file is occupied by other software".Translate());
                 return;
             }
             else if (expt.Contains("VPet.Plugin"))
             {
                 var exptin = expt.Split('\n').First(x => x.Contains("VPet.Plugin"));
                 exptin = exptin.Substring(exptin.IndexOf("VPet.Plugin") + 12).Split('.')[0];
-                MessageBox.Show("游戏发生错误,可能是".Translate() + $"MOD({exptin.Translate()})" +
-                    "导致的\n如有可能请发送 错误信息截图和引发错误之前的操作给相应MOD作者\n感谢您对MOD开发的支持\n".Translate()
-                     + expt, "游戏发生错误,可能是".Translate() + exptin);
+                MessageBox.Show("An error occurred in the game, probably".Translate() + $"MOD({exptin.Translate()})" +
+                    "Caused. \\nIf possible, please send the error message screenshot and the operation before the error to the corresponding MOD author\\nThank you for your support for MOD development\\n".Translate()
+                     + expt, "An error occurred in the game, probably".Translate() + exptin);
                 return;
             }
 
@@ -114,21 +111,21 @@ namespace VPet_Simulator.Windows
                 if (expt.Contains(modname))
                 {
                     var exptin = modname.Split('.').Last();
-                    MessageBox.Show("游戏发生错误,可能是".Translate() + $"MOD({modname})" +
-                        "导致的\n如有可能请发送 错误信息截图和引发错误之前的操作给相应MOD作者\n感谢您对MOD开发的支持\n".Translate()
-                         + expt, "游戏发生错误,可能是".Translate() + exptin);
+                    MessageBox.Show("An error occurred in the game, probably".Translate() + $"MOD({modname})" +
+                        "Caused. \\nIf possible, please send the error message screenshot and the operation before the error to the corresponding MOD author\\nThank you for your support for MOD development\\n".Translate()
+                         + expt, "An error occurred in the game, probably".Translate() + exptin);
                     return;
                 }
             }
 
 
-            string errstr = "游戏发生错误,可能是".Translate() + (string.IsNullOrWhiteSpace(CoreMOD.NowLoading) ?
-                "游戏或者MOD".Translate() : $"MOD({CoreMOD.NowLoading})") +
-                "导致的\n如有可能请发送 错误信息截图和引发错误之前的操作 给开发者:service@exlb.net\n感谢您对游戏开发的支持\n".Translate()
+            string errstr = "An error occurred in the game, probably".Translate() + (string.IsNullOrWhiteSpace(CoreMOD.NowLoading) ?
+                "Game or Mod".Translate() : $"MOD({CoreMOD.NowLoading})") +
+                "If possible, Please send a screenshot of the error message and the action you took before triggering the error to developer: service@exlb.net\\nThanks for your support of the game development\\n".Translate()
                 + expt;
             if (isFatality || MainWindow == null)
             {
-                MessageBox.Show(errstr, "游戏致命性错误".Translate());
+                MessageBox.Show(errstr, "Game Fatal Error".Translate());
                 return;
             }
             else

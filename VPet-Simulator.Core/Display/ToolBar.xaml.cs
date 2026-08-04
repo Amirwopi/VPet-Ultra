@@ -15,7 +15,6 @@ using Timer = System.Timers.Timer;
 namespace VPet_Simulator.Core
 {
     /// <summary>
-    /// ToolBar.xaml 的交互逻辑
     /// </summary>
     public partial class ToolBar : UserControl, IDisposable
     {
@@ -60,7 +59,7 @@ namespace VPet_Simulator.Core
                 Visibility = Visibility.Collapsed;
         }
         /// <summary>
-        /// 加载默认工作
+        /// LoadDefaultWork
         /// </summary>
         public void LoadWork()
         {
@@ -137,7 +136,6 @@ namespace VPet_Simulator.Core
             }
         }
         /// <summary>
-        /// 自动显示和隐藏DIY菜单
         /// </summary>
         public void LoadDIY()
         {
@@ -174,7 +172,6 @@ namespace VPet_Simulator.Core
             StartWork(wplay);
         }
         /// <summary>
-        /// 刷新显示UI
         /// </summary>
         public void M_TimeUIHandle(Main m)
         {
@@ -272,7 +269,6 @@ namespace VPet_Simulator.Core
                 Dispatcher.Invoke(() => this.Visibility = Visibility.Collapsed);
         }
         /// <summary>
-        /// ToolBar显示事件
         /// </summary>
         public event Action EventShow;
         public void Show()
@@ -304,33 +300,29 @@ namespace VPet_Simulator.Core
             m.Core.Controller.ShowPanel();
         }
         /// <summary>
-        /// 窗口类型
         /// </summary>
         public enum MenuType
         {
             /// <summary>
-            /// 投喂
+            /// Shop
             /// </summary>
             Feed,
             /// <summary>
-            /// 互动
+            /// Interact
             /// </summary>
             Interact,
             /// <summary>
-            /// 自定
+            /// DIY
             /// </summary>
             DIY,
             /// <summary>
-            /// 设置
+            /// Settings
             /// </summary>
             Setting,
         }
         /// <summary>
-        /// 添加按钮
         /// </summary>
-        /// <param name="parentMenu">按钮位置</param>
-        /// <param name="displayName">显示名称</param>
-        /// <param name="clickCallback">功能</param>
+        /// <param name="displayName">Display Name</param>
         public void AddMenuButton(MenuType parentMenu,
             string displayName,
             Action clickCallback)
@@ -413,7 +405,6 @@ namespace VPet_Simulator.Core
             }
         }
         /// <summary>
-        /// MenuPanel显示事件
         /// </summary>
         public event Action EventMenuPanelShow;
 

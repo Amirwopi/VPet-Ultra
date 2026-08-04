@@ -39,7 +39,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBox x:Name="TbTitleSearch" Grid.ColumnSpan="2" VerticalAlignment="Center" Padding="7,0"
-                                pu:TextBoxHelper.Watermark="{ll:Str 搜索商品}" FontSize="14" Background="#33FFFFFF"
+                                pu:TextBoxHelper.Watermark="{ll:Str Search for products}" FontSize="14" Background="#33FFFFFF"
                                 Height="30" BorderThickness="0" pu:TextBoxHelper.CornerRadius="5"
                                 Loaded="TbTitleSearch_Loaded" Foreground="{DynamicResource DARKPrimaryText}" />
                         <Button Grid.Column="1" Margin="0,0,3,0" VerticalAlignment="Center" Height="28" Width="28"
@@ -50,7 +50,7 @@
                                 Click="BtnSearch_Click" />
                     </Grid>
                     <TextBlock VerticalAlignment="Center" Margin="20,0,0,0" FontSize="16" FontWeight="Bold">
-                            <Run Text="{ll:Str 金钱}" />: $ <Run x:Name="rMoney" Loaded="rMoney_Loaded" Text="" />
+                            <Run Text="{ll:Str Money}" />: $ <Run x:Name="rMoney" Loaded="rMoney_Loaded" Text="" />
                     </TextBlock>
                 </StackPanel>
                 <Viewbox HorizontalAlignment="Right">
@@ -60,30 +60,30 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <pu:Switch Content="{ll:Str 购买后不自动关闭窗口}" Grid.Column="2" FontSize="14" Margin="10,0,5,0"
+                        <pu:Switch Content="{ll:Str &quot;Don't close after purchase&quot;}" Grid.Column="2" FontSize="14" Margin="10,0,5,0"
                                 Height="20" VerticalAlignment="Center" HorizontalAlignment="Left" BoxHeight="14"
                                 ToggleSize="10" CheckedBackground="{DynamicResource Primary}"
                                 CheckedBorderBrush="{DynamicResource Primary}" Background="Transparent"
                                 ToggleShadowColor="{x:Null}" CheckedToggleBrush="{DynamicResource DARKPrimaryText}"
                                 ToggleBrush="{DynamicResource DARKPrimaryText}" pu:WindowX.IsDragMoveArea="False"
                                 BoxWidth="24" Loaded="Switch_Loaded" />
-                        <pu:Switch Content="{ll:Str 让宠物自己买东西吃}" Grid.Column="2" FontSize="14" Margin="10,0,5,0"
+                        <pu:Switch Content="{ll:Str Let Pet animation purchase on their own}" Grid.Column="2" FontSize="14" Margin="10,0,5,0"
                                 Height="20" VerticalAlignment="Center" HorizontalAlignment="Left" BoxHeight="14"
                                 ToggleSize="10" CheckedBackground="{DynamicResource Primary}"
                                 CheckedBorderBrush="{DynamicResource Primary}" Background="Transparent"
                                 ToggleShadowColor="{x:Null}" CheckedToggleBrush="{DynamicResource DARKPrimaryText}"
                                 Grid.Row="1" ToggleBrush="{DynamicResource DARKPrimaryText}"
                                 pu:WindowX.IsDragMoveArea="False" BoxWidth="24"
-                                ToolTip="{ll:Str '当宠物口渴或者饥饿的时候会自己买东西吃\&#13;请注意,宠物可能会乱花钱和吃错误的东西\&#13;额外加收20%外卖运送费用'}"
+                                ToolTip="{ll:Str 'OR\&#13;,$\&#13;20%'}"
                                 Loaded="Switch_Loaded_1" />
-                        <pu:Switch Content="{ll:Str 让宠物自己买礼物}" Grid.Column="2" FontSize="14" Margin="10,0,5,0"
+                        <pu:Switch Content="{ll:Str Let the Pet animation buy gifts for itself}" Grid.Column="2" FontSize="14" Margin="10,0,5,0"
                                 Height="20" VerticalAlignment="Center" HorizontalAlignment="Left" BoxHeight="14"
                                 ToggleSize="10" CheckedBackground="{DynamicResource Primary}"
                                 CheckedBorderBrush="{DynamicResource Primary}" Background="Transparent"
                                 ToggleShadowColor="{x:Null}" CheckedToggleBrush="{DynamicResource DARKPrimaryText}"
                                 Grid.Row="2" ToggleBrush="{DynamicResource DARKPrimaryText}"
                                 pu:WindowX.IsDragMoveArea="False" BoxWidth="24" Visibility="Collapsed"
-                                ToolTip="{ll:Str '当宠物不开心的时候会自己给自己买礼物\&#13;请注意,宠物可能会乱花钱,而且礼物一般都非常贵\&#13;额外加收20%运送费用'}"
+                                ToolTip="{ll:Str 'Happy\&#13;,$,\&#13;20%'}"
                                 Loaded="Switch_Loaded_2" />
                     </Grid>
                 </Viewbox>
@@ -146,7 +146,7 @@
                                 </Border>-->
                                 <Button Grid.Row="4" Margin="0,7,0,0" Padding="7,5" Cursor="Hand"
                                         HorizontalAlignment="Left" pu:ButtonHelper.Icon="&#xF11A;"
-                                        Style="{DynamicResource ThemedButtonStyle}" Content="{ll:Str 购买}"
+                                        Style="{DynamicResource ThemedButtonStyle}" Content="{ll:Str Buy}"
                                         Click="BtnBuy_Click" />
                             </Grid>
                         </Grid>
@@ -211,14 +211,14 @@
                     </Border>
                     <ToggleButton x:Name="TbtnStar" Grid.ColumnSpan="2" Margin="0,5,32,0" HorizontalAlignment="Right"
                             VerticalAlignment="Top" Width="30" Height="30" Padding="0" FontSize="22"
-                            Foreground="#FFB300" Background="Transparent" ToolTip="{ll:Str 收藏食物}"
+                            Foreground="#FFB300" Background="Transparent" ToolTip="{ll:Str Favorite item}"
                             pu:ToggleButtonHelper.CornerRadius="5" pu:ToggleButtonHelper.CheckedContent="&#xF186;"
                             pu:IconHelper.Margin="0" FontFamily="/VPet-Simulator.Windows;component/Res/#remixicon"
                             Content="&#xF18B;" IsChecked="{Binding Star}" />
                     <ToggleButton x:Name="TbtnDetail" Grid.ColumnSpan="2" Margin="0,5,8,0" HorizontalAlignment="Right"
                             VerticalAlignment="Top" Width="30" Height="30" Padding="0" FontSize="22"
                             Foreground="{DynamicResource DARKPrimaryDarker}" Background="Transparent"
-                            ToolTip="{ll:Str 物品详情}" pu:ToggleButtonHelper.CornerRadius="5"
+                            ToolTip="{ll:Str Item Details}" pu:ToggleButtonHelper.CornerRadius="5"
                             pu:ToggleButtonHelper.CheckedContent="&#xEF3D;"
                             pu:ToggleButtonHelper.CheckedForeground="{DynamicResource DARKPrimaryText}"
                             pu:IconHelper.Margin="0" FontFamily="/VPet-Simulator.Windows;component/Res/#remixicon"
@@ -250,22 +250,22 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="2*" />
             </Grid.RowDefinitions>
-            <TextBlock Text="{ll:Str 商品分类}" FontSize="18" Margin="5" Foreground="{DynamicResource DARKPrimary}" />
+            <TextBlock Text="{ll:Str Product Category}" FontSize="18" Margin="5" Foreground="{DynamicResource DARKPrimary}" />
             <ListBox x:Name="LsbCategory" Grid.Row="1" Margin="-12,10,-12,0" Background="Transparent"
                     BorderThickness="0" SelectedIndex="0" pu:ListBoxHelper.ItemsPadding="15,8"
                     pu:ListBoxHelper.ItemsSelectedBackground="{DynamicResource DARKPrimary}"
                     pu:ListBoxHelper.ItemsSelectedForeground="{DynamicResource DARKPrimaryText}"
                     SelectionChanged="LsbSortRule_SelectionChanged">
-                <ListBoxItem Content="{ll:Str 全部}" />
-                <ListBoxItem Content="{ll:Str 收藏}" />
-                <ListBoxItem Content="{ll:Str 正餐}" />
-                <ListBoxItem Content="{ll:Str 零食}" />
-                <ListBoxItem Content="{ll:Str 饮料}" />
-                <ListBoxItem Content="{ll:Str 功能性}" />
-                <ListBoxItem Content="{ll:Str 药品}" />
-                <ListBoxItem Content="{ll:Str 礼品}" />
+                <ListBoxItem Content="{ll:Str All}" />
+                <ListBoxItem Content="{ll:Str Favorites}" />
+                <ListBoxItem Content="{ll:Str Main Dishes}" />
+                <ListBoxItem Content="{ll:Str Snacks}" />
+                <ListBoxItem Content="{ll:Str Drinks}" />
+                <ListBoxItem Content="{ll:Str Functional}" />
+                <ListBoxItem Content="{ll:Str Medicine}" />
+                <ListBoxItem Content="{ll:Str Gift}" />
             </ListBox>
-            <TextBlock Grid.Row="2" Text="{ll:Str 排序方式}" Margin="5" FontSize="18"
+            <TextBlock Grid.Row="2" Text="{ll:Str Sort by}" Margin="5" FontSize="18"
                     Foreground="{DynamicResource DARKPrimary}" />
             <Border Grid.Row="3" Margin="0,10,0,0" MinHeight="100" CornerRadius="5">
                 <Grid VerticalAlignment="Top">
@@ -279,15 +279,15 @@
                             pu:ListBoxHelper.ItemsSelectedBackground="{DynamicResource DARKPrimary}"
                             pu:ListBoxHelper.ItemsSelectedForeground="{DynamicResource DARKPrimaryText}"
                             SelectedIndex="0" SelectionChanged="LsbSortRule_SelectionChanged">
-                        <ListBoxItem Content="{ll:Str 按名字}" />
-                        <ListBoxItem Content="{ll:Str 按价格}" />
-                        <ListBoxItem Content="{ll:Str 按饱腹度}" />
-                        <ListBoxItem Content="{ll:Str 按口渴度}" />
-                        <ListBoxItem Content="{ll:Str 按体力}" />
-                        <ListBoxItem Content="{ll:Str 按心情}" />
-                        <ListBoxItem Content="{ll:Str 按健康}" />
-                        <ListBoxItem Content="{ll:Str 按经验值}" />
-                        <ListBoxItem Content="{ll:Str 按好感度}" />
+                        <ListBoxItem Content="{ll:Str Name}" />
+                        <ListBoxItem Content="{ll:Str Price}" />
+                        <ListBoxItem Content="{ll:Str Hunger}" />
+                        <ListBoxItem Content="{ll:Str Thirst}" />
+                        <ListBoxItem Content="{ll:Str Stamina}" />
+                        <ListBoxItem Content="{ll:Str Mood}" />
+                        <ListBoxItem Content="{ll:Str Health}" />
+                        <ListBoxItem Content="{ll:Str Exp}" />
+                        <ListBoxItem Content="{ll:Str By favorability}" />
                     </ListBox>
                     <Rectangle Grid.Column="1" Margin="10,0,10,0" Width="1" Fill="{DynamicResource DARKPrimaryTrans4}" />
                     <ListBox x:Name="LsbSortAsc" Grid.Column="2" Background="Transparent" BorderThickness="0"
@@ -295,8 +295,8 @@
                             pu:ListBoxHelper.ItemsSelectedBackground="{DynamicResource DARKPrimary}"
                             pu:ListBoxHelper.ItemsSelectedForeground="{DynamicResource DARKPrimaryText}"
                             SelectedIndex="0" SelectionChanged="LsbSortRule_SelectionChanged">
-                        <ListBoxItem Content="{ll:Str 升序}" />
-                        <ListBoxItem Content="{ll:Str 降序}" />
+                        <ListBoxItem Content="{ll:Str Asc.}" />
+                        <ListBoxItem Content="{ll:Str Desc.}" />
                     </ListBox>
                 </Grid>
             </Border>
@@ -332,14 +332,14 @@
                 <StackPanel Grid.Column="1" Margin="5,0,0,0" Orientation="Horizontal">
                     <TextBox x:Name="TbPage" MinWidth="50" Style="{DynamicResource StandardTextBoxStyle}"
                             PreviewKeyDown="TbPage_PreviewKeyDown" />
-                    <TextBlock Margin="3,0,0,0" Text="{ll:Str 页}" VerticalAlignment="Center" />
+                    <TextBlock Margin="3,0,0,0" Text="{ll:Str Page}" VerticalAlignment="Center" />
                 </StackPanel>
                 <StackPanel Grid.Column="3" Margin="5,0,0,0" Orientation="Horizontal">
-                    <TextBlock Margin="3" Text="{ll:Str 一次购买}" VerticalAlignment="Center" />
+                    <TextBlock Margin="3" Text="{ll:Str Purchase}" VerticalAlignment="Center" />
                     <pu:NumberInput x:Name="nibuytimes" Value="1" Minimum="1" CornerRadius="5,5,5,5" BorderThickness="1.5"
                             BorderBrush="{DynamicResource DARKPrimary}" MinWidth="50"
                             ValueChanged="nibuytimes_ValueChanged" />
-                    <TextBlock Margin="3" Text="{ll:Str 个}" VerticalAlignment="Center" />
+                    <TextBlock Margin="3" Text="{ll:Str at a time}" VerticalAlignment="Center" />
                 </StackPanel>
             </Grid>
         </Grid>

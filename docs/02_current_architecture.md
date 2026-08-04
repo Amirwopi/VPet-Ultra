@@ -274,7 +274,7 @@ Current: 60 FPS animation (sprite-sheet rendering). `EventTimer` 15 s tick. `PNG
 - No global error boundary beyond `App.DispatcherUnhandledException`.
 
 ## Edge Cases
-- Missing core MOD → "缺少模组Core,无法启动桌宠" error.
+- Missing core MOD → "Missing module Core, can't start up" error.
 - `mklink.bat` required to link `mod/` into build output for dev.
 - Multi-monitor: `AutoChangeWindow` (default false) for auto-switch.
 - Multi-open: `PrefixSave` allows multiple pet instances with separate saves.

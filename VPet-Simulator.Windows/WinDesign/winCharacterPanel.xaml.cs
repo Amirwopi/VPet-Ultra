@@ -21,7 +21,6 @@ using Color = System.Windows.Media.Color;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// winCharacterPanel.xaml 的交互逻辑
     /// </summary>
     public partial class winCharacterPanel : WindowX
     {
@@ -31,7 +30,7 @@ namespace VPet_Simulator.Windows
         {
             this.mw = mw;
             InitializeComponent();
-            Title = "面板".Translate() + ' ' + mw.PrefixSave;
+            Title = "Status".Translate() + ' ' + mw.PrefixSave;
             mw.Windows.Add(this);
             foreach (var v in mw.GameSavesData.Statistics.Data)
             {
@@ -77,11 +76,11 @@ namespace VPet_Simulator.Windows
                 StatCount = statCount;
                 if (statId.StartsWith("buy_"))
                 {
-                    StatName = "购买次数".Translate() + '_' + statId.Substring(4).Translate();
+                    StatName = "Purchase".Translate() + '_' + statId.Substring(4).Translate();
                 }
                 else if (statId.StartsWith("stat_"))
                 {
-                    StatName = "统计".Translate() + '_' + statId.Substring(5).Translate();
+                    StatName = "Statistics".Translate() + '_' + statId.Substring(5).Translate();
                 }
                 else
                 {
@@ -90,18 +89,18 @@ namespace VPet_Simulator.Windows
             }
 
             /// <summary>
-            /// 统计ID
+            /// StatisticsID
             /// </summary>
             public string StatId { get; set; }
 
             /// <summary>
-            /// 统计显示名称
+            /// StatisticsDisplay Name
             /// </summary>
             public string StatName { get; set; }
 
             private double _statCount;
             /// <summary>
-            /// 统计内容
+            /// StatisticsContent
             /// </summary>
             public double StatCount
             {
@@ -208,9 +207,9 @@ namespace VPet_Simulator.Windows
             double startlengthrank = 0;
             string startlengthranktext;
             if (startlengthrank < 0.5)
-                startlengthranktext = '"' + "主人~多陪陪我~".Translate() + '"';
+                startlengthranktext = '"' + "Master, stay with me!".Translate() + '"';
             else
-                startlengthranktext = '"' + "主人~感谢陪伴~".Translate() + '"';
+                startlengthranktext = '"' + "Master, thank you for your company.".Translate() + '"';
 
             double timelengthph = timelength_h / startdatelength;
             string timelengthphtext;
@@ -218,32 +217,32 @@ namespace VPet_Simulator.Windows
             int timelength_i;
             if (timelengthph < 2)
             {
-                timelengthphtext = "同学".Translate();
-                timelengthtext = '"' + "学长~前辈~".Translate() + '"';
+                timelengthphtext = "Classmates".Translate();
+                timelengthtext = '"' + "Senior".Translate() + '"';
                 timelength_i = 1;
             }
             else if (timelengthph < 4)
             {
-                timelengthphtext = "朋友".Translate();
-                timelengthtext = '"' + "兄弟!".Translate() + '"';
+                timelengthphtext = "Friend!".Translate();
+                timelengthtext = '"' + "Brother!".Translate() + '"';
                 timelength_i = 2;
             }
             else if (timelengthph < 7)
             {
-                timelengthphtext = "挚友".Translate();
-                timelengthtext = '"' + "不求同年同月同日生，但求同年同月同日打开《虚拟桌宠模拟器》".Translate() + '"';
+                timelengthphtext = "Best friend!".Translate();
+                timelengthtext = '"' + "We don't want to be born in the same year, month and day, but we want to open VPet Simulator in the same year, month and day.".Translate() + '"';
                 timelength_i = 3;
             }
             else if (timelengthph < 10)
             {
-                timelengthphtext = "家人".Translate();
-                timelengthtext = '"' + "We are 伐木累~".Translate() + '"';
+                timelengthphtext = "Family".Translate();
+                timelengthtext = '"' + "We are Family.".Translate() + '"';
                 timelength_i = 4;
             }
             else
             {
-                timelengthphtext = "女鹅".Translate();
-                timelengthtext = '"' + "爸妈~ 这么叫好像不太好".Translate() + '"';
+                timelengthphtext = "Daughter".Translate();
+                timelengthtext = '"' + "Mom and Dad!, I don't think it's a good idea to call them that.".Translate() + '"';
                 timelength_i = 5;
             }
 
@@ -252,27 +251,27 @@ namespace VPet_Simulator.Windows
             int study_i;
             if (mw.GameSavesData.GameSave.Level < 20)
             {
-                studytext = "相当于桌宠的小学学历哦\n\"肃清! {0}的安魂曲☆\"".Translate(petname);
+                studytext = "\n\"Purge! {0}'s Requiem\"".Translate(petname);
                 study_i = 1;
             }
             else if (mw.GameSavesData.GameSave.Level < 40)
             {
-                studytext = "相当于桌宠的中学学历哦\n<高考桌宠100天>".Translate();
+                studytext = "It's the equivalent of VPet's high school education.\\n<College Entrance Exam for VPet>".Translate();
                 study_i = 2;
             }
             else if (mw.GameSavesData.GameSave.Level < 60)
             {
-                studytext = "相当于桌宠的大学学历哦\n\"大学生上课吃饭睡觉, {0}学习吃饭睡觉, {0}＝大学生\"".Translate(petname);
+                studytext = "\n\"College students eat sleep study, {0} eats sleeps studies, {0} = college student\"".Translate(petname);
                 study_i = 3;
             }
             else if (mw.GameSavesData.GameSave.Level < 80)
             {
-                studytext = "相当于桌宠的博士学历哦\n\"大学生上课吃饭睡觉, 人家和那个带兜帽的没关系啦\"".Translate();
+                studytext = "\n\"College students eat sleep study, I have nothing to do with that hooded guy\"".Translate();
                 study_i = 4;
             }
             else
             {
-                studytext = "<虚拟桌宠模拟器砖家>\n\"一定是{0}干的!\"".Translate(username);
+                studytext = "<VPet-SimulatorExpert>\n\"{0} definitely did it!\"".Translate(username);
                 study_i = 5;
             }
 
@@ -285,48 +284,48 @@ namespace VPet_Simulator.Windows
             int studyexp_i, workmoney_i;
             if (studyexpmaxrank < 0.25)
             {
-                studyexptext = '"' + "在你这个年纪,你怎么睡得着觉的?".Translate() + '"';
+                studyexptext = '"' + "How do you sleep at your age?".Translate() + '"';
                 studyexp_i = 5;
             }
             else if (studyexpmaxrank < 0.4)
             {
-                studyexptext = '"' + "孩子学习老不好，多半是废了，快来试试思维驰学习机".Translate() + '"';
+                studyexptext = '"' + "The child's learning is not good, mostly waste, come and try the Nintendo switch learning machine".Translate() + '"';
                 studyexp_i = 4;
             }
             else if (studyexpmaxrank < 0.55)
             {
-                studyexptext = '"' + "孩子学习老不好，多半是废了，快来试试思维驰学习机".Translate() + '"';
+                studyexptext = '"' + "The child's learning is not good, mostly waste, come and try the Nintendo switch learning machine".Translate() + '"';
                 studyexp_i = 3;
             }
             else if (studyexpmaxrank < 0.75)
             {
-                studyexptext = '"' + "学而不思则罔，思而不学则die".Translate() + '"';
+                studyexptext = '"' + "Learning without thought means labour lost; thought without learning is perilous.".Translate() + '"';
                 studyexp_i = 2;
             }
             else
             {
-                studyexptext = '"' + "看我量子速读法!".Translate() + '"';
+                studyexptext = '"' + "Look at my quantum speed reading method!".Translate() + '"';
                 studyexp_i = 1;
             }
 
             if (studymoneymaxrank < 0.25)
             {
-                workmoneytext = '"' + "钱钱乃身外之物".Translate() + '"';
+                workmoneytext = '"' + "Money is nothing.".Translate() + '"';
                 workmoney_i = 4;
             }
             else if (studymoneymaxrank < 0.5)
             {
-                workmoneytext = '"' + "风声雨声读书声声声入耳，日结月结次次结钱钱入账".Translate() + '"';
+                workmoneytext = '"' + "The sound of the wind and rain, the sound of reading, the sound of the day, the sound of the month, the sound of the day, the sound of the month, the sound of the money.".Translate() + '"';
                 workmoney_i = 3;
             }
             else if (studymoneymaxrank < 0.75)
             {
-                workmoneytext = '"' + "有钱能使磨推鬼".Translate() + '"';
+                workmoneytext = '"' + "Money can make things go away.".Translate() + '"';
                 workmoney_i = 2;
             }
             else
             {
-                workmoneytext = '"' + "可是，我真的很需要那些钱钱!".Translate() + '"';
+                workmoneytext = '"' + "But I really need that money!".Translate() + '"';
                 workmoney_i = 1;
             }
 
@@ -339,32 +338,32 @@ namespace VPet_Simulator.Windows
             int worktime_i;
             if (worktimephrank < 0.25)
             {
-                worktimephtext = '"' + "干一天来歇一天, 能混一天是一天".Translate() + '"';
+                worktimephtext = '"' + "One day at a time, one day off, one day at a time.".Translate() + '"';
                 worktime_i = 1;
             }
             else if (worktimephrank < 0.35)
             {
-                worktimephtext = '"' + "早8晚5，快乐回家".Translate() + '"';
+                worktimephtext = '"' + "8 a.m. to 5 p.m., go home happy".Translate() + '"';
                 worktime_i = 2;
             }
             else if (worktimephrank < 0.45)
             {
-                worktimephtext = '"' + "早8晚5，快乐回家".Translate() + '"';
+                worktimephtext = '"' + "8 a.m. to 5 p.m., go home happy".Translate() + '"';
                 worktime_i = 3;
             }
             else if (worktimephrank < 0.55)
             {
-                worktimephtext = '"' + "早8晚5，快乐回家".Translate() + '"';
+                worktimephtext = '"' + "8 a.m. to 5 p.m., go home happy".Translate() + '"';
                 worktime_i = 4;
             }
             else if (worktimephrank < 0.75)
             {
-                worktimephtext = '"' + "加班没有加班费不是基本常识吗?".Translate() + '"';
+                worktimephtext = '"' + "Isn't it basic knowledge that overtime work is not paid?".Translate() + '"';
                 worktime_i = 5;
             }
             else
             {
-                worktimephtext = '"' + "老板! 路灯已经准备好了!".Translate() + '"';
+                worktimephtext = '"' + "Boss! The streetlights are ready!".Translate() + '"';
                 worktime_i = 6;
             }
 
@@ -387,26 +386,26 @@ namespace VPet_Simulator.Windows
                 }
             }
 
-            string foodtext = "啥也没吃,{0}都饿坏了".Translate(petname);
+            string foodtext = "haven't eaten anything. {0} is starving.".Translate(petname);
             switch (mostfood.Type)
             {
                 case Food.FoodType.Meal:
-                    foodtext = '"' + "人是铁饭是钢, 四菜一汤吃得香".Translate() + '"';
+                    foodtext = '"' + "Iron is steel, four dishes and one soup.".Translate() + '"';
                     break;
                 case Food.FoodType.Drug:
-                    foodtext = '"' + "自动购买又忘开了吧?".Translate() + '"';
+                    foodtext = '"' + "Did you forget to turn on the auto-purchase?".Translate() + '"';
                     break;
                 case Food.FoodType.Drink:
-                    foodtext = '"' + "多喝热水".Translate() + '"';
+                    foodtext = '"' + "I need to drink plenty of hot beverages otherwise i get cold master.".Translate() + '"';
                     break;
                 case Food.FoodType.Functional:
-                    foodtext = '"' + "不是正餐买不起, 而是功能性更有性价比".Translate() + '"';
+                    foodtext = '"' + "It's not that you can't afford to eat, it's that functionality is more cost-effective.".Translate() + '"';
                     break;
                 case Food.FoodType.Snack:
-                    foodtext = '"' + "多吃零食有益心理健康".Translate() + '"';
+                    foodtext = '"' + "Snacking is good for your mental health.".Translate() + '"';
                     break;
                 case Food.FoodType.Gift:
-                    foodtext = '"' + "公若不弃，{0}愿拜为义父!".Translate(petname) + '"';
+                    foodtext = '"' + "If you don't give me up, May {0} be worshipped as adoptive father".Translate(petname) + '"';
                     break;
             }
 
@@ -419,22 +418,22 @@ namespace VPet_Simulator.Windows
             int autobuy_i;
             if (autobuytimesph < 0.25)
             {
-                autobuytext = '"' + "主人, 是担心我乱买东西嘛".Translate() + '"';
+                autobuytext = '"' + "Master, Are you worried that I will buy things randomly?".Translate() + '"';
                 autobuy_i = 4;
             }
             else if (autobuytimesph < 0.5)
             {
-                autobuytext = '"' + "自己赚的钱自己花".Translate() + '"';
+                autobuytext = '"' + "I spend what I earn.".Translate() + '"';
                 autobuy_i = 3;
             }
             else if (autobuytimesph < 0.75)
             {
-                autobuytext = '"' + "不要小看我的情报网! 你自动购买礼物没关,对不对?".Translate() + '"';
+                autobuytext = '"' + "Don't underestimate my intelligence network! You're not buying gifts automatically, are you?".Translate() + '"';
                 autobuy_i = 2;
             }
             else
             {
-                autobuytext = '"' + "诚招保姆,工资面议".Translate() + '"';
+                autobuytext = '"' + "We're looking for a nanny. Salary negotiable.".Translate() + '"';
                 autobuy_i = 1;
             }
 
@@ -448,18 +447,18 @@ namespace VPet_Simulator.Windows
             int modworkshop_i;
             if (modworkshop == 0)
             {
-                modworkshoptext = '"' + "桌宠的steam创意工坊里有许多的mod喵, 主人快去试试吧".Translate() + '"';
+                modworkshoptext = '"' + "VPet's steam workshop is full of mods, so go try them out.".Translate() + '"';
                 modworkshop_i = 3;
             }
             else if (modworkshoprank < 0.3)
             {
-                modworkshoptext = '"' + "主人还可以再去创意工坊体验更多MOD喵".Translate() + '"';
+                modworkshoptext = '"' + "Master can also go to the workshop to experience more MOD".Translate() + '"';
                 modworkshop_i = 3;
             }
             else if (modworkshoprank < 0.7)
-            { modworkshoptext = '"' + "创意工坊又更新了很多有趣的mod喵, 主人要不要去看看?".Translate() + '"'; modworkshop_i = 2; }
+            { modworkshoptext = '"' + "There's a lot of interesting mods in the steam workshop. Would you like to take a look?".Translate() + '"'; modworkshop_i = 2; }
             else
-            { modworkshoptext = '"' + "主人已经是mod大师了喵,要不要试试mod制作器,给我做mod喵!".Translate() + '"'; modworkshop_i = 1; }
+            { modworkshoptext = '"' + "Master is already a master modder, try the mod maker and make mods for me!".Translate() + '"'; modworkshop_i = 1; }
 
             await Dispatcher.InvokeAsync(() => pb_r_genRank.Value = 80);
 
@@ -635,7 +634,7 @@ namespace VPet_Simulator.Windows
         {
             var pl = bdpetlist[cb_birthday.SelectedIndex];
             img_b_background.Source = mw.ImageSources.FindImage("bday_" + pl.loader.Name);
-            tb_bdiy.Text = "{0} 祝 {1} 生日快乐!".Translate(pl.name, mw.GameSavesData.GameSave.HostName);
+            tb_bdiy.Text = "{0} Happy Birthday to {1}!".Translate(pl.name, mw.GameSavesData.GameSave.HostName);
             ILine bdinfo = pl.loader.Config.Data.FindLine("bday");
             img_b_head.Width = bdinfo[(gdbe)"w"];
             img_b_head.Margin = new Thickness(bdinfo[(gdbe)"x"], bdinfo[(gdbe)"y"], 0, 0);
@@ -660,7 +659,7 @@ namespace VPet_Simulator.Windows
             OpenFileDialog openFileDialog = new OpenFileDialog()
             {
                 Filter = "Image File|*.png;*.jpg;*.jpeg;",
-                Title = "选择头像图片".Translate()
+                Title = "Select avatar image".Translate()
             };
             if (openFileDialog.ShowDialog() == true)
             {

@@ -43,9 +43,9 @@ namespace VPet_Simulator.Windows
     {
 
         /// <summary>
-        /// 加载主题
+        /// LoadTheme
         /// </summary>
-        /// <param name="themename">主题名称</param>
+        /// <param name="Themename">ThemeName</param>
         public void LoadTheme(string themename)
         {
             Theme ctheme = Themes.Find(x => x.xName == themename);
@@ -55,16 +55,13 @@ namespace VPet_Simulator.Windows
             }
             Theme = ctheme;
 
-            //加载图片包
             ImageSources.AddSources(ctheme.Images);
 
-            //阴影颜色
             Application.Current.Resources["ShadowColor"] = Function.HEXToColor('#' + ctheme.ThemeColor[(gstr)"ShadowColor"]);
 
             foreach (ILine lin in ctheme.ThemeColor.Assemblage.FindAll(x => !x.Name.Contains("Color")))
                 Application.Current.Resources[lin.Name] = new SolidColorBrush(Function.HEXToColor('#' + lin.info));
 
-            //系统生成部分颜色
             Color c = Function.HEXToColor('#' + ctheme.ThemeColor["Primary"].info);
             c.A = 204;
             Application.Current.Resources["PrimaryTrans"] = new SolidColorBrush(c);
@@ -111,9 +108,8 @@ namespace VPet_Simulator.Windows
 
 
         /// <summary>
-        /// 获得自动点击的文本
         /// </summary>
-        /// <returns>说话内容</returns>
+        /// <returns>SpeakContent</returns>
         public ClickText GetClickText()
         {
             ClickText.DayTime dt;
@@ -152,15 +148,12 @@ namespace VPet_Simulator.Windows
         private Image hashcheckimg;
 
         /// <summary>
-        /// 关闭该玩家的HashCheck检查
-        /// 如果你的mod属于作弊mod/有作弊内容,请在作弊前调用这个方法
         /// </summary>
         public void HashCheckOff()
         {
             HashCheck = false;
         }
         /// <summary>
-        /// 存档 Hash检查 是否通过
         /// </summary>
         public bool HashCheck
         {
@@ -202,7 +195,7 @@ namespace VPet_Simulator.Windows
 
                             hashcheckimg.Source = ImageResources.NewSafeBitmapImage("pack://application:,,,/Res/hash.png");
                             hashcheckimg.HorizontalAlignment = System.Windows.HorizontalAlignment.Right;
-                            hashcheckimg.ToolTip = "是没有修改过存档/使用超模MOD的玩家专属标志".Translate() + ' ' + ((int)(Math.Sqrt(hours))).ToString("X");
+                            hashcheckimg.ToolTip = "Is there no modified archive/supermodel MOD player exclusive logo".Translate() + ' ' + ((int)(Math.Sqrt(hours))).ToString("X");
                             hashcheckimg.Width = 64;
                             hashcheckimg.Height = 64;
                             Grid.SetColumn(hashcheckimg, 4);
@@ -239,14 +232,14 @@ namespace VPet_Simulator.Windows
 
         //private DateTime timecount = DateTime.Now;
         /// <summary>
-        /// 保存设置
+        /// Save the Settings
         /// </summary>
         public void Save()
         {
-            //保存日程表
+            // SaveSchedule
             ScheduleTask?.Save();
 
-            //保存物品栏
+            // SaveInventory
             foreach (var v in GameSavesData.Data.Assemblage.Keys.Where(x => x.StartsWith("item")))
                 GameSavesData.Data.Remove(v);
             for (int i = 0; i < Items.Count; i++)
@@ -256,15 +249,13 @@ namespace VPet_Simulator.Windows
 
             try
             {
-                //保存插件
                 foreach (MainPlugin mp in Plugins)
                     mp.Save();
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString(), "由于插件引起的保存错误".Translate());
+                MessageBox.Show(e.ToString(), "Save error caused by the plugin".Translate());
             }
-            //游戏存档
             if (Set != null)
             {
                 var st = Set.SaveTimesPP;
@@ -279,9 +270,9 @@ namespace VPet_Simulator.Windows
                 }
                 Set.StartRecordLastPoint = new Point(Dispatcher.Invoke(() => Left), Dispatcher.Invoke(() => Top));
                 if (PrefixSave == "" && File.Exists(ExtensionValue.BaseDirectory + @"\Setting.lps"))
-                {//对于主设置的备份
+                {
                     if (new FileInfo(ExtensionValue.BaseDirectory + @"\Setting.lps").Length < 10)
-                    {//文件大小小于10字节,可能是损坏的文件
+                    {
                         File.Delete(ExtensionValue.BaseDirectory + @"\Setting.lps");
                     }
                     else
@@ -296,7 +287,7 @@ namespace VPet_Simulator.Windows
 
                 if (!Directory.Exists(ExtensionValue.BaseDirectory + @"\Saves"))
                     Directory.CreateDirectory(ExtensionValue.BaseDirectory + @"\Saves");
-                if (!Directory.Exists(ExtensionValue.BaseDirectory + @"\Saves_BKP"))//备份功能
+                if (!Directory.Exists(ExtensionValue.BaseDirectory + @"\Saves_BKP"))
                     Directory.CreateDirectory(ExtensionValue.BaseDirectory + @"\Saves_BKP");
 
                 if (Core != null && Core.Save != null)
@@ -323,9 +314,7 @@ namespace VPet_Simulator.Windows
                     if (File.Exists(ExtensionValue.BaseDirectory + $"\\Saves_BKP\\Save{PrefixSave}_{hash:X}.lps"))
                         File.Delete(ExtensionValue.BaseDirectory + $"\\Saves_BKP\\Save{PrefixSave}_{hash:X}.lps");
 
-                    //存档
                     File.WriteAllText(ExtensionValue.BaseDirectory + $"\\Saves\\Save{PrefixSave}_{st}.lps", savesdata);
-                    //备份
                     File.WriteAllText(ExtensionValue.BaseDirectory + $"\\Saves_BKP\\Save{PrefixSave}_{hash:X}.lps", savesdata);
 
                     if (File.Exists(ExtensionValue.BaseDirectory + @"\Save.lps"))
@@ -338,7 +327,6 @@ namespace VPet_Simulator.Windows
             }
         }
         /// <summary>
-        /// 重载DIY按钮区域
         /// </summary>
         public void LoadDIY()
         {
@@ -356,7 +344,7 @@ namespace VPet_Simulator.Windows
                 {
                     var menuItem = new System.Windows.Controls.MenuItem()
                     {
-                        Header = "桌宠多开".Translate(),
+                        Header = "VPet Multiple ".Translate(),
                         HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center,
                     };
                     foreach (var win in list)
@@ -387,20 +375,18 @@ namespace VPet_Simulator.Windows
                     RunDIY(sub.Info);
                 });
 
-            //加载游戏创意工坊插件
             foreach (MainPlugin mp in Plugins)
-                try//不要识图用!DEBUG去掉try, 不在主线程导致错误显示不出来的
+                try
                 {
                     mp.LoadDIY();
                 }
                 catch (Exception e)
                 {
-                    MessageBoxX.Show(e.ToString(), "由于插件引起的自定按钮加载错误".Translate() + '-' + mp.PluginName);
+                    MessageBoxX.Show(e.ToString(), "Custom button loading error due to plug-in".Translate() + '-' + mp.PluginName);
                 }
             Main.ToolBar.LoadDIY();
         }
         /// <summary>
-        /// 加载帮助器
         /// </summary>
         public void LoadPetHelper()
         {
@@ -416,8 +402,8 @@ namespace VPet_Simulator.Windows
                 {
                     if (!Set["v"][(gbol)"rundiy"])
                     {
-                        MessageBoxX.Show("由于操作系统的设计，通过我们软件启动的程序可能会在任务管理器中归类为我们软件的子进程，这可能导致CPU/内存占用显示较高".Translate(),
-                            "关于CPU/内存占用显示较高的一次性提示".Translate());
+                        MessageBoxX.Show("Due to the design of the operating system, programs launched by our software may be categorized as sub-processes of our software in the task manager, which may result in higher displayed CPU/memory usage.".Translate(),
+                            "One-time Notice Regarding Higher Displayed CPU/Memory Usage".Translate());
                         Set["v"][(gbol)"rundiy"] = true;
                     }
                     ProcessStartInfo startInfo = new ProcessStartInfo();
@@ -445,7 +431,7 @@ namespace VPet_Simulator.Windows
                     }
                     catch (Exception e)
                     {
-                        MessageBoxX.Show("快捷键运行失败:无法运行指定内容".Translate() + '\n' + e.Message);
+                        MessageBoxX.Show("Hotkey failed to run: The specified content could not be run".Translate() + '\n' + e.Message);
                     }
                 }
             }
@@ -457,7 +443,7 @@ namespace VPet_Simulator.Windows
                 }
                 catch (Exception e)
                 {
-                    MessageBoxX.Show("快捷键运行失败:无法运行指定内容".Translate() + '\n' + e.Message);
+                    MessageBoxX.Show("Hotkey failed to run: The specified content could not be run".Translate() + '\n' + e.Message);
                 }
             }
             else
@@ -468,7 +454,7 @@ namespace VPet_Simulator.Windows
                 }
                 catch (Exception e)
                 {
-                    MessageBoxX.Show("快捷键运行失败:无法运行指定内容".Translate() + '\n' + e.Message);
+                    MessageBoxX.Show("Hotkey failed to run: The specified content could not be run".Translate() + '\n' + e.Message);
                 }
             }
         }
@@ -519,12 +505,12 @@ namespace VPet_Simulator.Windows
             if (Set.AutoBuy && Core.Save.Money >= 100)
             {
                 var havemoney = Core.Save.Money * 0.8;
-                List<Food> food = Foods.FindAll(x => x.Price >= 2 && x.Health >= -5 && x.Exp >= -10 && x.Likability >= 0 && x.Price < havemoney //桌宠不吃负面的食物
-                 && !x.IsOverLoad() // 不吃超模食物
+                List<Food> food = Foods.FindAll(x => x.Price >= 2 && x.Health >= -5 && x.Exp >= -10 && x.Likability >= 0 && x.Price < havemoney
+                 && !x.IsOverLoad()
                 );
 
                 if ((Core.Save.StrengthFood + Core.Save.StoreStrengthFood) < sm75)
-                {//饿了就该吃正餐
+                {
                     food = food.FindAll(x => x.Type == Food.FoodType.Meal && x.StrengthFood > Math.Min(sm * 0.20, 100));
                     if (food.Count == 0)
                         return;
@@ -555,7 +541,7 @@ namespace VPet_Simulator.Windows
                         if (food.Count == 0)
                             return;
                     }
-                    else // 没有自动购买礼物的可以试试自动购买零食能加点是一点
+                    else
                     {
                         food = food.FindAll(x => x.Type == Food.FoodType.Snack && x.Feeling > Math.Min(Core.Save.FeelingMax * 0.10, 40));
                         if (food.Count == 0)
@@ -686,34 +672,22 @@ namespace VPet_Simulator.Windows
 
         }
         /// <summary>
-        /// 事件:使用东西 (所有使用东西都会触发)
         /// </summary>
         public event Action<Food> Event_TakeItem;
         /// <summary>
-        /// 事件:使用东西 (仅 自动购买/更好买 调用) int: 个数 string: 来源
-        /// betterbuy: 更好买手动购买
-        /// auto*: 自动购买 (autofood/autodrink/autofeel) 因为饿了/渴了/心情不好
-        /// friend: 朋友赠送 (访客表)
-        /// *: 其他MOD调用
         /// </summary>
         public event Action<Food, int, string> Event_TakeItemHandle;
         /// <summary>
-        /// 呼叫事件 Event_TakeItemHandle
         /// </summary>
-        /// <param name="item">物品</param>
-        /// <param name="count">个数</param>
-        /// <param name="from">来源</param>
+        /// <param name="from">Source</param>
         public void TakeItemHandle(Food item, int count, string from)
         {
             Event_TakeItemHandle?.Invoke(item, count, from);
         }
         /// <summary>
-        /// 使用/食用物品 (不包括显示动画)
         /// </summary>
-        /// <param name="item">物品</param>
         public void TakeItem(Food item)
         {
-            //获取吃腻时间
             Main.LastInteractionTime = DateTime.Now;
             DateTime now = DateTime.Now;
             DateTime eattime = GameSavesData["buytime"].GetDateTime(item.Name, now);
@@ -727,18 +701,14 @@ namespace VPet_Simulator.Windows
                 eatuseps = Math.Max(0.5, 1 - eattimes * eattimes * 0.01);
             else
                 eatuseps = Math.Max(0.5, 1 - eattimes * eattimes * 0.02);
-            //开始加点
             Core.Save.EatFood(item, eatuseps);
-            //吃腻了
             eattimes += Math.Max(0.5, Math.Min(4, 2 - (item.Likability + item.Feeling / 2) / 5));
             GameSavesData["buytime"].SetDateTime(item.Name, now.AddHours(eattimes));
-            //通知
             item.LoadEatTimeSource(this);
             item.NotifyOfPropertyChange("Description");
 
-            ////吃完东西记得计算下状态
             //Core.Save.Mode = Core.Save.CalMode();
-            //统计
+            // Statistics
             GameSavesData.Statistics[(gint)"stat_buytimes"]++;
             GameSavesData.Statistics[(gint)("buy_" + item.Name)]++;
             GameSavesData.Statistics[(gdbe)"stat_betterbuy"] += item.Price;
@@ -806,7 +776,6 @@ namespace VPet_Simulator.Windows
             }
         }
         /// <summary>
-        /// 计算统计数据
         /// </summary>
         private void StatisticsCalHandle()
         {
@@ -859,7 +828,6 @@ namespace VPet_Simulator.Windows
                 stat[(gint)"stat_100_all"]++;
         }
         /// <summary>
-        /// 加载游戏存档
         /// </summary>
         public bool SavesLoad(ILPS lps)
         {
@@ -888,25 +856,25 @@ namespace VPet_Simulator.Windows
             if (tmp.GameSave == null)
                 return false;
             if (tmp.GameSave.Money == 0 && tmp.GameSave.Likability == 0 && tmp.GameSave.Exp == 0
-                && tmp.GameSave.StrengthDrink == 0 && tmp.GameSave.StrengthFood == 0)//数据全是0,可能是bug
+                && tmp.GameSave.StrengthDrink == 0 && tmp.GameSave.StrengthFood == 0)
                 return false;
             if (tmp.GameSave.Exp < -1000000000)
             {
                 tmp.GameSave.Exp = 1000000;
                 tmp.Data[(gbol)"round"] = true;
-                Dispatcher.Invoke(() => NoticeBox.Show("检测到经验值超过 9,223,372,036 导致算数溢出\n已经自动回正".Translate(), "数据溢出警告".Translate()));
+                Dispatcher.Invoke(() => NoticeBox.Show("Detected experience value exceeding 9,223,372,036 causing arithmetic overflow\\nAutomatically corrected".Translate(), "Data Overflow Warning".Translate()));
 
             }
             if (tmp.GameSave.Money < -1000000000)
             {
                 tmp.GameSave.Money = 100000;
-                Dispatcher.Invoke(() => NoticeBox.Show("检测到金钱超过 9,223,372,036 导致算数溢出\n已经自动回正".Translate(), "数据溢出警告".Translate()));
+                Dispatcher.Invoke(() => NoticeBox.Show("Detected money exceeding 9,223,372,036 causing arithmetic overflow\\nAutomatically corrected".Translate(), "Data Overflow Warning".Translate()));
             }
 
             if (tmp.Data[(gbol)"round"])
-            {//根据游玩时间补偿数据溢出
-                Dispatcher.Invoke(() => NoticeBox.Show("您以前遭遇过数据溢出, 已根据游戏时长自动添加进当前数值".Translate(), "数据溢出恢复".Translate()));
-                var totalhour = (int)(tmp.Statistics[(gint)"stat_total_time"] / 3600);//总计游玩时间/小时
+            {
+                Dispatcher.Invoke(() => NoticeBox.Show("You have encountered data overflow before, and the current value has been automatically added according to the game duration".Translate(), "Data overflow recovery".Translate()));
+                var totalhour = (int)(tmp.Statistics[(gint)"stat_total_time"] / 3600);
                 if (totalhour < 500)
                 {
                     tmp.GameSave.Exp += totalhour * 200;
@@ -939,14 +907,13 @@ namespace VPet_Simulator.Windows
 
         private bool? AudioPlayingVolumeOK = null;
         /// <summary>
-        /// 获得当前系统音乐播放音量
         /// </summary>
         public float AudioPlayingVolume()
         {
             if (AudioPlayingVolumeOK == null)
-            {//第一调用检查是否支持
+            {
                 try
-                {//后续容错可能是偶发性
+                {
                     using (var enumerator = new MMDeviceEnumerator())
                     {
                         if (enumerator.HasDefaultAudioEndpoint(DataFlow.Render, Role.Console))
@@ -973,7 +940,7 @@ namespace VPet_Simulator.Windows
                 return -1;
             }
             try
-            {//后续容错可能是偶发性
+            {
                 using (var enumerator = new MMDeviceEnumerator())
                 {
                     if (enumerator.HasDefaultAudioEndpoint(DataFlow.Render, Role.Console))
@@ -993,7 +960,6 @@ namespace VPet_Simulator.Windows
             }
         }
         /// <summary>
-        /// 音乐检测器
         /// </summary>
         private void Handle_Music(Main obj)
         {
@@ -1005,17 +971,16 @@ namespace VPet_Simulator.Windows
                 CurrMusicType = null;
                 MusicTimer.Start();
                 Task.Run(() =>
-                {//等3秒看看识别结果
+                {
                     Thread.Sleep(3000);
 
                     if (CurrMusicType != null && Main.IsIdel)
-                    {//识别通过,开始跑跳舞动画
-                        //先统计下
+                    {
                         GameSavesData.Statistics[(gint)"stat_music"]++;
                         Main.Display(Core.Graph.FindGraph("music", AnimatType.A_Start, Core.Save.Mode), Display_Music);
                     }
                     else
-                    { //失败或有东西阻塞,停止检测
+                    {
                         MusicTimer.Stop();
                     }
                 });
@@ -1026,7 +991,7 @@ namespace VPet_Simulator.Windows
             if (CurrMusicType.HasValue)
             {
                 if (CurrMusicType.Value)
-                {//播放更刺激的
+                {
                     var mg = Core.Graph.FindGraph("music", AnimatType.Single, Core.Save.Mode);
                     mg ??= Core.Graph.FindGraph("music", AnimatType.B_Loop, Core.Save.Mode);
                     Main.Display(mg, Display_Music);
@@ -1043,7 +1008,7 @@ namespace VPet_Simulator.Windows
         }
         private void MusicTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (!(Main.IsIdel || Main.DisplayType.Name == "music"))//不是音乐,被掐断
+            if (!(Main.IsIdel || Main.DisplayType.Name == "music"))
                 return;
             catch_MusicVolSum += AudioPlayingVolume();
             catch_MusicVolCount++;
@@ -1077,37 +1042,33 @@ namespace VPet_Simulator.Windows
         private double catch_MusicVolSum;
         private int catch_MusicVolCount;
         /// <summary>
-        /// 当前音乐播放状态
         /// </summary>
         public bool? CurrMusicType { get; private set; }
 
         int LastDiagnosisTime = 0;
 
         /// <summary>
-        /// 上传遥测文件
         /// </summary>
         public void DiagnosisUPLoad()
         {
             if (!Set.DiagnosisDayEnable)
-                return;//不遥测不参加遥测的用户
+                return;
             if (!Set.Diagnosis)
-                return;//不遥测不参加遥测的用户
+                return;
             if (!HashCheck)
-                return;//不遥测数据修改过的用户
+                return;
             if (LastDiagnosisTime++ < Set.DiagnosisInterval)
-                return;//等待间隔
+                return;
             LastDiagnosisTime = 0;
             string _url = "https://report.exlb.net/VPET/Report";
-            //参数
             StringBuilder sb = new StringBuilder();
             sb.Append("action=data");
             sb.Append($"&ver={version}");
             sb.Append("&save=");
             sb.AppendLine(HttpUtility.UrlEncode(Core.Save.ToLine().ToString() + Set.ToString()));
-            //游戏设置比存档更重要,桌宠大部分内容存设置里了,所以一起上传
-#pragma warning disable SYSLIB0014 // 类型或成员已过时
+#pragma warning disable SYSLIB0014
             var request = (HttpWebRequest)WebRequest.Create(_url);
-#pragma warning restore SYSLIB0014 // 类型或成员已过时
+#pragma warning restore SYSLIB0014
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";//ContentType
             byte[] byteData = Encoding.UTF8.GetBytes(sb.ToString());
@@ -1132,23 +1093,20 @@ namespace VPet_Simulator.Windows
 #if DEBUG
             else
             {
-                throw new Exception("诊断上传失败");
+                throw new Exception("Diagnostic upload failed");
             }
 #endif
 
         }
         /// <summary>
-        /// 关闭指示器,默认为true
         /// </summary>
         public bool CloseConfirm { get; private set; } = true;
 
         public List<ITalkAPI> TalkAPI { get; } = new List<ITalkAPI>();
         /// <summary>
-        /// 当前选择的对话框index
         /// </summary>
         public int TalkAPIIndex = -1;
         /// <summary>
-        /// 当前对话框
         /// </summary>
         public ITalkAPI TalkBoxCurr
         {
@@ -1165,7 +1123,6 @@ namespace VPet_Simulator.Windows
         Grid IMainWindow.PetGrid => MGrid;
         internal MWController MWController { get; set; }
         /// <summary>
-        /// 移除所有聊天对话框
         /// </summary>
         public void RemoveTalkBox()
         {
@@ -1179,7 +1136,6 @@ namespace VPet_Simulator.Windows
             Main.ToolBar.MainGrid.Children.Remove(TalkAPI[TalkAPIIndex].This);
         }
         /// <summary>
-        /// 加载自定义对话框
         /// </summary>
         public void LoadTalkDIY()
         {
@@ -1189,17 +1145,15 @@ namespace VPet_Simulator.Windows
             Main.ToolBar.MainGrid.Children.Add(TalkAPI[TalkAPIIndex].This);
         }
         /// <summary>
-        /// 超模工作检查
         /// </summary>
         public bool WorkCheck(Work work)
         {
-            //看看是否超模
             if (HashCheck && work.IsOverLoad())
             {
                 if (Set["gameconfig"].GetBool("noAutoCal"))
                 {
-                    if (MessageBoxX.Show("当前工作数据属性超模,是否继续工作?\n超模工作可能会导致游戏发生不可预料的错误\n超模工作不影响大部分成就解锁\n可以在设置中开启自动计算自动为工作设置合理数值"
-                        .Translate(), "超模工作提醒".Translate(), MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+                    if (MessageBoxX.Show("Current WorkData attributes are overpowered, continue working?\nOverpowered work may cause unpredictable errors\nOverpowered work does not affect most achievement unlocks\nYou can enable auto-calculation in Settings to set reasonable values"
+                        .Translate(), "Overpowered work warning".Translate(), MessageBoxButton.YesNo) != MessageBoxResult.Yes)
                     {
                         return false;
                     }
@@ -1207,14 +1161,13 @@ namespace VPet_Simulator.Windows
                 }
                 else
                 {
-                    MessageBoxX.Show("当前工作数据属性超模,已自动取消".Translate(), "超模工作提醒".Translate());
+                    MessageBoxX.Show("The current work data attribute is supermodel, and it has been automatically cancelled".Translate(), "Overpowered work warning".Translate());
                     return false;
                 }
             }
             return true;
         }
         /// <summary>
-        /// 游戏加载
         /// </summary>
         public void GameInitialization()
         {
@@ -1225,13 +1178,12 @@ namespace VPet_Simulator.Windows
             App.MainWindows.Add(this);
             try
             {
-                //加载游戏设置
                 if (new FileInfo(ExtensionValue.BaseDirectory + @$"\Setting{PrefixSave}.lps").Exists)
                 {
                     Set = new Setting(this, File.ReadAllText(ExtensionValue.BaseDirectory + @$"\Setting{PrefixSave}.lps"));
                 }
                 if (PrefixSave == "" && (Set == null || (Set != null && !Set["SingleTips"].GetBool("helloworld"))) && File.Exists(ExtensionValue.BaseDirectory + @"\Setting.bkp"))
-                {//如果设置是损坏的, 读取备份设置
+                {
                     Set = new Setting(this, File.ReadAllText(ExtensionValue.BaseDirectory + @"\Setting.bkp"));
                 }
 
@@ -1307,11 +1259,10 @@ namespace VPet_Simulator.Windows
                     Topmost = true;
                 }
 
-                //不存在就关掉
                 var modpath = new DirectoryInfo(ModPath + @"\0000_core\pet\vup");
                 if (!modpath.Exists)
                 {
-                    MessageBoxX.Show("缺少模组Core,无法启动桌宠\nMissing module Core, can't start up", "启动错误 boot error", Panuon.WPF.UI.MessageBoxIcon.Error);
+                    MessageBoxX.Show("Lack Mod Core, Unable start desktop Pet animation\nMissing module Core, can't start up", "Startup error boot error", Panuon.WPF.UI.MessageBoxIcon.Error);
                     Close();
                     return;
                 }
@@ -1319,27 +1270,23 @@ namespace VPet_Simulator.Windows
             }
             catch (Exception e)
             {
-                string errstr = "游戏发生错误,可能是".Translate() + (string.IsNullOrWhiteSpace(CoreMOD.NowLoading) ?
-              "游戏或者MOD".Translate() : $"MOD({CoreMOD.NowLoading})") +
-              "导致的\n如有可能请发送 错误信息截图和引发错误之前的操作 给开发者:service@exlb.net\n感谢您对游戏开发的支持\n".Translate()
+                string errstr = "An error occurred in the game, probably".Translate() + (string.IsNullOrWhiteSpace(CoreMOD.NowLoading) ?
+              "Game or Mod".Translate() : $"MOD({CoreMOD.NowLoading})") +
+              "If possible, Please send a screenshot of the error message and the action you took before triggering the error to developer: service@exlb.net\\nThanks for your support of the game development\\n".Translate()
               + e.ToString();
-                MessageBoxX.Show(errstr, "游戏致命性错误".Translate() + ' ' + "启动错误".Translate(), Panuon.WPF.UI.MessageBoxIcon.Error);
+                MessageBoxX.Show(errstr, "Game Fatal Error".Translate() + ' ' + "Startup error".Translate(), Panuon.WPF.UI.MessageBoxIcon.Error);
                 Close();
             }
         }
 
         /// <summary>
-        /// 支持多开的启动方式
         /// </summary>
-        /// <param name="prefixsave">存档前缀</param>
-        /// <param name="basemw">基础窗口</param>
         public MainWindow(string prefixsave, MainWindow basemw = null)
         {
             PrefixSave = prefixsave;
             if (prefixsave != string.Empty && !PrefixSave.StartsWith("-"))
                 PrefixSave = '-' + prefixsave;
 
-            //处理ARGS
             Args = new LPS_D();
             foreach (var str in App.Args)
             {
@@ -1357,7 +1304,6 @@ namespace VPet_Simulator.Windows
             }
 
 
-            //加载所有MOD
             List<DirectoryInfo> Path = new List<DirectoryInfo>();
             Path.AddRange(new DirectoryInfo(ModPath).EnumerateDirectories());
 
@@ -1371,7 +1317,6 @@ namespace VPet_Simulator.Windows
             Task.Run(() => GameLoad(Path));
         }
         /// <summary>
-        /// MOD地址
         /// </summary>
         public List<DirectoryInfo> MODPath { get; private set; }
 
@@ -1380,14 +1325,12 @@ namespace VPet_Simulator.Windows
         public IEnumerable<IModInfo> OnModInfo => CoreMODs.FindAll(x => x.IsOnMOD(this));
 
         /// <summary>
-        /// 加载游戏
         /// </summary>
-        /// <param name="Path">MOD地址</param>
         public async Task GameLoad(List<DirectoryInfo> Path)
         {
             MODPath = Path.GroupBy(x => x.FullName).Select(group => group.First()).ToList();
             await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "Loading MOD"));
-            //加载mod
+            // Loadmod
             foreach (DirectoryInfo di in MODPath)
             {
                 if (!File.Exists(di.FullName + @"\info.lps"))
@@ -1398,9 +1341,8 @@ namespace VPet_Simulator.Windows
 
             CoreMOD.NowLoading = null;
 
-            //判断是否需要清空缓存
             if (App.MainWindows.Count == 1 && Set.LastCacheDate < CoreMODs.Max(x => x.CacheDate))
-            {//需要清理缓存
+            {
                 Set.LastCacheDate = DateTime.Now;
                 if (Directory.Exists(GraphCore.CachePath))
                 {
@@ -1413,51 +1355,44 @@ namespace VPet_Simulator.Windows
 
             await Dispatcher.InvokeAsync(() =>
             {
-                MessageBoxXSettings.Setting.OKButtonContent = "好的".Translate();
-                MessageBoxXSettings.Setting.CancelButtonContent = "取消".Translate();
-                MessageBoxXSettings.Setting.YesButtonContent = "是".Translate();
-                MessageBoxXSettings.Setting.NoButtonContent = "否".Translate();
-                PendingBoxSettings.Setting.CancelButtonContent = "取消".Translate();
-                LoadingText.Content = "尝试加载游戏MOD".Translate();
+                MessageBoxXSettings.Setting.OKButtonContent = "OK".Translate();
+                MessageBoxXSettings.Setting.CancelButtonContent = "cancel".Translate();
+                MessageBoxXSettings.Setting.YesButtonContent = "Yes".Translate();
+                MessageBoxXSettings.Setting.NoButtonContent = "No".Translate();
+                PendingBoxSettings.Setting.CancelButtonContent = "cancel".Translate();
+                LoadingText.Content = "Try loading game MOD".Translate();
             });
 
-            //旧版本设置兼容
-            if (Set.PetGraph == "默认虚拟桌宠")
+            if (Set.PetGraph == "Default desktop pet")
                 Set.PetGraph = "vup";
 
-            //当前桌宠动画
             var petloader = Pets.Find(x => x.Name == Set.PetGraph);
             petloader ??= Pets[0];
-            //去除其他语言内容
             var tag = petloader.Config.Data.GetString("tag", "all").Split(',');
             LowDrinkText.RemoveAll(x => !x.FindTag(tag));
             LowFoodText.RemoveAll(x => !x.FindTag(tag));
             ClickTexts.RemoveAll(x => !x.FindTag(tag));
             SelectTexts.RemoveAll(x => !x.FindTag(tag));
 
-            await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "尝试加载游戏存档".Translate()));
-            //加载存档
-            if (File.Exists(ExtensionValue.BaseDirectory + @"\Save.lps")) //有老的旧存档,优先旧存档
+            await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "Attempting to game save".Translate()));
+            // Load Save
+            if (File.Exists(ExtensionValue.BaseDirectory + @"\Save.lps"))
                 try
                 {
                     if (!SavesLoad(new LpsDocument(File.ReadAllText(ExtensionValue.BaseDirectory + @"\Save.lps"))))
                     {
-                        //如果加载存档失败了,试试加载备份,如果没备份,就新建一个
                         LoadLatestSave(petloader.PetName);
                     }
 
                 }
                 catch (Exception ex)
                 {
-                    MessageBoxX.Show("存档损毁,无法加载该存档\n可能是数据溢出/超模导致的" + '\n' + ex.Message, "存档损毁".Translate());
-                    //如果加载存档失败了,试试加载备份,如果没备份,就新建一个
+                    MessageBoxX.Show("Archive damage, unable to load the archive\\nIt may be caused by data overflow/overmodel" + '\n' + ex.Message, "Archive damage".Translate());
                     LoadLatestSave(petloader.PetName);
                 }
             else
-                //如果加载存档失败了,试试加载备份,如果没备份,就新建一个
                 LoadLatestSave(petloader.PetName);
 
-            //加载数据合理化:食物
             if (!Set["gameconfig"].GetBool("noAutoCal"))
             {
                 foreach (Food f in Foods)
@@ -1493,10 +1428,9 @@ namespace VPet_Simulator.Windows
                 }
             }
 
-            //生日蛋糕默认为加满的
             var food = new Food()
             {
-                Name = "生日蛋糕",
+                Name = "1st Birthday Cake",
                 Likability = 5,
                 Exp = 1000,
                 Feeling = 100,
@@ -1504,16 +1438,15 @@ namespace VPet_Simulator.Windows
                 StrengthFood = Core.Save.StrengthMax,
                 Type = FoodType.Food,
                 isoverload = false,
-                Desc = "萝莉丝的专属生日蛋糕，由3桶牛奶+2份糖+1个鸡蛋+3份小麦合。制作而成。营养丰富，可使所有状态回满。只有在萝莉丝生日才能吃的到哦。"
+                Desc = "Lolis's exclusive birthday cake is made of 3 buckets of milk, 2 portions of sugar, 1 egg, and 3 portions of wheat. It is nutritious and can restore all states. You can only eat it on Lolis's birthday."
             };
             food.LoadImageSource(this);
             food.Star = true;
             food.Price = (int)Math.Max(0, food.RealPrice * .5);
             Foods.Add(food);
-            //生日蛋糕默认为加满的
             food = new Food()
             {
-                Name = "生日蛋糕2",//2nd 惊喜生日蛋糕
+                Name = "2nd Surprise Birthday Cake",
                 Likability = Core.Save.Level / 10,
                 Exp = Core.Save.Level,
                 Feeling = Core.Save.FeelingMax / 20,
@@ -1521,14 +1454,13 @@ namespace VPet_Simulator.Windows
                 StrengthFood = Core.Save.StrengthMax / 20,
                 Type = FoodType.Food,
                 isoverload = false,
-                Desc = "主人给萝莉丝制作的惊喜蛋糕，每次品尝都会随机回满一个状态或者获得一次收益，还有神秘惊喜奖励!\n具体配方是：取出 香草 草中的 香草籽 并立刻将 香草荚 研磨投入 热牛奶 中， 香草籽 需要在含有 糖分 的瞬间投入 蛋糊，且需添加 柠檬 的 皮 之气息。 巧克力甘纳许 需要使用 秋 季后的 可可豆 并在 温热 的状态下使用 鲜奶油 进行混合。添加 天然 鲸油（澄清黄油）， 香草荚 需要在不切割的情况下萃取出 风味 并 避免 接触 金属，黏度维持在 绸缎状 以上。需要制备后时长不超过 4小时 的 香缇奶油，在将其粉碎（打发）前使其维持 冷藏 状态并在 冰水浴 之下 打发。"
+                Desc = "A surprise cake crafted by owners for Lolis! Each bite randomly restores one stat or grants bonus rewards, with mysterious special effects!\\nSecret Recipe:\\n1. Extract seeds from vanilla beans, then immediately grind the vanilla pods into hot milk.\\n2. Add vanilla seeds to the egg batter precisely when sugar is incorporated.\\n3. Infuse with lemon zest essence.\\n4. For chocolate ganache: Use cocoa beans harvested post-autumn, blend with fresh cream while warm.\\n5. Add clarified butter (natural whale oil alternative).\\n6. Extract flavor from whole vanilla pods (uncut) – avoid metal contact.\\n7. Maintain viscosity above satin consistency.\\n8. Whip Chantilly cream (prepared ≤4hrs in advance) in an ice bath while chilled."
             };
             food.LoadImageSource(this);
             food.Star = true;
             food.Price = food.RealPrice;
             Foods.Add(food);
 
-            //第一次启动日期
             if (GameSavesData.Data.FindLine("birthday") == null)
             {
                 var sf = new FileInfo(ExtensionValue.BaseDirectory + @$"\Setting{PrefixSave}.lps");
@@ -1540,7 +1472,6 @@ namespace VPet_Simulator.Windows
                     GameSavesData[(gdat)"birthday"] = DateTime.Now.Date;
             }
 
-            //补充数据信息
             if (string.IsNullOrEmpty(GameSavesData.GameSave.HostName))
             {
                 GameSavesData.GameSave.HostName = Environment.UserName;
@@ -1566,33 +1497,29 @@ namespace VPet_Simulator.Windows
                 AutoSaveTimer.Interval = Set.AutoSaveInterval * 60000;
                 AutoSaveTimer.Start();
             }
-            ClickTexts.Add(new ClickText("你知道吗? 鼠标右键可以打开菜单栏"));
-            ClickTexts.Add(new ClickText("你知道吗? 你可以在设置里面修改游戏的缩放比例"));
-            ClickTexts.Add(new ClickText("想要宠物不乱动? 设置里可以设置智能移动或者关闭移动"));
-            ClickTexts.Add(new ClickText("这游戏开发这么慢,都怪画师太咕了"));
-            //ClickTexts.Add(new ClickText("有建议/游玩反馈? 来 菜单-系统-反馈中心 反馈吧"));
-            ClickTexts.Add(new ClickText("长按脑袋拖动桌宠到你喜欢的任意位置"));
+            ClickTexts.Add(new ClickText("Did you know? Mouse right click to open the menu bar"));
+            ClickTexts.Add(new ClickText("Did you know? You can modify the game's zoom ratio in the settings"));
+            ClickTexts.Add(new ClickText("Want your pet to stay still? Smart moving can be enabled in the settings"));
+            ClickTexts.Add(new ClickText("This game's development is so slow all due to the game artist's procrastination"));
+            //ClickTexts.Add(new ClickText("Do you have any suggestions or game feedback? Let's go to the Menu - System - Feedback Hub for feedback"));
+            ClickTexts.Add(new ClickText("Hold the head and drag the desktop pet wherever you like"));
 
-            ////临时聊天内容
-            //ClickTexts.Add(new ClickText("主人，sbema秋季促销开始了哦，还有游戏大奖赛，快去给{name}去投一票吧。"));
-            //ClickTexts.Add(new ClickText("主人主人，{name}参加了sbeam大奖赛哦，给人家投一票喵"));
-            //ClickTexts.Add(new ClickText("那个。。主人。。\n人家参加了sbeam大奖赛哦。能不能。。给{name}投一票呢～"));
-            //ClickTexts.Add(new ClickText("电脑里有一款《虚拟桌宠模拟器》的游戏正在参加2023的sbeam大奖赛，快来给桌宠投一票吧"));
-            //"如果你觉得目前功能太少,那就多挂会机. 宠物会自己动的".Translate(),
-            //"你知道吗? 你可以在设置里面修改游戏的缩放比例".Translate(),
-            //"你现在乱点说话是说话系统的一部分,不过还没做,在做了在做了ing".Translate(),
-            //"你添加了虚拟主播模拟器和虚拟桌宠模拟器到愿望单了吗? 快去加吧".Translate(),
-            //"这游戏开发这么慢,都怪画师太咕了".Translate(),
-            //"欢迎加入 虚拟主播模拟器群 430081239".Translate()
+            //ClickTexts.Add(new ClickText("Master, {name} is participating in the Sbeam Awards , vote for me meow"));
+            //ClickTexts.Add(new ClickText("That... Master... I'm participating in the Sbeam Awards . Can you... vote for {name}~"));
+            //ClickTexts.Add(new ClickText("There is a game called \"VPet Simulator\" in the computer that is participating in the 2023 Sbeam Awards , come and vote for the desktop pet"));
+            //"If you feel that there are too few functions at the moment, just stay AFK more. Pets will move on their own".Translate(),
+            //"Did you know? You can modify the game's zoom ratio in the settings".Translate(),
+            //"Your randomly tapping to speaking is part of the speaking system, but not do yet. It doing yet.".Translate(),
+            //"Have you added VUP-Simulator and VPet-Simulator to your wishlist? Go ahead and add them".Translate(),
+            //"This game's development is so slow all due to the game artist's procrastination".Translate(),
+            //"This open-source project is located at https://github.com/LorisYounger/VPet".Translate()
 
-            await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "尝试加载内容".Translate()));
-            //给正在玩这个游戏的主播/游戏up主做个小功能
-            ClickTexts.Add(new ClickText("关注 {0} 谢谢喵")
+            await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "Loading content".Translate()));
+            ClickTexts.Add(new ClickText("Subscribe {0} thanks")
             {
-                TranslateText = "关注 {0} 谢谢喵".Translate(Environment.UserName)
+                TranslateText = "Subscribe {0} thanks".Translate(Environment.UserName)
             });
 
-            //音乐识别timer加载
             MusicTimer = new System.Timers.Timer(200)
             {
                 AutoReset = false
@@ -1600,15 +1527,15 @@ namespace VPet_Simulator.Windows
             MusicTimer.Elapsed += MusicTimer_Elapsed;
 
 
-            //await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "尝试加载游戏动画".Translate()));
-            await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "尝试加载动画和生成缓存\n该步骤可能会耗时比较长\n请耐心等待".Translate()));
+            //await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "Attempting to load animations".Translate()));
+            await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "Attempting to load animations and generate cache\\nThis step may take a while\\nPlease be patient".Translate()));
             Core.Graph = petloader.Graph(Set.Resolution, Dispatcher);
 
             Main = await Dispatcher.InvokeAsync(() => new Main(Core));
 
             Main.LoadALL((c) =>
             {
-                Dispatcher.Invoke(() => LoadingText.Content = "尝试加载动画和生成缓存\n该步骤可能会耗时比较长\n请耐心等待".Translate()
+                Dispatcher.Invoke(() => LoadingText.Content = "Attempting to load animations and generate cache\\nThis step may take a while\\nPlease be patient".Translate()
                 + $"\n  {c} / {petloader.GraphCount}");
             }
             //#if NewYear
@@ -1618,14 +1545,13 @@ namespace VPet_Simulator.Windows
             Main.NoFunctionMOD = Set.CalFunState;
             await Dispatcher.InvokeAsync(() =>
               {
-                  //清空资源
                   Main.Resources = Application.Current.Resources;
                   Main.MsgBar.This.Resources = Application.Current.Resources;
                   Main.ToolBar.Resources = Application.Current.Resources;
                   Main.ToolBar.LoadClean();
                   Main.WorkList(out List<Work> ws, out List<Work> ss, out List<Work> ps);
 
-                  //日程表加载
+                  // ScheduleLoad
                   ScheduleTask = new ScheduleTask(this);
 
                   if (ws.Count == 0)
@@ -1682,7 +1608,7 @@ namespace VPet_Simulator.Windows
                   }
                   WorkStarMenu = new System.Windows.Controls.MenuItem()
                   {
-                      Header = "收藏".Translate(),
+                      Header = "Favorites".Translate(),
                       HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center,
                   };
                   foreach (var w in WorkStar())
@@ -1696,32 +1622,30 @@ namespace VPet_Simulator.Windows
                   }
                   Main.ToolBar.MenuInteract.Items.Add(WorkStarMenu);
 
-                  //加载主题:
+                  // LoadTheme:
                   LoadTheme(Set.Theme);
-                  //加载字体
+                  // LoadFont
                   LoadFont(Set.Font);
 
-                  LoadingText.Content = "正在加载游戏\n该步骤可能会耗时比较长\n请耐心等待".Translate();
+                  LoadingText.Content = "Loading the game\\nThis step may take a long time\\nPlease be patient".Translate();
 
 
-                  //加载数据合理化:工作
                   if (!Set["gameconfig"].GetBool("noAutoCal"))
                   {
                       foreach (var work in Core.Graph.GraphConfig.Works)
                       {
-                          if (work.LevelLimit > 200)//导入的最大合理工作不能超过200级
+                          if (work.LevelLimit > 200)
                               work.LevelLimit = 200;
-                          work.FixOverLoad();//导入的工作默认1.2倍
+                          work.FixOverLoad();
                       }
                   }
-                  //加载数据合理化:自动工作
                   foreach (var stp in SchedulePackage)
                       stp.FixOverLoad();
 
 
                   var m = new System.Windows.Controls.MenuItem()
                   {
-                      Header = "MOD管理".Translate(),
+                      Header = "MOD Management".Translate(),
                       HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center,
                   };
                   m.Click += (x, y) =>
@@ -1734,28 +1658,26 @@ namespace VPet_Simulator.Windows
                   Main.WorkTimer.E_FinishWork += WorkTimer_E_FinishWork;
                   Main.ToolBar.MenuMODConfig.Items.Add(m);
 
-                  //加载游戏创意工坊插件
                   foreach (MainPlugin mp in Plugins)
-                      try //不要识图用!DEBUG去掉try, 在主线程也会导致错误显示不出来的
+                      try
                       {
                           mp.LoadPlugin();
                       }
                       catch (Exception e)
                       {
-                          NoticeBox.Show("由于插件引起的游戏启动错误".Translate() + "\n" + e.ToString(), "由于插件引起的游戏启动错误".Translate() + '-' + mp.PluginName);
+                          NoticeBox.Show("Game launch error due to plugin".Translate() + "\n" + e.ToString(), "Game launch error due to plugin".Translate() + '-' + mp.PluginName);
                       }
                   Foods.ForEach(item => item.LoadImageSource(this));
                   Photos.ForEach(item => item.LoadUserInfo(this));
 
-                  //添加基本物品项目 (根据名称添加)
                   if (Set.PetGraph == "vup")
                   {
-                      if (!Items.Any(x => x.Name == "L徽章"))
+                      if (!Items.Any(x => x.Name == "L Badge"))
                       {
                           var itm = new Item()
                           {
-                              Name = "L徽章",
-                              Desc = "我有异议! 证物档案 - L徽章 - 出示!\n请勿在法庭当证据出示".Translate(),
+                              Name = "L Badge",
+                              Desc = "Objection! Evidence Archive - L Badge - Present!\\nPlease do not present this as evidence in court.".Translate(),
                               ItemType = "Item",
                               Price = 100,
                               IsSingle = true,
@@ -1764,12 +1686,12 @@ namespace VPet_Simulator.Windows
                           itm.LoadSource(this);
                           ItemsAdd(itm);
                       }
-                      if (!Items.Any(x => x.Name == "逗猫棒"))
+                      if (!Items.Any(x => x.Name == "Cat Teaser"))
                       {
                           var itm = new Item()
                           {
-                              Name = "逗猫棒",
-                              Desc = "钓竿式逗猫棒. 一般挂的是鼠鼠,毛球,W等。这款挂的是珠颈斑鸠呢。\n谁说逗猫棒就不能逗人?".Translate(),
+                              Name = "Cat Teaser",
+                              Desc = "A fishing-rod-style cat teaser. Usually hangs mice, pom-poms, W’s, etc. This one hangs a spotted dove.\\nWho says a cat teaser can’t tease people too?".Translate(),
                               ItemType = "Toy",
                               Price = 100,
                               IsSingle = true,
@@ -1778,12 +1700,12 @@ namespace VPet_Simulator.Windows
                           itm.LoadSource(this);
                           ItemsAdd(itm);
                       }
-                      if (!Items.Any(x => x.Name == "泡泡枪"))
+                      if (!Items.Any(x => x.Name == "Bubble Gun"))
                       {
                           var itm = new Item()
                           {
-                              Name = "泡泡枪",
-                              Desc = "粉白色带蝴蝶结装饰的泡泡枪, 没见到加肥皂水的地方, 莫非是高科技?\n对小朋友来说有点幼稚，但是对萝莉丝来说刚刚好".Translate(),
+                              Name = "Bubble Gun",
+                              Desc = "A pink-and-white bubble gun with a ribbon decoration. Can’t find where to add soapy water—is it high-tech?\\nA bit childish for kids, but just right for Lolis.".Translate(),
                               ItemType = "Toy",
                               Price = 100,
                               IsSingle = true,
@@ -1792,12 +1714,12 @@ namespace VPet_Simulator.Windows
                           itm.LoadSource(this);
                           ItemsAdd(itm);
                       }
-                      if (!Items.Any(x => x.Name == "球拍"))
+                      if (!Items.Any(x => x.Name == "Badminton Racket"))
                       {
                           var itm = new Item()
                           {
-                              Name = "球拍",
-                              Desc = "老板牌的最新款碳纤维球拍. 内置辅助动力, 让您可以轻松用出\"零式发球\"\"天衣无缝\"等球技\n你刚刚说了，网球?".Translate(),
+                              Name = "Badminton Racket",
+                              Desc = "The latest carbon fiber racket from the Boss brand. Built-in assist power allows you to easily use \"Zero Serve\" \"Seamless\" and other techniques\\nDid you just say, tennis?".Translate(),
                               ItemType = "Toy",
                               Price = 100,
                               IsSingle = true,
@@ -1806,12 +1728,12 @@ namespace VPet_Simulator.Windows
                           itm.LoadSource(this);
                           ItemsAdd(itm);
                       }
-                      if (!Items.Any(x => x.Name == "指南针"))
+                      if (!Items.Any(x => x.Name == "Compass"))
                       {
                           var itm = new Item()
                           {
-                              Name = "指南针",
-                              Desc = "指?针, 指针已经扭曲了, 实在看不懂在指哪边, 而且时不时还会乱晃, 有点吓人\n我亲爱的达瓦里氏,这玩意怎么在乱晃啊".Translate(),
+                              Name = "Compass",
+                              Desc = "Pointer? The needles are all warped, I really can’t tell which way they're pointing, and they keep shaking randomly—it’s a bit creepy\\nMy dear comrade, why is this thing shaking so much?".Translate(),
                               ItemType = "Tool",
                               Price = 100,
                               IsSingle = true,
@@ -1820,7 +1742,6 @@ namespace VPet_Simulator.Windows
                           ItemsAdd(itm);
                       }
                   }
-                  //每日礼盒
                   everydaygift();
 
 
@@ -1867,7 +1788,6 @@ namespace VPet_Simulator.Windows
                           break;
                   }
 
-                  //窗口部件
                   winSetting = new winGameSetting(this);
                   winBetterBuy = new winBetterBuy(this);
 
@@ -1879,7 +1799,6 @@ namespace VPet_Simulator.Windows
                           var rt = GetClickText();
                           if (rt != null)
                           {
-                              //聊天效果
                               if (rt.Exp != 0)
                               {
                                   if (rt.Exp > 0)
@@ -1928,11 +1847,11 @@ namespace VPet_Simulator.Windows
                       });
                   });
 
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "退出桌宠".Translate(), () => { Main.ToolBar.Visibility = Visibility.Collapsed; Close(); });
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "Exit".Translate(), () => { Main.ToolBar.Visibility = Visibility.Collapsed; Close(); });
                   if (Set.DeBug)
-                      Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "开发控制台".Translate(), () => { Main.ToolBar.Visibility = Visibility.Collapsed; new winConsole(this).Show(); });
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "照片图库".Translate(), ShowGallery);
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "操作教程".Translate(), () =>
+                      Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "Console".Translate(), () => { Main.ToolBar.Visibility = Visibility.Collapsed; new winConsole(this).Show(); });
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "Photo Gallery ".Translate(), ShowGallery);
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "How-to Tutorials".Translate(), () =>
                   {
                       if (LocalizeCore.CurrentCulture == "zh-Hans")
                           ExtensionFunction.StartURL("https://wiki.exlb.net/vpet/tutorial");
@@ -1941,8 +1860,8 @@ namespace VPet_Simulator.Windows
                       else
                           ExtensionFunction.StartURL("https://wiki.exlb.net/en/vpet/tutorial");
                   });
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "反馈中心".Translate(), () => { Main.ToolBar.Visibility = Visibility.Collapsed; new winReport(this).Show(); });
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "设置面板".Translate(), () =>
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "Feedback".Translate(), () => { Main.ToolBar.Visibility = Visibility.Collapsed; new winReport(this).Show(); });
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "Settings".Translate(), () =>
                   {
                       Main.ToolBar.Visibility = Visibility.Collapsed;
                       winSetting.Show();
@@ -1951,35 +1870,34 @@ namespace VPet_Simulator.Windows
 
                   //this.Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/Res/TopLogo2019.PNG")));
 
-                  //Main.ToolBar.AddMenuButton(VPet_Simulator.Core.ToolBar.MenuType.Feed, "喂食测试", () =>
                   //    {
                   //        Main.ToolBar.Visibility = Visibility.Collapsed;
                   //        IRunImage eat = (IRunImage)Core.Graph.FindGraph(GraphType.Eat, GameSave.ModeType.Nomal);
                   //        var b = Main.FindDisplayBorder(eat);
-                  //        eat.Run(b, new BitmapImage(new Uri("pack://application:,,,/Res/汉堡.png")), Main.DisplayToNomal);
+                  // eat.Run(b, new BitmapImage(new Uri("pack://application:,,,/Res/Hamburger.png")), Main.DisplayToNomal);
                   //    }
                   //);
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "吃饭".Translate(), () =>
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Food".Translate(), () =>
                   {
                       winBetterBuy.Show(Food.FoodType.Meal);
                   });
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "喝水".Translate(), () =>
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Drinks".Translate(), () =>
                   {
                       winBetterBuy.Show(Food.FoodType.Drink);
                   });
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "收藏".Translate(), () =>
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Favorites".Translate(), () =>
                   {
                       winBetterBuy.Show(Food.FoodType.Star);
                   });
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "药品".Translate(), () =>
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Medicine".Translate(), () =>
                   {
                       winBetterBuy.Show(Food.FoodType.Drug);
                   });
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "礼品".Translate(), () =>
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Gift".Translate(), () =>
                   {
                       winBetterBuy.Show(Food.FoodType.Gift);
                   });
-                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "背包".Translate(), () =>
+                  Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Backpack".Translate(), () =>
                   {
                       if (winInventory != null && !winInventory.IsClosed)
                           winInventory.Show();
@@ -1996,9 +1914,8 @@ namespace VPet_Simulator.Windows
 
                   Main.WorkCheck = WorkCheck;
 
-                  //加载图标
                   notifyIcon = new NotifyIcon();
-                  notifyIcon.Text = "虚拟桌宠模拟器".Translate() + PrefixSave;
+                  notifyIcon.Text = "VPet-Simulator".Translate() + PrefixSave;
                   ContextMenu m_menu;
 
                   if (Set.PetHelper)
@@ -2008,13 +1925,13 @@ namespace VPet_Simulator.Windows
 
                   m_menu = new ContextMenu();
                   m_menu.Opening += (x, y) => { GameSavesData.Statistics[(gint)"stat_menu_pop"]++; };
-                  var hitThrough = new MenuItem("鼠标穿透".Translate(), null, (x, y) => { SetTransparentHitThrough(); })
+                  var hitThrough = new MenuItem("Click Through Window".Translate(), null, (x, y) => { SetTransparentHitThrough(); })
                   {
                       Name = "NotifyIcon_HitThrough",
                       Checked = HitThrough
                   };
                   m_menu.Items.Add(hitThrough);
-                  var topmost = new MenuItem("置于顶层".Translate(), null, (x, y) =>
+                  var topmost = new MenuItem("Always On Top".Translate(), null, (x, y) =>
                   {
                       Topmost = ((MenuItem)x).Checked;
                   })
@@ -2024,7 +1941,7 @@ namespace VPet_Simulator.Windows
                       Checked = Topmost
                   };
                   m_menu.Items.Add(topmost);
-                  m_menu.Items.Add(new MenuItem("操作教程".Translate(), null, (x, y) =>
+                  m_menu.Items.Add(new MenuItem("How-to Tutorials".Translate(), null, (x, y) =>
                   {
                       if (LocalizeCore.CurrentCulture == "zh-Hans")
                           ExtensionFunction.StartURL(ExtensionValue.BaseDirectory + @"\Tutorial.html");
@@ -2033,23 +1950,23 @@ namespace VPet_Simulator.Windows
                       else
                           ExtensionFunction.StartURL(ExtensionValue.BaseDirectory + @"\Tutorial_en.html");
                   }));
-                  m_menu.Items.Add(new MenuItem("重置位置与状态".Translate(), null, (x, y) =>
+                  m_menu.Items.Add(new MenuItem("Reset Position && Status".Translate(), null, (x, y) =>
                   {
                       Main.CleanState();
                       Main.DisplayToNomal();
                       Left = (SystemParameters.PrimaryScreenWidth - Width) / 2;
                       Top = (SystemParameters.PrimaryScreenHeight - Height) / 2;
                   }));
-                  m_menu.Items.Add(new MenuItem("反馈中心".Translate(), null, (x, y) => { new winReport(this).Show(); }));
+                  m_menu.Items.Add(new MenuItem("Feedback".Translate(), null, (x, y) => { new winReport(this).Show(); }));
                   if (Set.DeBug)
-                      m_menu.Items.Add(new MenuItem("开发控制台".Translate(), null, (x, y) => { new winConsole(this).Show(); }));
+                      m_menu.Items.Add(new MenuItem("Console".Translate(), null, (x, y) => { new winConsole(this).Show(); }));
 
-                  m_menu.Items.Add(new MenuItem("设置面板".Translate(), null, (x, y) =>
+                  m_menu.Items.Add(new MenuItem("Settings".Translate(), null, (x, y) =>
                   {
                       winSetting.Show();
                   }));
-                  m_menu.Items.Add(new MenuItem("重启桌宠".Translate(), null, (x, y) => Restart()));
-                  m_menu.Items.Add(new MenuItem("退出桌宠".Translate(), null, (x, y) => Close()));
+                  m_menu.Items.Add(new MenuItem("Restart VPet".Translate(), null, (x, y) => Restart()));
+                  m_menu.Items.Add(new MenuItem("Exit".Translate(), null, (x, y) => Close()));
 
                   LoadDIY();
 
@@ -2063,7 +1980,7 @@ namespace VPet_Simulator.Windows
                       winSetting.Show();
                   };
                   if (Set.StartUPBoot == true && !Set["v"][(gbol)"newverstartup"])
-                  {//更新到最新版开机启动方式
+                  {
                       try
                       {
                           winSetting.GenStartUP();
@@ -2076,7 +1993,6 @@ namespace VPet_Simulator.Windows
                   }
 
 
-                  //成就和统计 
                   GameSavesData.Statistics[(gint)"stat_open_times"]++;
                   Main.MoveTimer.Elapsed += MoveTimer_Elapsed;
                   Main.SayProcess.Add(Main_OnSay);
@@ -2085,7 +2001,6 @@ namespace VPet_Simulator.Windows
 
                   HashCheck = HashCheck;
 
-                  //添加捏脸动画(若有)
                   if (Core.Graph.GraphConfig.Data.ContainsLine("pinch"))
                   {
                       var pin = Core.Graph.GraphConfig.Data["pinch"];
@@ -2122,14 +2037,14 @@ namespace VPet_Simulator.Windows
                       {
                           Thread.Sleep(2000);
                           Set["SingleTips"].SetBool("helloworld", true);
-                          NoticeBox.Show("欢迎使用虚拟桌宠模拟器!\n如果遇到桌宠爬不见了,可以在我这里设置居中或退出桌宠".Translate(),
-                             "你好".Translate() + Environment.UserName, Panuon.WPF.UI.MessageBoxIcon.Info, true, 5000);
+                          NoticeBox.Show("Welcome to use VPet-Simulator!\\nIf you can't find desktop pet, you can set the center or exit the desktop pet in here.".Translate(),
+                             "Hi".Translate() + Environment.UserName, Panuon.WPF.UI.MessageBoxIcon.Info, true, 5000);
                           //Thread.Sleep(2000);
-                          //Main.SayRnd("欢迎使用虚拟桌宠模拟器\n这是个中期的测试版,若有bug请多多包涵\n欢迎加群虚拟主播模拟器430081239或在菜单栏-管理-反馈中提交bug或建议".Translate());
+                          //Main.SayRnd("Welcome to use VPet-Simulator\\nThis is a beta version. Please forgive me for any bugs\\n You're welcome to check https://github.com/LorisYounger/VPet, or leave feedback at Menu - System - Feedback".Translate());
                       });
                   }
                   if (Set["v"][(gint)"rank"] != DateTime.Now.Year && GameSavesData.Statistics[(gint)"stat_total_time"] > 3600)
-                  {//年度报告提醒
+                  {
                       Task.Run(() =>
                       {
                           Thread.Sleep(Function.Rnd.Next(200000, 400000));
@@ -2138,7 +2053,7 @@ namespace VPet_Simulator.Windows
                           {
                               var button = new System.Windows.Controls.Button()
                               {
-                                  Content = "点击前往查看".Translate(),
+                                  Content = "Click to view".Translate(),
                                   FontSize = 20,
                                   HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
                                   Background = Function.ResourcesBrush(Function.BrushType.PrimaryDark),
@@ -2153,10 +2068,9 @@ namespace VPet_Simulator.Windows
                               };
                               return button;
                           });
-                          Main.Say("哼哼~主人，我的考试成绩出炉了哦，快来和我一起看我的成绩单喵".Translate(), btn, "shining");
+                          Main.Say("Humph~Master, my exam results are out, come and see my report card with me".Translate(), btn, "shining");
                       });
                   }
-                  //生日设置提醒
                   if (GameSavesData.Data.FindLine("HostBDay") == null)
                   {
                       Task.Run(() =>
@@ -2166,7 +2080,7 @@ namespace VPet_Simulator.Windows
                           {
                               var button = new System.Windows.Controls.Button()
                               {
-                                  Content = "设置".Translate(),
+                                  Content = "Settings".Translate(),
                                   FontSize = 20,
                                   HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
                                   Background = Function.ResourcesBrush(Function.BrushType.PrimaryDark),
@@ -2178,7 +2092,7 @@ namespace VPet_Simulator.Windows
                               };
                               return button;
                           });
-                          Main.Say("不要忘记设置生日时间哦 {0}，我会偷偷给你准备礼物的。".Translate(GameSavesData.GameSave.HostName), btn, "shining");
+                          Main.Say("Don't forget to set the time for your birthday {0}, I'll secretly prepare a gift for you.".Translate(GameSavesData.GameSave.HostName), btn, "shining");
                       });
                   }
                   else
@@ -2205,7 +2119,7 @@ namespace VPet_Simulator.Windows
                           {
                               var button = new System.Windows.Controls.Button()
                               {
-                                  Content = "查看生日公告/视频".Translate(),
+                                  Content = "View Birthday Announcement/Video".Translate(),
                                   FontSize = 20,
                                   HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
                                   Background = Function.ResourcesBrush(Function.BrushType.PrimaryDark),
@@ -2224,25 +2138,25 @@ namespace VPet_Simulator.Windows
                           switch (DateTime.Now.Day)
                           {
                               case 14:
-                                  bdt = "怎么啦主人，找我有什么事情吗？\n~诶今天是我的生日！？我都忘记啦！谢谢主人！在主人身边我平时就过的很幸福了喵~和主人不知不觉又过了一年呢，以后我们要永远在一起喵！";
+                                  bdt = "What's wrong master, do you need me?\n~Oh it's my birthday!? I forgot! Thank you master! I'm always happy being with you meow~ Another year passed, let's stay together forever meow!";
                                   break;
                               case 15:
-                                  bdt = "昨天过得怎么样主人？有好好开心的玩到喵？如果还不够尽兴也没关系！萝莉丝陪主人再嗨一次喵！";
+                                  bdt = "How was yesterday master? Did you have fun meow? If not enough, no worries! Loris will play with you again meow!";
                                   break;
                               case 16:
-                                  bdt = "什么？生日已经过去这么久了？该开始日程表了喵？？救命喵！萝莉丝还不想长大！";
+                                  bdt = "What? Birthday passed already? Time to start the schedule meow?? Help meow! Loris doesn't want to grow up!";
                                   break;
                               case 17:
-                                  bdt = "主人~人家出现了生日戒断反应了喵~要主人喂我吃蛋糕才能好~";
+                                  bdt = "Master~ I'm having birthday withdrawal symptoms meow~ I need master to feed me cake to get better~";
                                   break;
                               case 18:
-                                  bdt = "人家已经长大了喵，不会过生日这种。。。这种小孩子才会。。才会喜欢的幼稚东西了喵呜呜呜。";
+                                  bdt = "I've grown up meow, I don't celebrate birthdays... this kind of childish thing that only kids like meow woo woo woo.";
                                   break;
                               case 19:
-                                  bdt = "不用担心主人，我逐渐理解一切喵！只要和主人在一起！天天都是生日喵！";
+                                  bdt = "Don't worry master, I understand everything meow! With master, every day is birthday meow!";
                                   break;
                               default:
-                                  bdt = "过了这么久了，应该马上到三周年了吧猫！什么？！才过一星期喵！呜呜呜，主人大人~能不能预支一下下次的生日喵~";
+                                  bdt = "It's been so long, should be almost the third anniversary meow! What?! Only one week passed meow! Woo woo woo, master~ can I get an advance on my next birthday meow~";
                                   break;
 
                           }
@@ -2263,11 +2177,8 @@ namespace VPet_Simulator.Windows
                   };
                   Event_NewDay += everydaygift;
 
-                  //生日蛋糕的特殊功能
                   Event_TakeItem += MainWindow_Event_TakeItem;
-                  //添加购买事件
                   Event_TakeItemHandle += (item, count, from) => ActivityLogs.Add(new ActivityLog("take_" + from, item.TranslateName, count.ToString()));
-                  //添加工作事件
                   Main.Event_WorkStart += (work) => ActivityLogs.Add(new ActivityLog("work_start", work.NameTrans));
                   Main.Event_WorkEnd += (workinfo) => ActivityLogs.Add(new ActivityLog("work_end", workinfo.work.NameTrans, workinfo.Reason.ToString(), workinfo.spendtime.ToString("f0"), workinfo.count.ToString("f0")));
                   Main.SayProcess.Add((sayinfo) =>
@@ -2282,13 +2193,10 @@ namespace VPet_Simulator.Windows
                   //    Task.Run(() =>
                   //    {
                   //        Thread.Sleep(5000);
-                  //        Main.SayRnd("25年都跨过去了, 还有什么是跨不过的呢? {0}这一年辛苦了! 新年请多多指教!".Translate(GameSavesData.GameSave.HostName));
+                  //        Main.SayRnd("If 2025 has already passed, what else can't we get through? {0}, you've worked hard this year! Let's continue to get along well in the New Year!".Translate(GameSavesData.GameSave.HostName));
                   //    });
                   //}
-                  //修复因为26年元旦bug导致HashCheck失效的问题
-                  //简单来讲就是给所有有 2026跨年 这个照片的用户恢复一次HashCheck, 就当福利了(, 因为有这个照片的基本上都在bug周期里
-                  //请看到这个代码的人不要外传, 避免滥用
-                  //var photo25 = Photos.Find(x => x.Name == "2026跨年");
+                  //var photo25 = Photos.Find(x => x.Name == "2026 New Year’s Eve");
                   //if (photo25?.IsUnlock == true && GameSavesData.HashCheck == false && GameSavesData.Data["debug"][(gbol)"fix26"] == false)
                   //{
                   //    GameSave_v2 ogs = GameSavesData;
@@ -2304,7 +2212,6 @@ namespace VPet_Simulator.Windows
                       GameSavesData["debug"][(gdat)"losthash"] = DateTime.Now;
                   }
 #if NewYear
-                  //仅新年功能
                   if (DateTime.Now < new DateTime(2026, 2, 25))
                   {
                       Event_NewDay += NewYearSay;
@@ -2315,43 +2222,39 @@ namespace VPet_Simulator.Windows
                       });
                   }
 #endif
-                  //MOD报错
                   foreach (CoreMOD cm in CoreMODs)
                       if (!cm.SuccessLoad)
-                          if (cm.Tag.Contains("该模组已损坏"))
-                              MessageBoxX.Show("模组 {0} 插件损坏\n虚拟桌宠模拟器未能成功加载该插件\n请联系MOD作者修复该问题".Translate(cm.Name) + '\n' + cm.ErrorMessage, "该模组已损坏".Translate());
+                          if (cm.Tag.Contains("The module is corrupted."))
+                              MessageBoxX.Show("Module {0} plug-in damage\\nVirtual desktop pet simulator failed to load the plug-in\\nPlease contact the mod author to fix the problem.".Translate(cm.Name) + '\n' + cm.ErrorMessage, "The module is corrupted.".Translate());
                           else if (Set.IsPassMOD(cm.Name) || !string.IsNullOrEmpty(cm.ErrorMessage))
-                              MessageBoxX.Show("模组 {0} 的代码插件损坏\n虚拟桌宠模拟器未能成功加载该插件\n请联系MOD作者修复该问题".Translate(cm.Name) + '\n' + cm.ErrorMessage, "{0} 未加载代码插件".Translate(cm.Name));
+                              MessageBoxX.Show("Mod {0} Code plugins broken\\nVPet-Simulator failed to load the plugin\\nPlease contact MOD author to fix this problem".Translate(cm.Name) + '\n' + cm.ErrorMessage, "Code plugin {0} not loaded".Translate(cm.Name));
                           else if (Set.IsMSGMOD(cm.Name))
-                              MessageBoxX.Show("由于 {0} 包含代码插件\n虚拟桌宠模拟器已自动停止加载该插件\n请手动前往设置允许启用该mod 代码插件".Translate(cm.Name), "{0} 未加载代码插件".Translate(cm.Name));
-                  //动画错误
+                              MessageBoxX.Show("Since {0} contains code plugin\\nVPet-Simulator auto stopped loading the plugin\\nplease go to the settings to enabled the mod code plugin".Translate(cm.Name), "Code plugin {0} not loaded".Translate(cm.Name));
                   if (Main.ErrorMessage.Count != 0)
                   {
                       var errstr = string.Join("\n------\n", Main.ErrorMessage);
                       if (errstr.Contains("0000_core"))
                       {
-                          MessageBoxX.Show("动画加载错误,请尝试以下解决方法修复问题:\n\t1. 删除游戏根目录`Cache`文件夹\n\t2. 删除游戏根目录`mod\\0000_core\\pet`文件夹,并在Steam验证游戏完整性".Translate(), "动画加载错误".Translate());
+                          MessageBoxX.Show("Animation loading error, try the following fixes:\n\t1. Delete the `Cache` folder in the game root directory\n\t2. Delete the `mod\\0000_core\\pet` folder and verify game integrity".Translate(), "Animation loading error".Translate());
                           var winrep = new winReport(this, errstr);
-                          winrep.tDescription.Text = "动画加载错误".Translate();
+                          winrep.tDescription.Text = "Animation loading error".Translate();
                           winrep.Show();
                       }
                       else
-                          MessageBoxX.Show("动画加载错误\n虚拟桌宠模拟器未能成功加载该动画\n请联系MOD作者修复该问题".Translate() + '\n' + errstr, "动画加载错误".Translate());
+                          MessageBoxX.Show("Animation loading error\\nVPet Simulator failed to load the animation successfully\\nPlease contact the MOD author to fix the problem".Translate() + '\n' + errstr, "Animation loading error".Translate());
 
                       Main.ErrorMessage.Clear();
                   }
-                  //加载游戏创意工坊插件
                   foreach (MainPlugin mp in Plugins)
-                      try //不要识图用!DEBUG去掉try, 在主线程也会导致错误显示不出来的
+                      try
                       {
                           mp.GameLoaded();
                       }
                       catch (Exception e)
                       {
-                          NoticeBox.Show("由于插件引起的游戏启动错误".Translate() + "\n" + e.ToString(), "由于插件引起的游戏启动错误".Translate() + '-' + mp.PluginName);
+                          NoticeBox.Show("Game launch error due to plugin".Translate() + "\n" + e.ToString(), "Game launch error due to plugin".Translate() + '-' + mp.PluginName);
                       }
 
-                  //这里写的都是共通的功能, 如果限定第一个MW使用的功能, 请前往
 
                   if (GameSavesData.GameSave.Likability < 520)
                       Core.Graph.GraphsName[GraphType.Idel].Remove("like520");
@@ -2365,14 +2268,12 @@ namespace VPet_Simulator.Windows
               });
 
 
-            ////游戏提示
             //if (Set["SingleTips"][(gint)"open"] == 0 && Set.StartUPBoot == true && Set.StartUPBootSteam == true)
             //{
             //    await Dispatcher.InvokeAsync(new Action(() =>
             //    {
-            //        MessageBoxX.Show("检测到您开启了开机启动, 以下是开机启动相关提示信息: (仅显示一次)".Translate() + "\n------\n" +
-            //             "游戏开机启动的实现方式是创建快捷方式,不是注册表,更健康,所以游戏卸了也不知道\n如果游戏打不开,可以去这里手动删除游戏开机启动快捷方式:\n%appdata%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\".Translate()
-            //          , "关于卸载不掉的问题是因为开启了开机启动".Translate(), Panuon.WPF.UI.MessageBoxIcon.Info);
+            //        MessageBoxX.Show("We have detected that you have booted up the game, the following is a message about booting up the game: (shown only once)".Translate() + "\n------\n" +
+            //          , "The problem of uninstallation is due to the startup being turned on.".Translate(), Panuon.WPF.UI.MessageBoxIcon.Info);
             //        Set["SingleTips"][(gint)"open"] = 1;
             //    }));
             //}
@@ -2413,8 +2314,8 @@ namespace VPet_Simulator.Windows
             Set["dailydata"][(gint)"everydaygift"] = DateTime.Now.DayOfYear;
             var itm = new Item
             {
-                Name = "每日礼包",
-                Desc = "物品系统附赠的每日礼包, 打开后会获得3个随机物品. 教程还送礼物, 萝莉丝真大方.".Translate(),
+                Name = "Daily Gift Pack",
+                Desc = "A daily gift pack included with the item system. Opening it grants 3 random items. The tutorial even gives gifts—Lolis is truly generous.".Translate(),
                 ItemType = "Mail",
                 Price = 15,
             };
@@ -2441,8 +2342,7 @@ namespace VPet_Simulator.Windows
         {
             switch (obj.Name)
             {
-                case "生日蛋糕2":
-                    //更新下生日蛋糕的属性和价格
+                case "2nd Surprise Birthday Cake":
                     obj.Exp = Core.Save.Level;
                     obj.Likability = Core.Save.LikabilityMax / 20;
                     obj.StrengthDrink = Core.Save.StrengthMax / 20;
@@ -2455,63 +2355,63 @@ namespace VPet_Simulator.Windows
                         case 2:
                         case 3:
                             Core.Save.Strength = Core.Save.StrengthMax;
-                            Main.LabelDisplayShow("{0}充满抛瓦!".Translate(Core.Save.Name), 3000);
+                            Main.LabelDisplayShow("{0} POWER MAX!".Translate(Core.Save.Name), 3000);
                             break;
                         case 4:
                         case 5:
                             Core.Save.Feeling = Core.Save.FeelingMax;
-                            Main.LabelDisplayShow("{0}今天也是好心情!".Translate(Core.Save.Name), 3000);
+                            Main.LabelDisplayShow("{0} Today's mood: ★★★★★!".Translate(Core.Save.Name), 3000);
                             break;
                         case 6:
                         case 7:
                             Core.Save.StrengthFood = Core.Save.StrengthMax;
-                            Main.LabelDisplayShow("{0}吃饱了!".Translate(Core.Save.Name), 3000);
+                            Main.LabelDisplayShow("{0} Hunger satisfied!".Translate(Core.Save.Name), 3000);
                             break;
                         case 8:
                         case 9:
                             Core.Save.StrengthDrink = Core.Save.StrengthMax;
-                            Main.LabelDisplayShow("{0}加满水了!".Translate(Core.Save.Name), 3000);
+                            Main.LabelDisplayShow("{0} Hydration full!".Translate(Core.Save.Name), 3000);
                             break;
                         case 10:
                             int get = (Function.Rnd.Next(Core.Save.LevelUpNeed() * (GameSavesData.GameSave.LevelMax + 1)) / 200 + 1) * 100;
                             Core.Save.Exp += get;
-                            Main.LabelDisplayShow("{0}经验 +{1} 告辞".Translate(Core.Save.Name, get.ToString("N0")), 4000);
+                            Main.LabelDisplayShow("{0} EXP +{1} – Mission complete!".Translate(Core.Save.Name, get.ToString("N0")), 4000);
                             break;
                         case 11:
                             get = (Function.Rnd.Next(Core.Save.LevelUpNeed() * (GameSavesData.GameSave.LevelMax + 1)) / 500 + 1) * 10;
                             Core.Save.Exp += get;
-                            Main.LabelDisplayShow("{0}在马路边捡到{1}金钱".Translate(Core.Save.Name, get.ToString("N0")), 4000);
+                            Main.LabelDisplayShow("{0} Found {1} money on the roadside!".Translate(Core.Save.Name, get.ToString("N0")), 4000);
                             break;
                         case 12:
                             if (Function.Rnd.Next(3) != 0)
-                            {//再随一次, 给好感度
+                            {
                                 get = Function.Rnd.Next((int)Core.Save.LikabilityMax / 25) + 1;
                                 Core.Save.Likability += get;
-                                Main.LabelDisplayShow("{0}更喜欢{1}了".Translate(Core.Save.Name, Core.Save.HostName), 4000);
+                                Main.LabelDisplayShow("{0} Affection for {1} increased!".Translate(Core.Save.Name, Core.Save.HostName), 4000);
                                 break;
                             }
                             var photos = Photos.FindAll(x => x.IsUnlock == false && x.UnlockAble.Lock == false);
                             if (photos.Count > 0)
                             {
                                 var tempphoto = photos.FindAll(x => x.UnlockAble.Time != null || x.UnlockAble.Date != null || x.UnlockAble.Holiday != HolidayType.None);
-                                if (tempphoto.Count > 0)//优先解锁时间/日期/节日的照片
+                                if (tempphoto.Count > 0)
                                     photos = tempphoto;
                                 else
                                 {
                                     tempphoto = photos.FindAll(x => x.UnlockAble.SellBoth == false && (x.UnlockAble.Feeling > 10 || x.UnlockAble.Likability >= 10 || x.UnlockAble.Money >= 10));
-                                    if (tempphoto.Count > 0)//然后解锁好感度/金钱/饱腹/口渴的照片
+                                    if (tempphoto.Count > 0)
                                         photos = tempphoto;
                                 }
 
                                 var photo = photos[Function.Rnd.Next(photos.Count)];
                                 photo.Unlock(this);
-                                Main.LabelDisplayShow("{0}收到了新照片".Translate(Core.Save.Name) + '\n' + photo.Name, 4000);
+                                Main.LabelDisplayShow("{0} New photo unlocked!".Translate(Core.Save.Name) + '\n' + photo.Name, 4000);
                             }
                             else
                                 goto case 11;
                             break;
                         default:
-                            Main.LabelDisplayShow("{0}获得了谢谢惠顾".Translate(Core.Save.Name), 4000);
+                            Main.LabelDisplayShow("{0} Consolation prize: Better luck next time!".Translate(Core.Save.Name), 4000);
                             break;
                     }
                     break;
@@ -2530,18 +2430,14 @@ namespace VPet_Simulator.Windows
         }
 
         /// <summary>
-        /// 是否显示吃东西动画
         /// </summary>
         bool showeatanm = true;
         /// <summary>
-        /// 显示吃东西(夹层)动画
         /// </summary>
-        /// <param name="graphName">夹层动画名</param>
-        /// <param name="imageSource">被夹在中间的图片</param>
         public void DisplayFoodAnimation(string graphName, ImageSource imageSource)
         {
             if (showeatanm)
-            {//显示动画
+            {
                 showeatanm = false;
                 Main.Display(graphName, imageSource, () =>
                 {
@@ -2551,9 +2447,7 @@ namespace VPet_Simulator.Windows
                         var newmod = Core.Save.CalMode();
                         if (Core.Save.Mode != newmod)
                         {
-                            //魔改下参数以免不播放切换动画
                             Main.DisplayType.Type = GraphType.Default;
-                            //切换显示动画
                             Main.PlaySwitchAnimat(Core.Save.Mode, newmod);
                             Core.Save.Mode = newmod;
                         }
@@ -2565,7 +2459,7 @@ namespace VPet_Simulator.Windows
                 });
             }
             else
-            {//如果不显示动画, 则看看是不是有覆盖
+            {
                 if (Main.DisplayType.Animat != AnimatType.Single && Main.DisplayType.Name != graphName)
                 {
                     showeatanm = true;
@@ -2582,7 +2476,7 @@ namespace VPet_Simulator.Windows
             string sbv_trans = sbv.Translate(GameSavesData.GameSave.HostName);
             if (sbv == sbv_trans)
             {
-                Main.Say("今天是{0}的生日！祝{0}生日快乐！".Translate(GameSavesData.GameSave.HostName), "bday", true);
+                Main.Say("Today is {0}'s birthday! Happy birthday to {0}!".Translate(GameSavesData.GameSave.HostName), "bday", true);
             }
             else
             {
@@ -2602,18 +2496,16 @@ namespace VPet_Simulator.Windows
         private void NewDayHandle(Main main)
         {
             if (DateTime.Now.Hour == 0 && newday != DateTime.Now.Day)
-            {//跨时间
+            {
                 newday = DateTime.Now.Day;
                 Event_NewDay?.Invoke();
             }
         }
         /// <summary>
-        /// 事件:新的一天
         /// </summary>
         public event Action Event_NewDay;
 #if NewYear
         /// <summary>
-        /// 新年说
         /// </summary>
         private void NewYearSay()
         {
@@ -2622,36 +2514,35 @@ namespace VPet_Simulator.Windows
             {
 
                 case 16:
-                    sayny = "白龙马，蹄朝西~马儿你跑快点啊~神马都是浮云~\n小马萝莉斯祝主人马年顺利，万事顺利，前途无阻，万马奔腾不停歇！".Translate();
+                    sayny = "Chipi chipi chapa chapa~ Look at that horse go! \\nRacing Lolis wishes you: Health & Vitality! May you have the stamina of a champion racehorse and energy that never runs out! Keep running!".Translate();
                     break;
                 case 17:
-                    sayny = "马什么梅？什么冬梅？马冬什么？\n演员萝莉斯祝主人马年大智，学业进步，智商增加，考试满分！".Translate();
+                    sayny = "New year, new brain! ...Wait, where did I put my notes? Did I study for this? \\nScholar Lolis wishes you: Big Brain Energy! May you ace every exam, finish every assignment!".Translate();
                     break;
                 case 18:
-                    sayny = "老马啊！！！哎！老马啊——！\n主播萝莉斯祝主人马年快乐，心情轻松快乐，烦恼统统飞走！".Translate();
+                    sayny = "\"Praying to the RNG Gods... One tap, please!\"\\nGacha Lolis wishes you: S-Tier Luck! May your pulls always be Legendary, your pity timer never trigger, and your loot drops be absolutely God-Tier!".Translate();
                     break;
                 case 19:
-                    sayny = "我大意了啊没有闪，小主人你不讲武德！吃我闪电五连鞭！\n马掌门人萝莉斯祝主人马年安康，功夫有长进，技术有进步，能力会出众！".Translate();
+                    sayny = "\"I didn't miss! It was lag! My ping is 999!\" \\nGamer Lolis wishes you: Low Ping and High Frames! May your aim be cracked, your reflexes sharp, and may you carry your team to victory every single match. GG EZ".Translate();
                     break;
                 case 20:
-                    sayny = "哈基米曼波~马儿跳马儿跳~\n六星萝莉斯祝主人马年大运，抽卡出金一发入魂，装备掉落出红满仓！".Translate();
+                    sayny = "I want to make so much money this year!\\nFortune Lolis wishes you: Massive Gains! May your bank account grow like a high-score leaderboard, your investments only go \"Stonks\", and your wallet stay heavy all year long!".Translate();
                     break;
                 case 21:
-                    sayny = "哎致命空枪，哎打腿没死，哎又空枪。我柜子动了我不玩了。\n游戏萝莉斯祝主人马年变强，枪枪爆头好运连连，把把第一永不马枪！".Translate();
+                    sayny = "I just want to be happy every day!\\nCheerful Lolis wishes you: Every single day is going to be full of smiles! 100% Happiness!".Translate();
                     break;
                 case 22:
-                    sayny = "待我高头大马，许你十里桃花！\n马猴烧酒萝莉斯祝主人马年马上有对象！千里姻缘一马牵，万水千山有马子！".Translate();
+                    sayny = "I want everything to go my way this year!\\nLucky Lolis wishes you: May every path you take be a shortcut to success, every green light be waiting for you, and every small wish of yours come true instantly!".Translate();
                     break;
                 default:
                 case 23:
-                    sayny = "马喽的命也是命！\n打工人萝莉斯祝主人马年发财，返工赚大钱，今年一定发！马到成功！".Translate();
+                    sayny = "I’m going to have a super successful year at work! \\nWorker Lolis wishes you: Massive Success! May your career go smoothly, every project be a winner, and you make tons of money this year! Let's get that bread!".Translate();
                     break;
             }
             Main.SayRnd(sayny);
         }
 #endif
         /// <summary>
-        /// 显示捏脸情况
         /// </summary>
         public bool DisplayPinch()
         {
@@ -2666,7 +2557,7 @@ namespace VPet_Simulator.Windows
                 Core.Save.StrengthChange(-2);
                 Core.Save.FeelingChange(1);
                 Core.Save.Mode = Core.Save.CalMode();
-                Main.LabelDisplayShowChangeNumber(LocalizeCore.Translate("体力-{0:f0} 心情+{1:f0}"), 2, 1);
+                Main.LabelDisplayShowChangeNumber(LocalizeCore.Translate("Stamina: -{0:f0}, Mood: +{1:f0}"), 2, 1);
             }
             if (Main.DisplayType.Name == "pinch")
             {
@@ -2699,7 +2590,7 @@ namespace VPet_Simulator.Windows
                     Core.Save.StrengthChange(-2);
                     Core.Save.FeelingChange(1);
                     Core.Save.Mode = Core.Save.CalMode();
-                    Main.LabelDisplayShowChangeNumber(LocalizeCore.Translate("体力-{0:f0} 心情+{1:f0}"), 2, 1);
+                    Main.LabelDisplayShowChangeNumber(LocalizeCore.Translate("Stamina: -{0:f0}, Mood: +{1:f0}"), 2, 1);
                 }
                 Main.Display("pinch", AnimatType.B_Loop, DisplayPinch_loop);
             }
@@ -2709,7 +2600,6 @@ namespace VPet_Simulator.Windows
             }
         }
         /// <summary>
-        /// 获取收藏的工作
         /// </summary>
         public List<Work> WorkStar()
         {
@@ -2728,18 +2618,18 @@ namespace VPet_Simulator.Windows
             var gf = Core.Graph.FindGraph("levelup", GraphInfo.AnimatType.Single, GameSavesData.GameSave.Mode);
             if (gf != null)
             {
-                Main.Say("邦邦咔邦,{0}等级突破了!".Translate(Name), "levelup", true);
+                Main.Say("Bang bang kabang, level {0} has been advanced through!".Translate(Name), "levelup", true);
             }
             if (args.IsLevelMaxUp)
-            {//告知用户上限等级上升
+            {
                 Task.Run(() =>
                 {
                     Thread.Sleep(5000);
                     Dispatcher.Invoke(() =>
                     {
-                        MessageBoxX.Show("系统提示\n您的桌宠等级已经突破\nLv{0}→LV{1} x{2}\n已突破为尊贵的x{3}阶".Translate(
+                        MessageBoxX.Show("System Notice\\nYour VPet level has advanced\\nLv{0}→LV{1} x{2}\\nHas advanced to the prestigious x{3} rank".Translate(
                             1000 + args.BeforeLevelMax * 100, 100 * GameSavesData.GameSave.LevelMax, GameSavesData.GameSave.LevelMax),
-                            "桌宠等级突破".Translate());
+                            "VPet Level Advanced through".Translate());
                     });
                 });
             }
@@ -2758,13 +2648,11 @@ namespace VPet_Simulator.Windows
             }
             ActivityLogs.Add(new ActivityLog("photo_unlock", sb.ToString().AsSpan(2).ToString()));
             Dispatcher.Invoke(() =>
-            NoticeBox.Show(string.Concat(sb.ToString().AsSpan(2), "\n", "以上照片已解锁".Translate()), "新的照片已解锁".Translate()
+            NoticeBox.Show(string.Concat(sb.ToString().AsSpan(2), "\n", "The above photos have been unlocked".Translate()), "New photos have been unlocked".Translate()
             , Panuon.WPF.UI.MessageBoxIcon.Info, true, 5000));
         }
         /// <summary>
-        /// 添加物品到物品栏 (自动合并)
         /// </summary>
-        /// <param name="item">物品</param>
         public void ItemsAdd(Item item)
         {
             var sameitem = Items.Find(x => x.Name == item.Name);

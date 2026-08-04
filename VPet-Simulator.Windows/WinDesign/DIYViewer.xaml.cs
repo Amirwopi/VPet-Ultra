@@ -8,7 +8,6 @@ using System.Windows.Input;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// DIYViewer.xaml 的交互逻辑
     /// </summary>
     public partial class DIYViewer : UserControl
     {
@@ -171,7 +170,7 @@ namespace VPet_Simulator.Windows
         private void SelectFilePath_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog sfd = new OpenFileDialog();
-            sfd.Filter = "所有可执行文件".Translate() + "|*.exe";
+            sfd.Filter = "All executable files".Translate() + "|*.exe";
             if (sfd.ShowDialog() == true)
             {
                 TextContent.Text = sfd.FileName;

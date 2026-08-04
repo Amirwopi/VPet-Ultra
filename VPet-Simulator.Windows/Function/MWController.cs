@@ -10,7 +10,6 @@ using VPet_Simulator.Core;
 namespace VPet_Simulator.Windows
 {
     /// <summary>
-    /// 窗体控制器实现
     /// </summary>
     public class MWController : IController
     {

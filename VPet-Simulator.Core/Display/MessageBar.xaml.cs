@@ -18,48 +18,37 @@ namespace VPet_Simulator.Core
     public interface IMassageBar : IDisposable
     {
         /// <summary>
-        /// 显示消息
         /// </summary>
-        /// <param name="name">名字</param>
-        /// <param name="text">内容</param>
-        /// <param name="graphName">图像名</param>
-        /// <param name="msgContent">消息框内容</param>
+        /// <param name="Text Set">Content</param>
+        /// <param name="msgContent">Message BoxContent</param>
         void Show(string name, string text, string graphName = null, UIElement msgContent = null);
 
 
         /// <summary>
-        /// 显示流式消息
         /// </summary>
-        /// <param name="name">名字</param>
-        /// <param name="sayInfoWithStream">内容</param>
+        /// <param name="sayInfoWithStream">Content</param>
         void Show(string name, SayInfoWithStream sayInfoWithStream);
         /// <summary>
-        /// 强制关闭
         /// </summary>
         void ForceClose();
         /// <summary>
-        /// 设置位置在桌宠内
         /// </summary>
         void SetPlaceIN();
         /// <summary>
-        /// 设置位置在桌宠外
         /// </summary>
         void SetPlaceOUT();
         /// <summary>
-        /// 显示状态
+        /// Display Status
         /// </summary>
         Visibility Visibility { get; set; }
         /// <summary>
-        /// 该消息框的Control
         /// </summary>
         Control This { get; }
         /// <summary>
-        /// 被关闭时事件
         /// </summary>
         event Action EndAction;
     }
     /// <summary>
-    /// MessageBar.xaml 的交互逻辑
     /// </summary>
     public partial class MessageBar : UserControl, IDisposable, IMassageBar
     {
@@ -99,7 +88,6 @@ namespace VPet_Simulator.Core
         {
             if (outputtext.Count > 0)
             {
-                // 处理2-3个字符，平衡效果和性能
                 int batchSize = Math.Min(2, outputtext.Count);
                 string textToAdd = string.Empty;
 
@@ -116,7 +104,6 @@ namespace VPet_Simulator.Core
             }
             else
             {
-                // 其余代码保持不变
                 if (m.PlayingVoice)
                 {
                     if (m.windowMediaPlayerAvailable)
@@ -150,7 +137,6 @@ namespace VPet_Simulator.Core
             }
         }
         /// <summary>
-        /// 被关闭时事件
         /// </summary>
         public event Action EndAction;
         private void EndTimer_Elapsed(object sender, ElapsedEventArgs e)
@@ -168,10 +154,8 @@ namespace VPet_Simulator.Core
         int timeleft;
         string graphName;
         /// <summary>
-        /// 显示消息
         /// </summary>
-        /// <param name="name">名字</param>
-        /// <param name="text">内容</param>
+        /// <param name="Text Set">Content</param>
         public void Show(string name, string text, string graphName = null, UIElement msgContent = null)
         {
             if (m.UIGrid.Children.IndexOf(this) != m.UIGrid.Children.Count - 1)
@@ -195,7 +179,6 @@ namespace VPet_Simulator.Core
         }
         private SayInfoWithStream oldsaystream;
         /// <summary>
-        /// 流式传输模式 显示文字
         /// </summary>
         public void Show(string name, SayInfoWithStream sayInfoWithStream)
         {
@@ -204,7 +187,6 @@ namespace VPet_Simulator.Core
                 Panel.SetZIndex(this, m.UIGrid.Children.Count - 1);
             }
 
-            //解除之前说话绑定,取消之前的说话
             if (oldsaystream != null)
             {
                 oldsaystream.Event_Update -= DealWithUpdate;
@@ -247,13 +229,10 @@ namespace VPet_Simulator.Core
                 sayInfoWithStream.Event_Finish += DealWithStreamFinish;
         }
         /// <summary>
-        /// 流式传输用的阻断文字显示用的计时器
         /// </summary>
         DateTime nextshow = DateTime.Now;
         /// <summary>
-        /// 增加显示新词
         /// </summary>
-        /// <param name="data">更新内容</param>
         public void DealWithUpdate((string fullText, string changedText) data)
         {
             timeleft = data.fullText.Length;
@@ -268,14 +247,13 @@ namespace VPet_Simulator.Core
                     }
                     else
                         nextshow = DateTime.Now.AddMilliseconds(150);
-                if (sleeptime > 0) //处理前等待
+                if (sleeptime > 0)
                     Thread.Sleep(sleeptime);
                 Dispatcher.Invoke(() => { TText.Text = data.fullText; });
             });
 
         }
         /// <summary>
-        /// 处理流式传输结束
         /// </summary>
         public void DealWithStreamFinish(string fullText)
         {
@@ -337,7 +315,6 @@ namespace VPet_Simulator.Core
             ForceClose();
         }
         /// <summary>
-        /// 强制关闭
         /// </summary>
         public void ForceClose()
         {

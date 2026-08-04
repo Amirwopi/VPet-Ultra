@@ -21,7 +21,6 @@ using WpfAnimatedGif;
 
 namespace VPet_Simulator.Windows;
 /// <summary>
-/// winGallery.xaml 的交互逻辑
 /// </summary>
 public partial class winGallery : WindowX
 {
@@ -34,17 +33,13 @@ public partial class winGallery : WindowX
         InitializeComponent();
         this.mw = mw;
 
-        //每次打开的时候都检查下是否解锁, 并自动解锁
-        //这个解锁条件可以塞到 保存前的检查里面
         mw.CheckGalleryUnlock();
 
-        //逻辑啥的可以空出来我写
 
-        //tag分类
-        var tags = mw.Photos.SelectMany(p => p.TagsTrans).GroupBy(item => item) // 按照每个元素进行分组
-            .Select(group => new { Item = group.Key, Count = group.Count() }) // 选择元素及其出现次数
-            .OrderByDescending(x => x.Count) // 按出现次数降序排序
-            .Select(x => x.Item); // 选择去重后的元素
+        var tags = mw.Photos.SelectMany(p => p.TagsTrans).GroupBy(item => item)
+            .Select(group => new { Item = group.Key, Count = group.Count() })
+            .OrderByDescending(x => x.Count)
+            .Select(x => x.Item);
         ToggleButtonGroupTags.ItemsSource = tags;
     }
 
@@ -55,7 +50,7 @@ public partial class winGallery : WindowX
 
     private void Button_Loaded(object sender, RoutedEventArgs e)
     {
-        ((Button)sender).Content = "照片图库".Translate() + mw.PrefixSave;
+        ((Button)sender).Content = "Photo Gallery ".Translate() + mw.PrefixSave;
     }
 
     private void BtnSearch_Click(object sender, RoutedEventArgs e)
@@ -96,7 +91,6 @@ public partial class winGallery : WindowX
 
         var searchText = _searchTextBox.Text;
 
-        //如果某个分类一个都没选中，那就等于全部选中
 
         var isIllustrationChecked = ToggleButtonIllustration.IsChecked == true ? true : ToggleButtonThumbnail.IsChecked == false;
         var isThumbnailChecked = ToggleButtonThumbnail.IsChecked == true ? true : ToggleButtonIllustration.IsChecked == false;
@@ -110,7 +104,6 @@ public partial class winGallery : WindowX
 
         var photos = new List<Photo>();
 
-        //获取锁定的图片
         if (isLockedChecked)
         {
             var lockphoto = mw.Photos.FindAll(p =>
@@ -129,7 +122,6 @@ public partial class winGallery : WindowX
             );
             photos.AddRange(lockphoto);
         }
-        //获取解锁的图片
         if (isUnlockedChecked)
         {
             var unlockphoto = mw.Photos.FindAll(p =>
@@ -193,7 +185,7 @@ public partial class winGallery : WindowX
         nowphoto = photo;
         LablePhotoLoading.Visibility = Visibility.Visible;
         TextBlockPhotoDetailTitle.Text = photo.TranslateName;
-        TextBlockPhotoDetailDescription.Text = "解锁时间".Translate() + ": " + photo.PlayerInfo.UnlockTime.ToString() + '\n' + photo.Description.Translate();
+        TextBlockPhotoDetailDescription.Text = "Unlock time".Translate() + ": " + photo.PlayerInfo.UnlockTime.ToString() + '\n' + photo.Description.Translate();
         IsMaskVisible = true;
         IsOverlayerVisible = true;
         if (photo.Type == Photo.PhotoType.Illustration)
@@ -231,7 +223,7 @@ public partial class winGallery : WindowX
         if (nowphoto == null)
             return;
         nowphoto.CopyImageToClipboard(mw);
-        Toast(message: "已复制图片！".Translate(),
+        Toast(message: "The picture has been copied!".Translate(),
                      icon: MessageBoxIcon.Info);
     }
 
@@ -250,7 +242,7 @@ public partial class winGallery : WindowX
                     nowphoto.SaveAs(mw, dialog.FileName);
                     Dispatcher.Invoke(() =>
                      Toast(
-                        message: "已保存图片！".Translate(),
+                        message: "The picture has been saved!".Translate(),
                         icon: MessageBoxIcon.Info
                     ));
                 });
@@ -264,7 +256,7 @@ public partial class winGallery : WindowX
         if (selectedPhotos.Count == 0)
         {
             Toast(
-                message: "当前没有解锁任何图片！".Translate(),
+                message: "Currently, no pictures are unlocked!".Translate(),
                 icon: MessageBoxIcon.Error
             );
             return;
@@ -279,7 +271,7 @@ public partial class winGallery : WindowX
                     photo.SaveAs(mw, photo.FilePath(dialog.FolderName));
                 }
                 Dispatcher.Invoke(() => Toast(
-                          message: "已导出全部解锁的图片！".Translate(),
+                          message: "All unlocked images have been exported!".Translate(),
                           icon: MessageBoxIcon.Info
                       ));
             });
@@ -300,7 +292,7 @@ public partial class winGallery : WindowX
         if (selectedPhotos.Count == 0)
         {
             Toast(
-                message: "当前没有选中任何图片！".Translate(),
+                message: "Currently, no image is selected!".Translate(),
                 icon: MessageBoxIcon.Error
             );
             return;
@@ -319,7 +311,7 @@ public partial class winGallery : WindowX
                     nowphoto.SaveAs(mw, dialog.FileName);
                     Dispatcher.Invoke(() =>
                      Toast(
-                        message: "已保存图片！".Translate(),
+                        message: "The picture has been saved!".Translate(),
                         icon: MessageBoxIcon.Info
                     ));
                 });
@@ -335,7 +327,7 @@ public partial class winGallery : WindowX
                     photo.SaveAs(mw, photo.FilePath(dialog.FolderName));
                 }
                 Toast(
-                    message: "已导出选中的图片！".Translate(),
+                    message: "The selected pictures have been exported!".Translate(),
                     icon: MessageBoxIcon.Info
                 );
             }
