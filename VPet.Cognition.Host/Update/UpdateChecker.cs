@@ -166,8 +166,8 @@ public sealed class UpdateChecker
     /// <summary>Compare two version strings. Returns -1, 0, or 1.</summary>
     private static int CompareVersions(string a, string b)
     {
-        var partsA = a.Split('.').Select(int.TryParse).Select((s, i) => s ? int.Parse(a.Split('.')[i]) : 0).ToArray();
-        var partsB = b.Split('.').Select(int.TryParse).Select((s, i) => s ? int.Parse(b.Split('.')[i]) : 0).ToArray();
+        var partsA = a.Split('.').Select(s => int.TryParse(s, out var v) ? v : 0).ToArray();
+        var partsB = b.Split('.').Select(s => int.TryParse(s, out var v) ? v : 0).ToArray();
 
         for (int i = 0; i < Math.Max(partsA.Length, partsB.Length); i++)
         {
