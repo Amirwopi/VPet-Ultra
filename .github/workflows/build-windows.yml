@@ -64,6 +64,20 @@ jobs:
           $modPath = "publish/vpet-ultra/mod/0000_cognition"
           New-Item -ItemType Directory -Force -Path $modPath
 
+          # Create info.lps -- VPet REQUIRES this to recognize a mod folder
+          # Without it, the mod loader skips the folder entirely
+          $infoLps = 'vupmod#Cognition:|author#VPet-Ultra:|gamever#11000:|ver#100:|intro#AI Cognition Plugin:|authorid#0:|itemid#0:|lang#en:|Cognition#Cognition:|'
+          $infoLps | Out-File -FilePath "$modPath/info.lps" -Encoding UTF8
+          Write-Host 'Created: info.lps'
+
+          # Create version.txt for update checking
+          $version = '0.2.0'
+          if ($env:GITHUB_REF -like 'refs/tags/v*') {
+            $version = $env:GITHUB_REF.Substring(11)
+          }
+          $version | Out-File -FilePath "$modPath/version.txt" -Encoding UTF8
+          Write-Host "Created: version.txt ($version)"
+
           # Copy all cognition DLLs
           $hostBin = "VPet.Cognition.Host/bin/Release/net8.0-windows"
           $cognitionDlls = Get-ChildItem -Path $hostBin -Filter "VPet.Cognition.*.dll" -Recurse
@@ -74,7 +88,10 @@ jobs:
 
           # Copy dependency DLLs (non-VPet, non-LinePutScript)
           $depDlls = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse |
-            Where-Object { $_.Name -notlike "VPet.Cognition.*" -and $_.Name -notlike "VPet-Simulator.*" -and $_.Name -notlike "LinePutScript.*" }
+            Where-Object {
+              $name = $_.Name
+              -not ($name -like 'VPet.Cognition.*' -or $name -like 'VPet-Simulator.*' -or $name -like 'LinePutScript.*' -or $name -like 'Panuon.*' -or $name -like 'steam_api*' -or $name -like 'Facepunch.*' -or $name -like 'NAudio.*' -or $name -like 'Skia*' -or $name -like 'libSkia*' -or $name -like 'WpfAnimatedGif*')
+            }
           foreach ($dll in $depDlls) {
             $dest = Join-Path $modPath $dll.Name
             if (-not (Test-Path $dest)) {

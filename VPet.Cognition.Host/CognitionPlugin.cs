@@ -596,6 +596,15 @@ public static class CognitionHostBuilder
         services.AddSingleton<SecretResolver>();
         services.AddTransient<EgressFilterHandler>();
 
+        // ── Update checker ──
+        services.AddSingleton<VPet.Cognition.Host.Update.UpdateChecker>(sp =>
+        {
+            var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+            var logger = sp.GetRequiredService<ILogger<VPet.Cognition.Host.Update.UpdateChecker>>();
+            return new VPet.Cognition.Host.Update.UpdateChecker(
+                httpClientFactory.CreateClient("cognition"), logger);
+        });
+
         // ── Event bus ──
         services.AddSingleton<IEventBus, EventBus.EventBus>();
 

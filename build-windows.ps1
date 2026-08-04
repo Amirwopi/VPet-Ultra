@@ -65,6 +65,11 @@ Write-Host "[6/7] Copying cognition plugin DLLs..." -ForegroundColor Yellow
 $modPath = Join-Path $OutputDir "mod/0000_cognition"
 New-Item -ItemType Directory -Force -Path $modPath | Out-Null
 
+# Create info.lps -- VPet REQUIRES this to recognize a mod folder
+$infoLps = 'vupmod#Cognition:|author#VPet-Ultra:|gamever#11000:|ver#100:|intro#AI Cognition Plugin:|authorid#0:|itemid#0:|lang#en:|Cognition#Cognition:|'
+$infoLps | Out-File -FilePath (Join-Path $modPath 'info.lps') -Encoding UTF8
+Write-Host '  Created: info.lps'
+
 $hostBin = "VPet.Cognition.Host/bin/$Configuration/net8.0-windows"
 if (-not (Test-Path $hostBin)) {
     $hostBin = "VPet.Cognition.Host/bin/$Configuration/net8.0-windows/publish"
