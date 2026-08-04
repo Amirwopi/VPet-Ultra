@@ -6,6 +6,7 @@ using VPet.Cognition.Domain.Entities;
 using VPet.Cognition.Domain.Enums;
 using VPet.Cognition.Domain.Events;
 using VPet.Cognition.Domain.ValueObjects;
+using VPet.Cognition.MemoryStore;
 
 namespace VPet.Cognition.AgentRuntime;
 
@@ -23,6 +24,7 @@ public sealed class DefaultAgentRuntime : IAgentRuntime
     private readonly int _maxStepsPerPlan;
     private readonly int _maxRetries;
     private readonly double _confidenceThreshold;
+    private readonly CognitionStore? _cognitionStore;
 
     public event Action<CognitionEvent>? EventRaised;
 
@@ -35,7 +37,8 @@ public sealed class DefaultAgentRuntime : IAgentRuntime
         int maxStepsPerPlan,
         int maxRetries,
         double confidenceThreshold,
-        ILogger<DefaultAgentRuntime> logger)
+        ILogger<DefaultAgentRuntime> logger,
+        CognitionStore? cognitionStore = null)
     {
         _toolProvider = toolProvider;
         _permissionService = permissionService;
@@ -43,6 +46,7 @@ public sealed class DefaultAgentRuntime : IAgentRuntime
         _maxRetries = maxRetries;
         _confidenceThreshold = confidenceThreshold;
         _logger = logger;
+        _cognitionStore = cognitionStore;
     }
 
     public Task<GoalId> SetGoalAsync(string description, GoalPriority priority, CancellationToken cancellationToken = default)
@@ -358,5 +362,24 @@ public sealed class DefaultAgentRuntime : IAgentRuntime
         task.Result = result;
         _logger.LogInformation("Tool {Tool} executed: success={Success} duration={Ms}ms",
             task.ToolName, result.Success, sw.ElapsedMilliseconds);
+
+        // Audit log to CognitionStore (tamper-evident hash chain)
+        if (_cognitionStore is not null)
+        {
+            try
+            {
+                await _cognitionStore.LogToolInvocationAsync(
+                    task.ToolName,
+                    toolArgs.GetRawText(),
+                    result.Success ? result.Output : result.Error,
+                    result.Success,
+                    sw.ElapsedMilliseconds,
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to write tool audit log for {Tool}", task.ToolName);
+            }
+        }
     }
 }

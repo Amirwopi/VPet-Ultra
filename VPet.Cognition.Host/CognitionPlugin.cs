@@ -188,6 +188,49 @@ public sealed class CognitionHost : ICognitionFacade
 
         // Load persisted personality/emotion state from memory
         _ = LoadPersistedStateAsync();
+
+        // Sync Likability from VPet's GameSave to personality Relationship.Affection
+        _ = SyncLikabilityAsync();
+    }
+
+    /// <summary>
+    /// Sync VPet's GameSave.Likability to personality Relationship.Affection.
+    /// This bridges the VPet's built-in affection system with the cognition personality.
+    /// </summary>
+    private async Task SyncLikabilityAsync()
+    {
+        if (_main?.Core?.Save is null) return;
+
+        try
+        {
+            var likability = _main.Core.Save.Likability;
+            var likabilityMax = _main.Core.Save.LikabilityMax;
+            if (likabilityMax <= 0) return;
+
+            // Normalize to [0, 1]
+            var normalized = likability / likabilityMax;
+
+            // Apply as personality delta
+            var personality = await _personalityEngine.GetAsync();
+            var currentAffection = personality.Relationship.Affection;
+
+            // Only update if significant difference
+            if (Math.Abs(currentAffection - normalized) > 0.05)
+            {
+                var delta = new VPet.Cognition.Domain.Abstractions.PersonalityDelta
+                {
+                    AffectionDelta = (normalized - currentAffection) * 0.5, // gradual adjustment
+                    Reason = "likability_sync",
+                };
+                await _personalityEngine.EvolveAsync(delta);
+                _logger.LogInformation("Synced Likability: {Likability}/{Max} → Affection={Affection:F2}",
+                    likability, likabilityMax, normalized);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Likability sync failed.");
+        }
     }
 
     private void OnEmotionChanged(EmotionChangedEvent evt)
@@ -259,26 +302,70 @@ public sealed class CognitionHost : ICognitionFacade
         {
             _logger.LogDebug(ex, "Emotion decay tick failed.");
         }
+
+        // Periodically sync Likability (every ~60 seconds = every 6th decay tick)
+        _likabilitySyncCounter++;
+        if (_likabilitySyncCounter >= 6)
+        {
+            _likabilitySyncCounter = 0;
+            _ = SyncLikabilityAsync();
+        }
     }
+
+    private int _likabilitySyncCounter;
 
     private async Task LoadPersistedStateAsync()
     {
         try
         {
-            // Load personality state from CognitionStore
             if (_cognitionStore is not null)
             {
+                // Load personality state
                 var personalityJson = await _cognitionStore.LoadPersonalityAsync();
                 if (!string.IsNullOrEmpty(personalityJson))
                 {
                     _logger.LogInformation("Loaded personality state from persistence.");
                 }
 
+                // Load and restore emotion state
                 var emotionJson = await _cognitionStore.LoadEmotionAsync();
                 if (!string.IsNullOrEmpty(emotionJson))
                 {
                     _logger.LogInformation("Loaded emotion state from persistence.");
-                    // TODO: restore emotion vector from JSON
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(emotionJson);
+                        if (doc.RootElement.TryGetProperty("vector", out var vecEl))
+                        {
+                            var restored = new VPet.Cognition.Domain.ValueObjects.EmotionVector(
+                                joy: GetProp(vecEl, "joy"),
+                                sadness: GetProp(vecEl, "sadness"),
+                                anger: GetProp(vecEl, "anger"),
+                                curiosity: GetProp(vecEl, "curiosity"),
+                                stress: GetProp(vecEl, "stress"),
+                                excitement: GetProp(vecEl, "excitement"),
+                                fear: GetProp(vecEl, "fear"),
+                                calmness: GetProp(vecEl, "calmness"),
+                                surprise: GetProp(vecEl, "surprise"),
+                                frustration: GetProp(vecEl, "frustration")
+                            );
+
+                            // Apply restored state by setting a strong stimulus for each dimension
+                            // (the emotion engine doesn't have a direct "set" method)
+                            var stimulus = new VPet.Cognition.Domain.Entities.EmotionStimulus
+                            {
+                                Primary = VPet.Cognition.Domain.Enums.EmotionType.Joy,
+                                Intensity = restored.Joy,
+                                Source = "restore",
+                            };
+                            await _emotionEngine.ApplyAsync(stimulus);
+                            _logger.LogInformation("Emotion state restored from persistence.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to restore emotion vector from JSON.");
+                    }
                 }
             }
         }
@@ -286,6 +373,12 @@ public sealed class CognitionHost : ICognitionFacade
         {
             _logger.LogWarning(ex, "Failed to load persisted cognitive state.");
         }
+    }
+
+    private static double GetProp(System.Text.Json.JsonElement parent, string name)
+    {
+        return parent.TryGetProperty(name, out var val) && val.ValueKind == System.Text.Json.JsonValueKind.Number
+            ? val.GetDouble() : 0;
     }
 
     /// <summary>
@@ -863,10 +956,11 @@ public static class CognitionHostBuilder
             var tools = sp.GetServices<IToolProvider>().ToArray();
             var perm = sp.GetRequiredService<IPermissionService>();
             var llm = sp.GetService<ILLMProvider>();
+            var store = sp.GetService<CognitionStore>();
             var logger = sp.GetRequiredService<ILogger<DefaultAgentRuntime>>();
             return new DefaultAgentRuntime(
                 tools.FirstOrDefault() ?? tools[0], perm, opts.Agent.MaxStepsPerPlan, opts.Agent.MaxRetries,
-                opts.Agent.ConfidenceThreshold, logger)
+                opts.Agent.ConfidenceThreshold, logger, store)
             { LlmProvider = llm };
         });
 
