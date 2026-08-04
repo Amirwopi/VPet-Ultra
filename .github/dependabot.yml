@@ -1,0 +1,53 @@
+version: 2
+updates:
+  # NuGet packages in VPet-Simulator.Windows
+  - package-ecosystem: "nuget"
+    directory: "/VPet-Simulator.Windows"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "nuget"
+    commit-message:
+      prefix: "deps:"
+    reviewers:
+      - "Amirwopi"
+
+  # NuGet packages in VPet-Simulator.Windows.Interface
+  - package-ecosystem: "nuget"
+    directory: "/VPet-Simulator.Windows.Interface"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "nuget"
+    commit-message:
+      prefix: "deps:"
+
+  # NuGet packages in VPet-Simulator.Core
+  - package-ecosystem: "nuget"
+    directory: "/VPet-Simulator.Core"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "nuget"
+    commit-message:
+      prefix: "deps:"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci:"
