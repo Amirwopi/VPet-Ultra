@@ -197,14 +197,15 @@ jobs:
           $size = [math]::Round((Get-Item "VPet-Ultra-Plugin.zip").Length / 1MB, 1)
           Write-Host "Plugin zip: $size MB"
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: VPet-Ultra-Build
-          path: |
-            VPet-Ultra-Full.zip
-            VPet-Ultra-Plugin.zip
-          retention-days: 30
+      # Skip artifact upload to avoid storage quota — use Release downloads instead
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: VPet-Ultra-Build
+      #     path: |
+      #       VPet-Ultra-Full.zip
+      #       VPet-Ultra-Plugin.zip
+      #     retention-days: 7
 
       - name: Upload to Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')
