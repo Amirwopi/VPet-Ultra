@@ -5,6 +5,61 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-08-04
+
+### Fixed — Critical
+- **Mod loading**: `0000_cognition` was missing `info.lps` — VPet requires this file to
+  recognize a mod folder. Without it, the mod loader skipped the folder entirely.
+  Now creates `info.lps` with `vupmod#Cognition` + metadata in CI and local build.
+- **Dependency filter**: CI now skips Panuon/Steam/NAudio/Skia DLLs (already in main app)
+
+### Added — Update System
+- `UpdateChecker`: checks GitHub releases API for latest version
+  - Compares local `version.txt` against latest release tag
+  - Downloads only Plugin zip (~50MB) not Full zip (914MB)
+  - Extracts and replaces `mod/0000_cognition/` files
+  - Updates `version.txt` after successful update
+- `version.txt` created in each build for version tracking
+
+### Added — Local Build
+- `build-local.ps1`: complete Windows build script (no CI needed)
+  - Restore + Build + Test + Publish + Package
+  - Produces `VPet-Ultra-Full-vX.Y.Z.zip` and `VPet-Ultra-Plugin-vX.Y.Z.zip`
+  - Auto-detects version from git tag
+
+### Added — UI Windows (4 new)
+- `EmotionDashboardWindow`: live 10-dimensional emotion bar chart (updates every 500ms)
+- `PersonalityWindow`: Big Five + adaptive traits + relationship + preferences
+- `MemoryInspectorWindow`: searchable memory list with GridView
+- `PermissionPromptWindow`: modal dialog (Deny / Allow Once / Allow Always)
+
+### Added — Voice Audio
+- `AudioCapture`: NAudio microphone capture (16kHz mono 16-bit, 10s chunks)
+  ChunkReady event for streaming STT integration, silence filtering
+- `AudioPlayer`: NAudio WAV playback with barge-in support
+  PlayAsync with CancellationToken, BargeInTriggered event
+- `EnergyWakeWordProvider`: energy-based VAD wake word detector
+  RMS energy calculation, threshold + min duration trigger
+
+### Added — Agent Infrastructure
+- `GoalPriorityQueue`: weighted priority formula
+- `GoalManager`: goal persistence + in-memory cache
+- `AgentScheduler`: periodic background tasks
+- Tool audit logging: `ExecuteToolCallAsync` writes to `CognitionStore` hash chain
+
+### Added — Security
+- `EgressFilterHandler`: HTTP delegating handler, blocks non-allowlisted domains (SSRF prevention)
+- `SecretResolver`: env var expansion (`${ENV_VAR}`) + Windows DPAPI encryption/decryption
+
+### Added — Integration
+- Likability bridge: syncs `GameSave.Likability` → personality `Relationship.Affection`
+- Emotion state restore: loads vector from `CognitionStore` JSON on startup
+- Tool audit log wired to `CognitionStore.LogToolInvocationAsync`
+
+### Changed
+- CI only runs on tags (saves storage quota)
+- Artifact upload skipped (use Release downloads)
+
 ## [0.2.0] — 2026-08-02
 
 ### Summary
