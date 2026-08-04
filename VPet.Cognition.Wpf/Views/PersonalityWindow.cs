@@ -162,7 +162,7 @@ public partial class PersonalityWindow : Window
     {
         var template = new DataTemplate();
         var sp = new FrameworkElementFactory(typeof(StackPanel));
-        sp.SetValue(StackPanel.OrientationProperty, StackOrientation.Horizontal);
+        sp.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
         sp.SetValue(StackPanel.MarginProperty, new Thickness(0, 1, 0, 1));
 
         var label = new FrameworkElementFactory(typeof(TextBlock));

@@ -107,7 +107,7 @@ public partial class EmotionDashboardWindow : Window
         var template = new DataTemplate(typeof(EmotionBar));
 
         var stackPanel = new FrameworkElementFactory(typeof(StackPanel));
-        stackPanel.SetValue(StackPanel.OrientationProperty, StackOrientation.Horizontal);
+        stackPanel.SetValue(StackPanel.OrientationProperty, Orientation.Horizontal);
         stackPanel.SetValue(StackPanel.MarginProperty, new Thickness(0, 2, 0, 2));
 
         // Label
