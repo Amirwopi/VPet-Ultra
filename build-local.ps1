@@ -1,4 +1,4 @@
-# VPet-Ultra Local Build Script for Windows
+﻿# VPet-Ultra Local Build Script for Windows
 # Builds the full solution + cognition plugin and packages into zip
 #
 # Usage:
@@ -220,8 +220,15 @@ Write-Host "  Created: models/, data/, logs/"
 # Copy documentation
 Copy-Item "INSTALL.md" -Destination $OutputDir -Force
 Copy-Item "TESTING.md" -Destination $OutputDir -Force
-Copy-Item "docs/MODELS.md" -Destination $OutputDir -Force
-Write-Host "  Copied: INSTALL.md, TESTING.md, MODELS.md"
+if (Test-Path "docs/MODELS.md") {
+    Copy-Item "docs/MODELS.md" -Destination $OutputDir -Force
+    Write-Host "  Copied: INSTALL.md, TESTING.md, MODELS.md"
+} elseif (Test-Path "wiki/AI-Models.md") {
+    Copy-Item "wiki/AI-Models.md" -Destination $OutputDir -Force
+    Write-Host "  Copied: INSTALL.md, TESTING.md, AI-Models.md"
+} else {
+    Write-Host "  Copied: INSTALL.md, TESTING.md (models doc not found)"
+}
 Write-Host "  OK" -ForegroundColor Green
 Write-Host ""
 
@@ -243,7 +250,11 @@ Copy-Item -Path $modPath -Destination "$pluginPath/mod/0000_cognition" -Recurse 
 Copy-Item -Path $appsettingsPath -Destination $pluginPath -Force
 Copy-Item "INSTALL.md" -Destination $pluginPath -Force
 Copy-Item "TESTING.md" -Destination $pluginPath -Force
-Copy-Item "docs/MODELS.md" -Destination $pluginPath -Force
+if (Test-Path "docs/MODELS.md") {
+    Copy-Item "docs/MODELS.md" -Destination $pluginPath -Force
+} elseif (Test-Path "wiki/AI-Models.md") {
+    Copy-Item "wiki/AI-Models.md" -Destination $pluginPath -Force
+}
 
 if (Test-Path $pluginZip) { Remove-Item $pluginZip -Force }
 Compress-Archive -Path "$pluginPath/*" -DestinationPath $pluginZip -Force
@@ -257,7 +268,7 @@ Write-Host ""
 
 # Done
 Write-Host "==========================================" -ForegroundColor Green
-Write-Host "  BUILD COMPLETE — v$Version" -ForegroundColor Green
+Write-Host "  BUILD COMPLETE - v$Version" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Output:" -ForegroundColor White
