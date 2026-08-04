@@ -76,6 +76,7 @@ namespace VPet_Simulator.Core
                     for (int i = 0; i < ig2.Count; i++)
                     {
                         IGraph ig3 = ig2[i];
+                        var timeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
                         while (!ig3.IsReady)
                         {
                             if (ig3.IsFail)
@@ -84,8 +85,13 @@ namespace VPet_Simulator.Core
                                 ig2.Remove(ig3);
                                 break;
                             }
-                            else
-                                await Task.Delay(100);
+                            if (timeoutCts.IsCancellationRequested)
+                            {
+                                ErrorMessage.Add($"Timeout waiting for graph: {ig3}");
+                                ig2.Remove(ig3);
+                                break;
+                            }
+                            await Task.Delay(100);
                         }
                     }
                 }
@@ -113,6 +119,7 @@ namespace VPet_Simulator.Core
                         IGraph ig3 = ig2[i];
                         tasks.Add(Task.Run(async () =>
                         {
+                            var timeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
                             while (!ig3.IsReady)
                             {
                                 if (ig3.IsFail)
@@ -120,6 +127,15 @@ namespace VPet_Simulator.Core
                                     lock (ErrorMessage)
                                     {
                                         ErrorMessage.Add(ig3.FailMessage);
+                                        ig2.Remove(ig3);
+                                    }
+                                    break;
+                                }
+                                if (timeoutCts.IsCancellationRequested)
+                                {
+                                    lock (ErrorMessage)
+                                    {
+                                        ErrorMessage.Add($"Timeout waiting for graph: {ig3}");
                                         ig2.Remove(ig3);
                                     }
                                     break;

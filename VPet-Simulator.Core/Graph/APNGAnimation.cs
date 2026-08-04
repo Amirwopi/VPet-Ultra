@@ -102,8 +102,15 @@ namespace VPet_Simulator.Core
 
         private async Task startup()
         {
+            var memTimeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             while (Function.MemoryUsage() > PNGAnimation.MaxLoadMemory)
             {
+                if (memTimeoutCts.IsCancellationRequested)
+                {
+                    IsFail = true;
+                    FailMessage = $"--APNGAnimation--{GraphInfo}--\nPath: {Path}\nTimeout waiting for memory to drop below {PNGAnimation.MaxLoadMemory}MB";
+                    return;
+                }
                 await Task.Delay(100);
             }
 
@@ -167,6 +174,14 @@ namespace VPet_Simulator.Core
             {
                 IsFail = true;
                 FailMessage = $"--APNGAnimation--{GraphInfo}--\nPath: {Path}\n{e.Message}";
+            }
+            finally
+            {
+                if (!IsReady && !IsFail)
+                {
+                    IsFail = true;
+                    FailMessage = $"--APNGAnimation--{GraphInfo}--\nPath: {Path}\nUnknown failure (neither ready nor failed)";
+                }
             }
         }
 

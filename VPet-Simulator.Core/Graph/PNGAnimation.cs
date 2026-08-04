@@ -107,8 +107,16 @@ namespace VPet_Simulator.Core
 
         private async void startup(string path, FileInfo[] paths)
         {
+            // Timeout: if memory is too high for too long, give up waiting
+            var memTimeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             while (Function.MemoryUsage() > MaxLoadMemory)
             {
+                if (memTimeoutCts.IsCancellationRequested)
+                {
+                    IsFail = true;
+                    FailMessage = $"--PNGAnimation--{GraphInfo}--\nPath: {path}\nTimeout waiting for memory to drop below {MaxLoadMemory}MB";
+                    return;
+                }
                 await Task.Delay(100);
             }
             try
@@ -223,6 +231,16 @@ namespace VPet_Simulator.Core
             {
                 IsFail = true;
                 FailMessage = $"--PNGAnimation--{GraphInfo}--\nPath: {path}\n{e.Message}";
+            }
+            finally
+            {
+                // Ensure the graph is marked as either ready or failed so
+                // Load_2_WaitGraph doesn't loop forever.
+                if (!IsReady && !IsFail)
+                {
+                    IsFail = true;
+                    FailMessage = $"--PNGAnimation--{GraphInfo}--\nPath: {path}\nUnknown failure (neither ready nor failed)";
+                }
             }
         }
 
