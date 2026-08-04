@@ -103,7 +103,15 @@ namespace VPet_Simulator.Windows
             Task.Run(async () =>
             {
                 List<DirectoryInfo> Path = new List<DirectoryInfo>();
-                Path.AddRange(new DirectoryInfo(ModPath).EnumerateDirectories());
+                try
+                {
+                    Path.AddRange(new DirectoryInfo(ModPath).EnumerateDirectories());
+                }
+                catch (Exception ex)
+                {
+                    // Log and continue if some mod directories are broken symlinks or inaccessible
+                    Console.WriteLine($"Warning: failed to enumerate mod directories: {ex.Message}");
+                }
 
                 bool NOCancel = true;
                 CancellationTokenSource source = new CancellationTokenSource();
