@@ -1,5 +1,6 @@
 using System.Windows;
 using VPet.Cognition.Domain.Abstractions;
+using VPet.Cognition.Domain.Entities;
 using VPet.Cognition.Wpf.Views;
 
 namespace VPet.Cognition.Wpf;
