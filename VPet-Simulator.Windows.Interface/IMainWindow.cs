@@ -27,18 +27,6 @@ namespace VPet_Simulator.Windows.Interface
         /// </summary>
         LPS_D Args { get; }
         /// <summary>
-        /// 是否为Steam用户
-        /// </summary>
-        bool IsSteamUser { get; }
-        /// <summary>
-        /// SteamID
-        /// </summary>
-        public ulong SteamID { get; }
-        /// <summary>
-        /// SteamAccountId
-        /// </summary>
-        public uint SteamAuthorID { get; }
-        /// <summary>
         /// 游戏设置
         /// </summary>
         ISetting Set { get; }
@@ -189,17 +177,6 @@ namespace VPet_Simulator.Windows.Interface
         /// 主窗体 Pet Grid
         /// </summary>
         Grid PetGrid { get; }
-        /// <summary>
-        /// 当创建/加入新的多人联机窗口(访客表)时触发
-        /// 如果你想写联机功能,请监听这个事件
-        /// </summary>
-        event Action<IMPWindows> MutiPlayerHandle;
-        /// <summary>
-        /// 当创建/加入新的多人联机窗口(访客表)时触发
-        /// 用于给MOD定义自己的联机窗口时准备的, 一般联机功能不需要调用这个
-        /// </summary>
-        /// <param name="mp"></param>
-        void MutiPlayerStart(IMPWindows mp);
 
         /// <summary>
         /// 显示吃东西(夹层)动画
@@ -263,12 +240,6 @@ namespace VPet_Simulator.Windows.Interface
         /// 动态资源, 用于给插件MOD存储共享的数据
         /// </summary>
         Dictionary<string, object> DynamicResources { get; }
-
-        /// <summary>
-        /// 生成授权码(仅用于LB相关服务验证)
-        /// </summary>
-        /// <returns></returns>
-        Task<int> GenerateAuthKey();
 
         /// <summary>
         /// 呼叫事件 Event_TakeItemHandle

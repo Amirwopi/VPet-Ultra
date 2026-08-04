@@ -173,12 +173,6 @@
 			<Generator>SettingsSingleFileGenerator</Generator>
 			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
 		</None>
-		<None Update="steam_api.dll">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="steam_api64.dll">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
 		<EmbeddedResource Update="Properties\Resources.resx">
 			<Generator>ResXFileCodeGenerator</Generator>
 			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -229,8 +223,6 @@
 	  <Resource Include="Res\img\r_worktime_6.png" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="Facepunch.Steamworks" Condition="'$(Platform)' == 'x64'" Version="2.3.3" />
-		<PackageReference Include="Facepunch.Steamworks.win32" Condition="'$(Platform)' == 'x86'" Version="2.3.3" />
 		<PackageReference Include="LinePutScript" Version="1.11.9" />
 		<PackageReference Include="LinePutScript.Localization.WPF" Version="1.0.7" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />

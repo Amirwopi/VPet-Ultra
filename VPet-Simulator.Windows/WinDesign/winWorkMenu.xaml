@@ -78,7 +78,7 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <CheckBox x:Name="cbDIYName" ToolTip="{ll:Str '自定义显示的名称,会在Steam好友列表显示\&#13;让桌宠和你一起干活,学习和玩耍'}"
+                        <CheckBox x:Name="cbDIYName" ToolTip="{ll:Str '自定义显示的名称\&#13;让桌宠和你一起干活,学习和玩耍'}"
                                 Checked="cbDIYName_Checked" Unchecked="cbDIYName_Checked">
                             <TextBox x:Name="tbDIYName" FontSize="14" pu:IconHelper.Margin="5,0,0,0" Width="180" Height="22"
                                     MaxLength="100" IsEnabled="{Binding IsChecked, ElementName=cbDIYName}"

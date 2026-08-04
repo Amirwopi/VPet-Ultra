@@ -2,8 +2,6 @@
 using LinePutScript.Dictionary;
 using LinePutScript.Localization.WPF;
 using Panuon.WPF.UI;
-using Steamworks;
-using Steamworks.Data;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -85,27 +83,6 @@ namespace VPet_Simulator.Windows
             CultureInfo.CurrentCulture = new CultureInfo(CultureInfo.CurrentCulture.Name);
             CultureInfo.CurrentCulture.NumberFormat = new CultureInfo("en-US").NumberFormat;
 
-
-            //判断是不是Steam用户,因为本软件会发布到Steam
-            //在 https://store.steampowered.com/app/1920960/VPet
-            try
-            {
-#if DEMO
-                SteamClient.Init(2293870, true);
-#else
-                SteamClient.Init(1920960, true);
-#endif
-                SteamClient.RunCallbacks();
-                IsSteamUser = SteamClient.IsValid;
-                ////同时看看有没有买dlc,如果有就添加dlc按钮
-                //if (Steamworks.SteamApps.IsDlcInstalled(1386450))
-                //  dlcToolStripMenuItem.Visible = true;
-            }
-            catch
-            {
-                IsSteamUser = false;
-            }
-
             //更新存档系统
             if (Directory.Exists(ExtensionValue.BaseDirectory + @"\BackUP"))
             {
@@ -137,56 +114,11 @@ namespace VPet_Simulator.Windows
                 CancellationTokenSource source = new CancellationTokenSource();
                 var tsk = Task.Run(async () =>
                 {
-                    if (IsSteamUser)//如果是steam用户,尝试加载workshop
+                    //非Steam版本: 仅从本地设置加载workshop路径
+                    var workshop = Set["workshop"];
+                    foreach (Sub ws in workshop)
                     {
-                        //Leaderboard? leaderboard = await SteamUserStats.FindLeaderboardAsync("chatgpt_auth");
-                        //leaderboard?.ReplaceScore(Function.Rnd.Next());
-                        var workshop = new Line_D("workshop");
-                        await Dispatcher.InvokeAsync(new Action(() =>
-                        {
-                            LoadingText.Content = "Loading Steam Workshop\nDouble Click To Skip";
-                            LoadingText.MouseDoubleClick += (_, _) =>
-                            {
-                                if ((string)LoadingText.Content == "Loading Steam Workshop\nDouble Click To Skip")
-                                {
-                                    NOCancel = false;
-                                }
-                            };
-                        }));
-                        int i = 1;
-                        while (true)
-                        {
-                            var page = await Steamworks.Ugc.Query.ItemsReadyToUse.GetPageAsync(i++);
-                            if (page.HasValue && page.Value.ResultCount != 0)
-                            {
-                                foreach (Steamworks.Ugc.Item entry in page.Value.Entries)
-                                {
-                                    if (!NOCancel)
-                                    {
-                                        return;
-                                    }
-                                    if (entry.Directory != null)
-                                    {
-                                        Path.Add(new DirectoryInfo(entry.Directory));
-                                        workshop.Add(new Sub(entry.Directory, ""));
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                break;
-                            }
-                        }
-                        if (workshop.Count != 0)
-                            Set["workshop"] = workshop;
-                    }
-                    else
-                    {
-                        var workshop = Set["workshop"];
-                        foreach (Sub ws in workshop)
-                        {
-                            Path.Add(new DirectoryInfo(ws.Name));
-                        }
+                        Path.Add(new DirectoryInfo(ws.Name));
                     }
                 }, source.Token);
 
@@ -244,100 +176,6 @@ namespace VPet_Simulator.Windows
                     Set["CGPT"][(gstr)"type"] = "LB";
 
                 await GameLoad(Path);
-                if (IsSteamUser)
-                {
-                    //COD Check
-                    if (!Set["v"][(gbol)"CODC"])
-                    {
-                        var di = new DirectoryInfo(ExtensionValue.BaseDirectory).Parent;
-                        if (di.Exists && di.GetDirectories("*Call of Duty*").Length != 0)
-                        {
-                            Dispatcher.Invoke(() => NoticeBox.Show("检测到游戏库中包含使命召唤,建议不要在运行COD时运行桌宠\n根据社区反馈, COD可能会误报桌宠为作弊软件".Translate(),
-                                "Call of Duty Check"));
-                        }
-                        Set["v"][(gbol)"CODC"] = true;
-                    }
-                    Set.SteamID = (long)SteamID;
-                    Dispatcher.Invoke(() =>
-                    {
-                        var menuItem = new MenuItem()
-                        {
-                            Header = "访客表".Translate(),
-                            HorizontalContentAlignment = HorizontalAlignment.Center
-                        };
-                        Main.ToolBar.MenuInteract.Items.Add(menuItem);
-
-                        var menuCreate = new MenuItem()
-                        {
-                            Header = "创建".Translate(),
-                            HorizontalContentAlignment = HorizontalAlignment.Center
-                        };
-                        menuCreate.Click += (_, _) =>
-                        {
-                            if (winMutiPlayer == null)
-                            {
-                                winMutiPlayer = new winMutiPlayer(this);
-                                winMutiPlayer.Show();
-                            }
-                            else
-                            {
-                                MessageBoxX.Show("已经有加入了一个访客表,无法再创建更多".Translate());
-                                winMutiPlayer.Focus();
-                            }
-                        };
-                        menuItem.Items.Add(menuCreate);
-
-                        var menuJoin = new MenuItem()
-                        {
-                            Header = "加入".Translate(),
-                            HorizontalContentAlignment = HorizontalAlignment.Center
-                        };
-                        menuJoin.Click += (_, _) =>
-                        {
-                            if (winMutiPlayer == null)
-                            {
-                                winInputBox.Show(this, "请输入访客表ID/固定ID".Translate(), "加入访客表".Translate(), "1860000", async (id) =>
-                                {
-                                    if (ulong.TryParse(id, NumberStyles.HexNumber, null, out ulong lid))
-                                    {
-                                        winMutiPlayer = new winMutiPlayer(this, lid);
-                                        winMutiPlayer.Show();
-                                    }
-                                    else if ((id.StartsWith('V') || id.StartsWith('v')) && int.TryParse(id[1..], out int fixedid))
-                                    {
-                                        if (ulong.TryParse(await GetVPetRoom("SteamRoomGetLobbyID", fixID: fixedid), out lid) && lid > 1860000)
-                                        {
-                                            winMutiPlayer = new winMutiPlayer(this, lid);
-                                            winMutiPlayer.Show();
-                                        }
-                                        else
-                                        {
-                                            MessageBoxX.Show("未找到该固定ID,请检查输入".Translate());
-                                        }
-                                    }
-                                });
-                            }
-                            else
-                            {
-                                MessageBoxX.Show("已经有加入了一个访客表,无法再创建更多".Translate());
-                                winMutiPlayer.Focus();
-                            }
-                        };
-                        menuItem.Items.Add(menuJoin);
-
-                        int clid = Array.IndexOf(App.Args, "+connect_lobby");
-                        if (clid != -1)
-                        {
-                            if (ulong.TryParse(App.Args[clid + 1], out ulong lid))
-                            {
-                                winMutiPlayer = new winMutiPlayer(this, lid);
-                                winMutiPlayer.Show();
-                            }
-                        }
-                    });
-                    SteamMatchmaking.OnLobbyInvite += SteamMatchmaking_OnLobbyInvite;
-                    SteamFriends.OnGameLobbyJoinRequested += SteamFriends_OnGameLobbyJoinRequested;
-                }
 
 
                 //这里写的都是限定第一个MW使用的功能, 如果写共通, 请前往
@@ -421,79 +259,10 @@ namespace VPet_Simulator.Windows
                               return true;
                       }
                       return false;
-                  }]);
+                   }]);
             });
         }
 
-        private void SteamFriends_OnGameLobbyJoinRequested(Lobby lobby, SteamId id)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                if (winMutiPlayer == null)
-                {
-                    winMutiPlayer = new winMutiPlayer(this, lobby.Id.Value);
-                    winMutiPlayer.Show();
-                }
-                else
-                {
-                    MessageBoxX.Show("已经有加入了一个访客表,无法再创建更多".Translate());
-                    winMutiPlayer.Focus();
-                }
-            });
-        }
-
-        private void SteamMatchmaking_OnLobbyInvite(Friend friend, Lobby lobby)
-        {
-            if (Set["banuser"][(gbol)friend.Id.Value.ToString()])
-                return;
-            if (!friend.IsPlayingThisGame)
-            {
-                ActivityLogs.Add(new ActivityLog("stream_invite_other", friend.Name));
-                var tb = new TextBlock() { Text = "SID:" + friend.Id.Value, FontSize = 18, ToolTip = "SID:" + friend.Id.Value };
-                Button btn = new Button();
-                btn.Content = "屏蔽该用户".Translate();
-                btn.Style = FindResource("ThemedButtonStyle") as Style;
-                btn.FontSize = 18;
-                btn.Padding = new Thickness(2, 0, 2, 0);
-                btn.Margin = new Thickness(3, 0, 0, 0);
-                btn.Click += (_, _) =>
-                {
-                    Set["banuser"][(gbol)friend.Id.Value.ToString()] = true;
-                    Main.MsgBar.ForceClose();
-                };
-                var stackpanal = new StackPanel() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
-                stackpanal.Children.Add(tb);
-                stackpanal.Children.Add(btn);
-                Main.Say("你的好友{0}邀请你玩游戏,快去回应ta吧".Translate(friend.Name), msgcontent: stackpanal);
-                return;
-            }
-
-            Dispatcher.Invoke(() =>
-            {
-                Button btn = new Button();
-                btn.Content = "加入访客表".Translate();
-                btn.Style = FindResource("ThemedButtonStyle") as Style;
-                btn.Click += (_, _) =>
-                {
-                    if (winMutiPlayer == null)
-                    {
-                        winMutiPlayer = new winMutiPlayer(this, lobby.Id);
-                        winMutiPlayer.Show();
-                        Main.MsgBar.ForceClose();
-                    }
-                    else
-                    {
-                        MessageBoxX.Show("已经有加入了一个访客表,无法再创建更多".Translate());
-                        winMutiPlayer.Focus();
-                    }
-                };
-                ActivityLogs.Add(new ActivityLog("stream_invite_vpet", friend.Name));
-                Main.Say("收到来自{0}的访客邀请,是否加入?".Translate(friend.Name), msgcontent: btn);
-            });
-        }
-
-
-        internal winMutiPlayer winMutiPlayer;
 
         public new void Close()
         {
@@ -577,15 +346,7 @@ namespace VPet_Simulator.Windows
                     winBetterBuy?.Close();
                     winWorkMenu?.Close();
                     winGallery?.Close();
-                    if (winMutiPlayer != null)
-                    {
-                        winMutiPlayer.lb.Leave();
-                        winMutiPlayer.lb = default;
-                        winMutiPlayer.Close();
-                    }
 
-                    if (IsSteamUser)
-                        SteamClient.Shutdown();//关掉和Steam的连线
                     if (notifyIcon != null)
                     {
                         notifyIcon.Visible = false;
@@ -627,12 +388,6 @@ namespace VPet_Simulator.Windows
                 winBetterBuy?.Close();
                 winWorkMenu?.Close();
                 winGallery?.Close();
-                if (winMutiPlayer != null)
-                {
-                    winMutiPlayer.lb.Leave();
-                    winMutiPlayer.lb = default;
-                    winMutiPlayer.Close();
-                }
                 App.MainWindows.Remove(this);
                 if (notifyIcon != null)
                 {
@@ -906,23 +661,6 @@ namespace VPet_Simulator.Windows
         public void ShowInputBox(string title, string text, string defaulttext, Action<string> ENDAction, bool AllowMutiLine = false, bool TextCenter = true, bool CanHide = false)
         {
             winInputBox.Show(this, title, text, defaulttext, ENDAction, AllowMutiLine, TextCenter, CanHide);
-        }
-        /// <summary>
-        /// 从VPET服务器获取访客表相关信息的接口
-        /// </summary>
-        public async Task<string> GetVPetRoom(string action, int fixID = 0, ulong lobbyid = 0)
-        {
-            var checkkey = await GenerateAuthKey();
-            string RequestURL = $"https://report.exlb.net/VPET/{action}?hoststeamid={SteamID}&fixid={fixID}&lobbyid={lobbyid}&checkkey={checkkey}";
-            using System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
-            try
-            {
-                return client.GetStringAsync(RequestURL).Result;
-            }
-            catch (Exception e)
-            {
-                return e.Message;
-            }
         }
     }
 }

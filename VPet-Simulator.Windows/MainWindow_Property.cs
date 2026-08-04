@@ -1,6 +1,5 @@
 ﻿using LinePutScript.Dictionary;
 using LinePutScript.Localization.WPF;
-using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,14 +25,6 @@ public partial class MainWindow
     /// 版本号
     /// </summary>
     public string Version => $"{version / 10000}.{version % 10000 / 100}.{version % 100:00}";
-    /// <summary>
-    /// SteamID
-    /// </summary>
-    public ulong SteamID => IsSteamUser ? SteamClient.SteamId.Value : 0;
-    /// <summary>
-    /// SteamIDAccountId
-    /// </summary>
-    public uint SteamAuthorID => IsSteamUser ? SteamClient.SteamId.AccountId : 0;
     public List<LowText> LowFoodText { get; set; } = new List<LowText>();
 
     public List<LowText> LowDrinkText { get; set; } = new List<LowText>();
@@ -50,7 +41,7 @@ public partial class MainWindow
     public GameSave_v2 GameSavesData { get; set; }
 
     public readonly string ModPath = ExtensionValue.BaseDirectory + @"\mod";
-    public bool IsSteamUser { get; }
+    public bool IsSteamUser { get; } = false;
     public LPS_D Args { get; }
     public string PrefixSave { get; } = "";
     private string prefixsavetrans = null;

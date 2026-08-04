@@ -86,38 +86,6 @@ namespace VPet_Simulator.Windows
             else
                 mw.Main.Say(SayTextBox.Text, CombSay.Text, true);
         }
-        private void SaySteam_Click(object sender, RoutedEventArgs e)
-        {
-            var sayinfosteam = new SayInfoWithStream();
-            if (string.IsNullOrWhiteSpace(CombSay.Text))
-                mw.Main.SayRnd(sayinfosteam);
-            else
-                mw.Main.Say(sayinfosteam);
-
-            // 将 SayTextBox.Text 按每段3-5个字切分到 str 里
-            List<string> str = new List<string>();
-            string text = SayTextBox.Text;
-            Random rand = new Random();
-            int idx = 0;
-            while (idx < text.Length)
-            {
-                int len = rand.Next(3, 6); // 3-5个字
-                if (idx + len > text.Length)
-                    len = text.Length - idx;
-                str.Add(text.Substring(idx, len));
-                idx += len;
-            }
-
-            Task.Run(() =>
-            {
-                foreach (var v in str)
-                {
-                    sayinfosteam.UpdateText(v);
-                    System.Threading.Thread.Sleep(rand.Next(30, 300));
-                }
-                sayinfosteam.FinishGenerate();
-            });
-        }
         Timer DestanceTimer = new Timer()
         {
             AutoReset = true,

@@ -1,7 +1,6 @@
 ﻿using LinePutScript;
 using LinePutScript.Dictionary;
 using LinePutScript.Localization.WPF;
-using Steamworks;
 using System;
 using System.Windows;
 using VPet_Simulator.Core;
@@ -338,14 +337,6 @@ namespace VPet_Simulator.Windows
             set => this["gameconfig"].SetBool("startboot", value);
         }
         /// <summary>
-        /// 开机启动 Steam
-        /// </summary>
-        public bool StartUPBootSteam
-        {
-            get => !this["gameconfig"].GetBool("startbootsteam");
-            set => this["gameconfig"].SetBool("startbootsteam", !value);
-        }
-        /// <summary>
         /// 桌宠选择内容
         /// </summary>
         public string PetGraph
@@ -534,12 +525,6 @@ namespace VPet_Simulator.Windows
             set => this["gameconfig"].SetInt("gamescreenindex", value);
         }
 
-        public long SteamID
-        {
-            get => this[(gi64)"steamid"];
-            set => this[(gi64)"steamid"] = value;
-        }
-
         /// <summary>
         /// 读写自定义游戏设置(给mod准备的接口)
         /// </summary>
@@ -595,8 +580,6 @@ namespace VPet_Simulator.Windows
             if (ischangename)
             {
                 mw.Core.Save.Name = petloader.PetName.Translate();
-                if (mw.IsSteamUser)
-                    SteamFriends.SetRichPresence("username", mw.Core.Save.Name);
             }
         }
 

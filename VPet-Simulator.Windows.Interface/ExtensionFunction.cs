@@ -284,13 +284,6 @@ namespace VPet_Simulator.Windows.Interface
                 ["NAudio.WinMM"] = "License: MIT | Copyright © Mark Heath",
                 ["NAudio.SoundFont"] = "License: MIT | Copyright © Mark Heath",
 
-                ["Steamworks"] = "License: MIT | Copyright © Facepunch Studios LTD",
-                ["Steamworks.Ugc"] = "License: MIT | Copyright © Facepunch Studios LTD",
-                ["Facepunch.Steamworks.Win32"] = "License: MIT | Copyright © Facepunch Studios LTD",
-                ["Facepunch.Steamworks.Win64"] = "License: MIT | Copyright © Facepunch Studios LTD",
-                ["steam_api"] = "License: Proprietary | Copyright © Valve Corporation",
-                ["steam_api64"] = "License: Proprietary | Copyright © Valve Corporation",
-
                 ["Panuon.WPF"] = "License: Apache-2.0 | Copyright © Panuon",
                 ["Panuon.WPF.UI"] = "License: Apache-2.0 | Copyright © Panuon",
                 ["SkiaSharp"] = "License: MIT | Copyright © Xamarin, Inc. / Microsoft Corporation",

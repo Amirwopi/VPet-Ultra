@@ -24,8 +24,8 @@ namespace VPet_Simulator.Windows
 
         public static HashSet<string> LoadedDLL { get; } = new HashSet<string>()
         {
-            "Panuon.WPF.dll","steam_api.dll","Panuon.WPF.UI.dll","steam_api64.dll",
-            "LinePutScript.dll","Facepunch.Steamworks.Win32.dll", "Facepunch.Steamworks.Win64.dll",
+            "Panuon.WPF.dll","Panuon.WPF.UI.dll",
+            "LinePutScript.dll",
             "VPet-Simulator.Core.dll","VPet-Simulator.Windows.Interface.dll","LinePutScript.Localization.WPF.dll",
             "NAudio.Asio.dll", "libSkiaSharp.dll","NAudio.Core.dll","NAudio.dll", "SkiaSharp.dll","NAudio.Midi.dll",
             "NAudio.Wasapi.dll","NAudio.WinForms.dll", "NAudio.WinMM.dll", "WpfAnimatedGif.dll"

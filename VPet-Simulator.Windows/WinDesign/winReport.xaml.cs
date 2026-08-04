@@ -35,13 +35,6 @@ namespace VPet_Simulator.Windows
                 tContent.Text = errmsg;
                 tContent.IsReadOnly = true;
             }
-
-            if (!mw.IsSteamUser)
-            {
-                MessageBoxX.Show("您不是Steam用户，无法使用反馈中心\n欢迎加入虚拟主播模拟器群430081239反馈问题".Translate(),
-                    "非Steam用户无法使用反馈中心".Translate(), MessageBoxButton.OK, MessageBoxIcon.Info);
-                btn_Report.IsEnabled = false;
-            }
         }
 
         private void Timer_Elapsed(object sender, ElapsedEventArgs e)
@@ -64,11 +57,6 @@ namespace VPet_Simulator.Windows
                 MessageBoxX.Show("问题详细描述是反馈具体问题\n例如如何触发这个报错,游戏有什么地方不合理等".Translate(), "请填写问题描述".Translate());
                 return;
             }
-            if (!mw.IsSteamUser)
-            {
-                MessageBoxX.Show("您不是Steam用户，无法使用反馈中心\n欢迎加入虚拟主播模拟器群430081239反馈问题".Translate(), "非Steam用户无法使用反馈中心".Translate(), MessageBoxButton.OK, MessageBoxIcon.Info);
-                return;//不遥测非Steam用户
-            }
             MainGrid.IsEnabled = false;
             pgload.Value = 0;
             gridLoading.Visibility = Visibility.Visible;
@@ -85,7 +73,6 @@ namespace VPet_Simulator.Windows
             sb.Append("&description=" + HttpUtility.UrlEncode(tDescription.Text));
             sb.Append("&content=" + HttpUtility.UrlEncode(tContent.Text));
             sb.Append("&contact=" + HttpUtility.UrlEncode(tContact.Text));
-            sb.Append($"&steamid={Steamworks.SteamClient.SteamId.Value}");
             sb.Append($"&ver={mw.version}&repver=3&lang={LocalizeCore.CurrentCulture}");
             sb.Append("&save=");
             sb.Append(HttpUtility.UrlEncode(save));

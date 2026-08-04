@@ -83,9 +83,6 @@
                 <CheckBox x:Name="cb_NoCheat" Content="{ll:Str '未使用过作弊模组和修改游戏数据'}" Margin="5,2"
                         BorderBrush="{DynamicResource DARKPrimary}" pu:CheckBoxHelper.CornerRadius="4" IsEnabled="False"
                         Unchecked="cb_NoCheat_Unchecked" />
-                <CheckBox x:Name="cb_AgreeUpload" Content="{ll:Str '同意上传统计数据至Steam排行榜'}" Margin="5,2"
-                        BorderBrush="{DynamicResource DARKPrimary}" pu:CheckBoxHelper.CornerRadius="4" Grid.Row="1"
-                        IsEnabled="False" Checked="cb_AgreeUpload_Checked" />
                 <ScrollViewer Grid.Row="2" Grid.ColumnSpan="2" x:Name="r_viewbox" Visibility="Collapsed">
                     <Viewbox x:Name="r_output">
                         <Grid x:Name="r_output_base">

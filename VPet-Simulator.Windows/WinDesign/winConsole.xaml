@@ -81,7 +81,6 @@
                         AcceptsReturn="True" TextWrapping="Wrap" />
                 <Button VerticalAlignment="Bottom" Click="Say_Click" Content="{ll:Str 说话}" FontSize="24"
                         Margin="0,0,0,32" />
-                <Button VerticalAlignment="Bottom" Click="SaySteam_Click" Content="{ll:Str 流式说话测试}" FontSize="24" />
             </Grid>
         </TabItem>
         <TabItem Header="{ll:Str 距离查看器}">

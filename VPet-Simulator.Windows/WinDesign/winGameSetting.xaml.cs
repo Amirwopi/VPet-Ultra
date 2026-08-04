@@ -2,8 +2,6 @@
 using LinePutScript.Localization.WPF;
 using NAudio.SoundFont;
 using Panuon.WPF.UI;
-using Steamworks;
-using Steamworks.Ugc;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,7 +21,6 @@ using System.Windows.Threading;
 using VPet_Simulator.Core;
 using VPet_Simulator.Windows.Interface;
 using static VPet_Simulator.Windows.Win32;
-using Item = Steamworks.Ugc.Item;
 
 namespace VPet_Simulator.Windows
 {
@@ -75,7 +72,6 @@ namespace VPet_Simulator.Windows
             ConsoleBox.IsChecked = mw.Set.DeBug;
 
             StartUpBox.IsChecked = mw.Set.StartUPBoot;
-            StartUpSteamBox.IsChecked = mw.Set.StartUPBootSteam;
             TextBoxPetName.Text = mw.Core.Save.Name;
             foreach (PetLoader pl in mw.Pets)
             {
@@ -190,18 +186,9 @@ namespace VPet_Simulator.Windows
             GameVerison.Content = "游戏版本".Translate() + $"v{mw.Version} x86";
 #endif
             //关于ui
-            if (mw.IsSteamUser)
-            {
-                runUserName.Text = SteamClient.Name;
-                runActivate.Text = "已通过Steam[{0}]激活服务注册".Translate(SteamClient.SteamId.Value.ToString("x").Substring(6));
-                run_BC.Text = "前往 更好买:贡献兑换".Translate();
-            }
-            else
-            {
-                runUserName.Text = Environment.UserName;
-                runActivate.Text = "尚未激活 您可能需要启动Steam或去Steam上免费领个".Translate();
-                btn_fixdata.Visibility = Visibility.Collapsed;
-            }
+            runUserName.Text = Environment.UserName;
+            runActivate.Text = "独立运行模式".Translate();
+            btn_fixdata.Visibility = Visibility.Collapsed;
             //CGPT
             if (mw.TalkAPI.Count > 0)
             {
@@ -457,46 +444,6 @@ namespace VPet_Simulator.Windows
                 ButtonEnable.IsEnabled = false;
                 ButtonDisEnable.IsEnabled = true;
             }
-            //发布steam等功能
-            if (mw.IsSteamUser)
-            {
-                if (mod.ItemID == 1)
-                {
-                    ButtonSteam.IsEnabled = false;
-                    ButtonPublish.Text = "系统自带".Translate();
-                    ButtonSteam.Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100));
-                }
-                else if (mod.ItemID == 0)
-                {
-                    ButtonSteam.IsEnabled = false;
-                    ButtonPublish.Text = "上传至Steam".Translate();
-                    ButtonSteam.Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100));
-                }
-                else
-                {
-                    ButtonSteam.IsEnabled = true;
-                    ButtonPublish.Text = "更新至Steam".Translate();
-                    ButtonSteam.Foreground = Function.ResourcesBrush(Function.BrushType.DARKPrimaryDarker);
-                }
-                if (mod.ItemID != 1 && (mod.AuthorID == SteamClient.SteamId.AccountId || mod.AuthorID == 0))
-                {
-                    ButtonPublish.IsEnabled = true;
-                    ButtonPublish.Foreground = Function.ResourcesBrush(Function.BrushType.DARKPrimaryDarker);
-                }
-                else
-                {
-                    ButtonPublish.IsEnabled = false;
-                    ButtonPublish.Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100));
-                }
-            }
-            else
-            {
-                ButtonSteam.IsEnabled = false;
-                ButtonPublish.Text = "未登录".Translate();
-                ButtonPublish.IsEnabled = false;
-                ButtonPublish.Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100));
-                ButtonSteam.Foreground = new SolidColorBrush(Color.FromRgb(100, 100, 100));
-            }
             runMODVer.Text = CoreMOD.INTtoVER(mod.Ver);
             GameInfo.Text = mod.Intro.Translate();
             string content = "";
@@ -628,129 +575,6 @@ namespace VPet_Simulator.Windows
             ShowMod(mod.Name);
             ButtonRestart.Visibility = Visibility.Visible;
             ShowModList();
-        }
-        class ProgressClass : IProgress<float>
-        {
-            float lastvalue = 0;
-            ProgressBar pb;
-            public ProgressClass(ProgressBar p) => pb = p;
-            public void Report(float value)
-            {
-                if (lastvalue >= value) return;
-                lastvalue = value;
-                pb.Dispatcher.Invoke(new Action(() => pb.Value = (int)(lastvalue * 100)));
-            }
-        }
-        private async void ButtonPublish_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            var mods = mod;
-            if (!mw.IsSteamUser)
-            {
-                MessageBoxX.Show("请先登录Steam后才能上传文件".Translate(), "上传MOD需要Steam登录".Translate(), MessageBoxIcon.Warning);
-                return;
-            }
-            if (CoreMOD.OnModDefList.Contains(mods.Name))
-            {
-                MessageBoxX.Show("模组 Core 为<虚拟桌宠模拟器>核心文件,无法发布\n如需发布自定义内容,请复制并更改名称".Translate(), "MOD上传失败".Translate(), MessageBoxIcon.Error);
-                return;
-            }
-            if (mods.Path.FullName.Contains("workshop"))
-            {
-                MessageBoxX.Show("创意工坊物品无法进行上传,请移动到mod文件夹后重试".Translate(), "MOD上传失败".Translate(), MessageBoxIcon.Error);
-                return;
-            }
-            if (!File.Exists(mods.Path.FullName + @"\icon.png") || new FileInfo(mods.Path.FullName + @"\icon.png").Length > 524288)
-            {
-                MessageBoxX.Show("封面图片(icon.png)大于500kb,请修改后重试".Translate(), "MOD上传失败".Translate(), MessageBoxIcon.Error);
-                return;
-            }
-            mods.GameVer = mw.version;
-            mods.WriteFile();
-#if DEMO
-            MessageBoxX.Show("经测试,除正式版均无创意工坊权限,此功能仅作为展示", "特殊版无法上传创意工坊");
-#endif
-            ButtonPublish.IsEnabled = false;
-            ButtonPublish.Text = "正在上传".Translate();
-            ProgressBarUpload.Visibility = Visibility.Visible;
-            ProgressBarUpload.Value = 0;
-            if (mods.ItemID == 0)
-            {
-                var result = Editor.NewCommunityFile
-                        .WithTitle(mods.Name)
-                        .WithDescription(mods.Intro)
-                        .WithPublicVisibility()
-                        .WithPreviewFile(mods.Path.FullName + @"\icon.png")
-                        .WithContent(mods.Path.FullName);
-                foreach (string tag in mods.Tag)
-                    result = result.WithTag(tag);
-                var r = await result.SubmitAsync(new ProgressClass(ProgressBarUpload));
-                mods.AuthorID = SteamClient.SteamId.AccountId;
-                mods.WriteFile();
-                if (r.Success)
-                {
-                    mods.ItemID = r.FileId.Value;
-                    mods.WriteFile();
-                    //ProgressBarUpload.Value = 0;
-                    //await result.SubmitAsync(new ProgressClass(ProgressBarUpload));
-                    if (MessageBoxX.Show("{0} 成功上传至WorkShop服务器\n是否跳转至创意工坊页面进行编辑详细介绍和图标?".Translate(mods.Name), "MOD上传成功".Translate(), MessageBoxButton.YesNo, MessageBoxIcon.Success) == MessageBoxResult.Yes)
-                    {
-                        ExtensionFunction.StartURL("https://steamcommunity.com/sharedfiles/filedetails/?id=" + r.FileId);
-                    }
-                }
-                else
-                {
-                    mods.AuthorID = 0; mods.WriteFile();
-                    MessageBoxX.Show("{0} 上传至WorkShop服务器失败\n请检查网络后重试\n请注意:上传和下载工坊物品可能需要良好的网络条件\n失败原因:{1}"
-                        .Translate(mods.Name, r.Result), "MOD上传失败 {0}".Translate(r.Result));
-                }
-            }
-            else if (mods.AuthorID == SteamClient.SteamId.AccountId)
-            {
-                var item = await Item.GetAsync(mod.ItemID);
-                Editor result;
-                if (item == null)
-                {
-                    result = new Editor(new Steamworks.Data.PublishedFileId() { Value = mods.ItemID })
-                        .WithTitle(mods.Name)
-                        .WithDescription(mods.Intro)
-                        .WithPreviewFile(mods.Path.FullName + @"\icon.png")
-                        .WithContent(mods.Path);
-                }
-                else
-                {
-                    result = new Editor(new Steamworks.Data.PublishedFileId() { Value = mods.ItemID })
-                        .WithTitle(item.Value.Title)
-                        .WithDescription(item.Value.Description)
-                        .WithPreviewFile(mods.Path.FullName + @"\icon.png")
-                        .WithContent(mods.Path);
-                }
-
-                foreach (string tag in mods.Tag)
-                    result = result.WithTag(tag);
-                var r = await result.SubmitAsync(new ProgressClass(ProgressBarUpload));
-                if (r.Success)
-                {
-                    mods.AuthorID = SteamClient.SteamId.AccountId;
-                    mods.ItemID = r.FileId.Value;
-                    mods.WriteFile();
-                    if (MessageBoxX.Show("{0} 成功上传至WorkShop服务器\n是否跳转至创意工坊页面进行编辑新内容?".Translate(mods.Name)
-                        , "MOD更新成功".Translate(), MessageBoxButton.YesNo, MessageBoxIcon.Success) == MessageBoxResult.Yes)
-                        ExtensionFunction.StartURL("https://steamcommunity.com/sharedfiles/filedetails/?id=" + r.FileId);
-                }
-                else
-                    MessageBoxX.Show("{0} 上传至WorkShop服务器失败\n请检查网络后重试\n请注意:上传和下载工坊物品可能需要良好的网络条件\n失败原因:{1}"
-                        .Translate(mods.Name, r.Result), "MOD上传失败 {0}".Translate(r.Result));
-            }
-            ButtonPublish.IsEnabled = true;
-            ButtonPublish.Text = "任务完成".Translate();
-            ProgressBarUpload.Visibility = Visibility.Collapsed;
-        }
-
-        private void ButtonSteam_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (!AllowChange)
-                return;
-            ExtensionFunction.StartURL("https://steamcommunity.com/sharedfiles/filedetails/?id=" + mod.ItemID);
         }
 
         private void ButtonAllow_Click(object sender, RoutedEventArgs e)
@@ -890,11 +714,6 @@ namespace VPet_Simulator.Windows
             ExtensionFunction.StartURL("https://github.com/LorisYounger/VPet/graphs/contributors");
         }
 
-        private void Steam_Click(object sender, RoutedEventArgs e)
-        {
-            ExtensionFunction.StartURL("https://store.steampowered.com/app/1920960/_/");
-        }
-
         private void Github_Click(object sender, RoutedEventArgs e)
         {
             ExtensionFunction.StartURL("https://github.com/LorisYounger/VPet");
@@ -971,13 +790,7 @@ namespace VPet_Simulator.Windows
                 if (File.Exists(path))
                     File.Delete(path);
                 var link = (IShellLink)new ShellLink();
-                if (mw.Set.StartUPBootSteam)
-                {
-                    link.SetPath(ExtensionValue.BaseDirectory + @"\VPet.Solution.exe");
-                    link.SetArguments("launchsteam");
-                }
-                else
-                    link.SetPath(System.Reflection.Assembly.GetExecutingAssembly().Location.Replace(".dll", ".exe"));
+                link.SetPath(System.Reflection.Assembly.GetExecutingAssembly().Location.Replace(".dll", ".exe"));
 
                 link.SetDescription("VPet Simulator");
                 link.SetIconLocation(ExtensionValue.BaseDirectory + @"vpeticon.ico", 0);
@@ -1016,14 +829,6 @@ namespace VPet_Simulator.Windows
             //}
 
             mw.Set.StartUPBoot = StartUpBox.IsChecked == true;
-            GenStartUP();
-        }
-
-        private void StartUpSteamBox_Checked(object sender, RoutedEventArgs e)
-        {
-            if (!AllowChange)
-                return;
-            mw.Set.StartUPBootSteam = StartUpSteamBox.IsChecked == true;
             GenStartUP();
         }
         private int petboxbef;
@@ -1106,8 +911,6 @@ namespace VPet_Simulator.Windows
             {
                 mw.Core.Save.Name = mw.Pets[petboxbef].PetName.Translate();
                 TextBoxPetName.Text = mw.Core.Save.Name;
-                if (mw.IsSteamUser)
-                    SteamFriends.SetRichPresence("username", mw.Core.Save.Name);
             }
         }
 
@@ -1116,8 +919,6 @@ namespace VPet_Simulator.Windows
             if (!AllowChange)
                 return;
             mw.Core.Save.Name = TextBoxPetName.Text;
-            if (mw.IsSteamUser)
-                SteamFriends.SetRichPresence("username", mw.Core.Save.Name);
         }
 
         private void DIY_ADD_Click(object sender, RoutedEventArgs e)
@@ -1571,75 +1372,7 @@ namespace VPet_Simulator.Windows
 
         private void btn_fixdata_Click(object sender, RoutedEventArgs e)
         {
-            //先拿玩家游戏时间
-            int playtime;
-            try
-            {
-                string _url = "https://aiopen.exlb.net/VPet/GetPlayTime?steamid=" + SteamClient.SteamId.Value;
-#pragma warning disable SYSLIB0014 // 类型或成员已过时
-                var request = (HttpWebRequest)WebRequest.Create(_url);
-#pragma warning restore SYSLIB0014 // 类型或成员已过时
-                request.Method = "GET";
-                string responseString;
-                using (var response = (HttpWebResponse)request.GetResponse())
-                {
-                    responseString = new StreamReader(response.GetResponseStream(), Encoding.UTF8).ReadToEnd();
-                    response.Dispose();
-                }
-                playtime = int.Parse(responseString);
-            }
-            catch
-            {
-                MessageBoxX.Show("获取玩家游戏时间失败,请检查网络连接或稍后再试".Translate());
-                return;
-            }
-            if (playtime == 0) return;
-            if (mw.GameSavesData.HashCheck)
-            {//对于
-                int hours = mw.GameSavesData.Statistics[(gint)"stat_total_time"] / 60;
-                if (hours < playtime)
-                {
-                    mw.GameSavesData.Statistics[(gint)"stat_total_time"] = playtime * 60;
-                    MessageBoxX.Show("陪伴时长已更新".Translate() + $"\n{hours}Min->{playtime}Min", "修复成功".Translate());
-                }
-                else
-                    MessageBoxX.Show("当前游戏时间已经大于Steam服务器记录时间,无需修复".Translate());
-                if (mw.GameSavesData.GameSave.LikabilityMax < 100 + playtime)
-                    mw.GameSavesData.GameSave.LikabilityMax = 100 + playtime;
-            }
-            else
-            {
-                GameSave_v2 ogs = mw.GameSavesData;
-                mw.GameSavesData = new GameSave_v2(ogs.GameSave.Name);
-                mw.GameSavesData.Statistics = ogs.Statistics;
-                mw.GameSavesData.Statistics[(gint)"stat_total_time"] = playtime * 60;
-                mw.GameSavesData.GameSave.Event_LevelUp += mw.LevelUP;
-
-                //同步等级
-                //按2小时=1级进行计算
-                int newlevel = playtime / 120;
-                int newmaxlevel = 0;
-                if (newlevel > 0)
-                {
-                    while (newlevel > (newmaxlevel * 100 + 1000))
-                    {
-                        newlevel -= (newmaxlevel * 100 + 1000);
-                        newmaxlevel++;
-                    }
-                    mw.GameSavesData.GameSave.LevelMax = Math.Min(newmaxlevel, ogs.GameSave.LevelMax);
-                    mw.GameSavesData.GameSave.Level = Math.Min(newlevel + (ogs.GameSave.LevelMax - newmaxlevel) * 500, ogs.GameSave.Level);
-                }
-                //同步金钱
-                //根据当前等级计算金钱
-                int newmoney = (200 * mw.GameSavesData.GameSave.Level - 100) * mw.GameSavesData.GameSave.LevelMax + 1;
-                mw.GameSavesData.GameSave.Money = Math.Min(newmoney, ogs.GameSave.Money);
-                //好感度最大值(1h=+1)
-                mw.GameSavesData.GameSave.LikabilityMax += playtime;
-                //同步好感度
-                mw.GameSavesData.GameSave.Likability = ogs.GameSave.Likability;
-
-                MessageBoxX.Show("数据修复成功".Translate());
-            }
+            MessageBoxX.Show("独立运行模式不支持数据修复(需要Steam服务器记录的游戏时间)".Translate(), "功能不可用".Translate(), MessageBoxIcon.Info);
         }
 
         private void ConsoleBox_Checked(object sender, RoutedEventArgs e)
@@ -1712,7 +1445,7 @@ namespace VPet_Simulator.Windows
 
         private void BC_Click(object sender, RoutedEventArgs e)
         {
-            Task.Run(() => ExtensionFunction.StartURL($"https://bettercontribution.exlb.net/shop#steamid={mw.SteamID}&checkkey={mw.GenerateAuthKey().Result}&lang={LocalizeCore.CurrentCulture}"));
+            ExtensionFunction.StartURL($"https://bettercontribution.exlb.net/shop?lang={LocalizeCore.CurrentCulture}");
         }
 
         private void SwitchHideFromTaskControl_OnChecked(object sender, RoutedEventArgs e)

@@ -4,8 +4,6 @@ using LinePutScript.Dictionary;
 using LinePutScript.Localization.WPF;
 using NAudio.CoreAudioApi;
 using Panuon.WPF.UI;
-using Steamworks;
-using Steamworks.Data;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -335,27 +333,6 @@ namespace VPet_Simulator.Windows
                         if (File.Exists(ExtensionValue.BaseDirectory + @"\Save.bkp"))
                             File.Delete(ExtensionValue.BaseDirectory + @"\Save.bkp");
                         File.Move(ExtensionValue.BaseDirectory + @"\Save.lps", ExtensionValue.BaseDirectory + @"\Save.bkp");
-                    }
-
-                    //Steam云存档
-                    if (IsSteamUser)
-                    {
-                        var steamsave = SteamRemoteStorage.Files.Where(x => x.StartsWith($"VPetCloud/Save{PrefixSave}_")).ToList();
-                        if (steamsave.Count > Set.BackupSaveMaxNum)
-                        {
-                            steamsave = steamsave.OrderBy(x =>
-                            {
-                                if (int.TryParse(x.Split('_').Last().Split('.')[0], out int i))
-                                    return i;
-                                return 0;
-                            }).ToList();
-                            while (steamsave.Count > Set.BackupSaveMaxNum)
-                            {
-                                SteamRemoteStorage.FileDelete(steamsave[0]);
-                                steamsave.RemoveAt(0);
-                            }
-                        }
-                        SteamRemoteStorage.FileWrite($"VPetCloud/Save{PrefixSave}_{(DateTime.Now.Ticks / 60000):X}.lps", Encoding.UTF8.GetBytes(savesdata));
                     }
                 }
             }
@@ -829,16 +806,6 @@ namespace VPet_Simulator.Windows
             }
         }
         /// <summary>
-        /// Steam统计相关变化
-        /// </summary>
-        private void Statistics_StatisticChanged(Statistics sender, string name, SetObject value)
-        {
-            if (name.StartsWith("stat_"))
-            {
-                SteamUserStats.SetStat(name, (int)value);
-            }
-        }
-        /// <summary>
         /// 计算统计数据
         /// </summary>
         private void StatisticsCalHandle()
@@ -890,11 +857,6 @@ namespace VPet_Simulator.Windows
             var smm = save.StrengthMax - 1;
             if (save.Strength > smm && save.Feeling > save.FeelingMax - 1 && save.StrengthFood > smm && save.StrengthDrink > smm)
                 stat[(gint)"stat_100_all"]++;
-
-            if (IsSteamUser)
-            {
-                Task.Run(SteamUserStats.StoreStats);
-            }
         }
         /// <summary>
         /// 加载游戏存档
@@ -975,135 +937,6 @@ namespace VPet_Simulator.Windows
 
 
 
-        private void Handle_Steam(Main obj)
-        {
-            string jointab = " ";
-            if (winMutiPlayer != null)
-            {
-                if (winMutiPlayer.Joinable)
-                    jointab += "可加入".Translate();
-                SteamFriends.SetRichPresence("steam_player_group", winMutiPlayer.LobbyID.ToString("x"));
-                SteamFriends.SetRichPresence("steam_player_group_size", winMutiPlayer.lb.MemberCount.ToString());
-            }
-            else
-            {
-                SteamFriends.SetRichPresence("steam_player_group_size", "0");
-            }
-            if (App.MainWindows.Count > 1)
-            {
-                if (App.MainWindows.FirstOrDefault() != this)
-                {
-                    return;
-                }
-                string str = "";
-                int lv = 0;
-                int workcount = 0;
-                int sleepcount = 0;
-                int musiccount = 0;
-                int allcount = App.MainWindows.Count * 2 / 3;
-                foreach (var item in App.MainWindows)
-                {
-                    if (item.GameSavesData == null || item.Main == null)
-                        continue;
-                    str += item.GameSavesData.GameSave.Name + ",";
-                    if (item.HashCheck)
-                    {
-                        lv += item.GameSavesData.GameSave.Level;
-                    }
-                    else
-                        lv = int.MinValue;
-                    switch (item.Main.State)
-                    {
-                        case Main.WorkingState.Work:
-                            workcount++;
-                            break;
-                        case Main.WorkingState.Sleep:
-                            sleepcount++;
-                            break;
-                        case Main.WorkingState.Nomal:
-                            if (item.Main.DisplayType.Name == "music")
-                                musiccount++;
-                            break;
-                    }
-                }
-                SteamFriends.SetRichPresence("usernames", str.Trim(','));
-                if (lv > 0)
-                {
-                    SteamFriends.SetRichPresence("lv", $" (lv{lv}/{App.MainWindows.Count})" + jointab);
-                }
-                else
-                {
-                    SteamFriends.SetRichPresence("lv", " " + jointab);
-                }
-                if (workcount > allcount)
-                {
-                    SteamFriends.SetRichPresence("steam_display", "#Status_MUTI_Work");
-                }
-                else if (sleepcount > allcount)
-                {
-                    SteamFriends.SetRichPresence("steam_display", "#Status_MUTI_Sleep");
-                }
-                else if (musiccount > allcount)
-                {
-                    SteamFriends.SetRichPresence("steam_display", "#Status_MUTI_Music");
-                }
-                else
-                {
-                    SteamFriends.SetRichPresence("steam_display", "#Status_MUTI_Play");
-                }
-            }
-            else
-            {
-                if (HashCheck)
-                {
-                    SteamFriends.SetRichPresence("lv", $" (lv{GameSavesData.GameSave.Level})" + jointab);
-                }
-                else
-                {
-                    SteamFriends.SetRichPresence("lv", " " + jointab);
-                }
-                if (Core.Save.Mode == IGameSave.ModeType.Ill)
-                {
-                    SteamFriends.SetRichPresence("steam_display", "#Status_Ill");
-                }
-                else
-                {
-                    SteamFriends.SetRichPresence("mode", (Core.Save.Mode.ToString() + "ly").Translate());
-                    switch (obj.State)
-                    {
-                        case Main.WorkingState.Work:
-                            SteamFriends.SetRichPresence("work", obj.NowWork.NameTrans);
-                            SteamFriends.SetRichPresence("steam_display", "#Status_Work");
-                            break;
-                        case Main.WorkingState.Sleep:
-                            SteamFriends.SetRichPresence("steam_display", "#Status_Sleep");
-                            break;
-                        default:
-                            if (obj.DisplayType.Name == "music")
-                                SteamFriends.SetRichPresence("steam_display", "#Status_Music");
-                            else
-                            {
-                                switch (obj.DisplayType.Type)
-                                {
-                                    case GraphType.Move:
-                                        SteamFriends.SetRichPresence("idel", "乱爬".Translate());
-                                        break;
-                                    case GraphType.Idel:
-                                    case GraphType.StateONE:
-                                    case GraphType.StateTWO:
-                                        SteamFriends.SetRichPresence("idel", "发呆".Translate());
-                                        break;
-                                    default:
-                                        SteamFriends.SetRichPresence("idel", "闲逛".Translate());
-                                        break;
-                                }
-                                SteamFriends.SetRichPresence("steam_display", "#Status_IDLE");
-                            }
-                            break;
-                    }
-                }
-            }
-        }
         private bool? AudioPlayingVolumeOK = null;
         /// <summary>
         /// 获得当前系统音乐播放音量
@@ -1255,8 +1088,6 @@ namespace VPet_Simulator.Windows
         /// </summary>
         public void DiagnosisUPLoad()
         {
-            if (!IsSteamUser)
-                return;//不遥测非Steam用户
             if (!Set.DiagnosisDayEnable)
                 return;//不遥测不参加遥测的用户
             if (!Set.Diagnosis)
@@ -1270,7 +1101,6 @@ namespace VPet_Simulator.Windows
             //参数
             StringBuilder sb = new StringBuilder();
             sb.Append("action=data");
-            sb.Append($"&steamid={SteamClient.SteamId.Value}");
             sb.Append($"&ver={version}");
             sb.Append("&save=");
             sb.AppendLine(HttpUtility.UrlEncode(Core.Save.ToLine().ToString() + Set.ToString()));
@@ -1509,8 +1339,6 @@ namespace VPet_Simulator.Windows
             if (prefixsave != string.Empty && !PrefixSave.StartsWith("-"))
                 PrefixSave = '-' + prefixsave;
 
-            IsSteamUser = App.MainWindows[0].IsSteamUser;
-
             //处理ARGS
             Args = new LPS_D();
             foreach (var str in App.Args)
@@ -1715,10 +1543,7 @@ namespace VPet_Simulator.Windows
             //补充数据信息
             if (string.IsNullOrEmpty(GameSavesData.GameSave.HostName))
             {
-                if (IsSteamUser)
-                    GameSavesData.GameSave.HostName = SteamClient.Name;
-                else
-                    GameSavesData.GameSave.HostName = Environment.UserName;
+                GameSavesData.GameSave.HostName = Environment.UserName;
             }
 
             //if (GameSavesData.Data.FindLine("HostBDay") == null)
@@ -1760,37 +1585,12 @@ namespace VPet_Simulator.Windows
             //"这游戏开发这么慢,都怪画师太咕了".Translate(),
             //"欢迎加入 虚拟主播模拟器群 430081239".Translate()
 
-            await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "尝试加载Steam内容".Translate()));
+            await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "尝试加载内容".Translate()));
             //给正在玩这个游戏的主播/游戏up主做个小功能
-            if (IsSteamUser)
+            ClickTexts.Add(new ClickText("关注 {0} 谢谢喵")
             {
-                ClickTexts.Add(new ClickText("关注 {0} 谢谢喵")
-                {
-                    TranslateText = "关注 {0} 谢谢喵".Translate(SteamClient.Name)
-                });
-                //Steam成就
-                GameSavesData.Statistics.StatisticChanged += Statistics_StatisticChanged;
-                //Steam通知
-                SteamFriends.SetRichPresence("username", Core.Save.Name);
-                SteamFriends.SetRichPresence("mode", (Core.Save.Mode.ToString() + "ly").Translate());
-                SteamFriends.SetRichPresence("steam_display", "#Status_IDLE");
-                SteamFriends.SetRichPresence("idel", "闲逛".Translate());
-                if (HashCheck)
-                {
-                    SteamFriends.SetRichPresence("lv", $" (lv{GameSavesData.GameSave.Level})");
-                }
-                else
-                {
-                    SteamFriends.SetRichPresence("lv", " ");
-                }
-            }
-            else
-            {
-                ClickTexts.Add(new ClickText("关注 {0} 谢谢喵")
-                {
-                    TranslateText = "关注 {0} 谢谢喵".Translate(Environment.UserName)
-                });
-            }
+                TranslateText = "关注 {0} 谢谢喵".Translate(Environment.UserName)
+            });
 
             //音乐识别timer加载
             MusicTimer = new System.Timers.Timer(200)
@@ -2026,8 +1826,6 @@ namespace VPet_Simulator.Windows
 
 
                   Main.TimeHandle += Handle_Music;
-                  if (IsSteamUser)
-                      Main.TimeHandle += Handle_Steam;
                   Main.TimeHandle += (x) => DiagnosisUPLoad();
 
 
@@ -2325,7 +2123,7 @@ namespace VPet_Simulator.Windows
                           Thread.Sleep(2000);
                           Set["SingleTips"].SetBool("helloworld", true);
                           NoticeBox.Show("欢迎使用虚拟桌宠模拟器!\n如果遇到桌宠爬不见了,可以在我这里设置居中或退出桌宠".Translate(),
-                             "你好".Translate() + (IsSteamUser ? SteamClient.Name : Environment.UserName), Panuon.WPF.UI.MessageBoxIcon.Info, true, 5000);
+                             "你好".Translate() + Environment.UserName, Panuon.WPF.UI.MessageBoxIcon.Info, true, 5000);
                           //Thread.Sleep(2000);
                           //Main.SayRnd("欢迎使用虚拟桌宠模拟器\n这是个中期的测试版,若有bug请多多包涵\n欢迎加群虚拟主播模拟器430081239或在菜单栏-管理-反馈中提交bug或建议".Translate());
                       });
@@ -2722,12 +2520,6 @@ namespace VPet_Simulator.Windows
 
         TextBlock tlvplus;
 
-        public event Action<IMPWindows> MutiPlayerHandle;
-        public void MutiPlayerStart(IMPWindows mp)
-        {
-            MutiPlayerHandle?.Invoke(mp);
-        }
-
         private void MWUIHandle(Main main)
         {
             if (Main.ToolBar.BdrPanel.Visibility == Visibility.Visible)
@@ -2968,66 +2760,6 @@ namespace VPet_Simulator.Windows
             Dispatcher.Invoke(() =>
             NoticeBox.Show(string.Concat(sb.ToString().AsSpan(2), "\n", "以上照片已解锁".Translate()), "新的照片已解锁".Translate()
             , Panuon.WPF.UI.MessageBoxIcon.Info, true, 5000));
-        }
-        static readonly DateTime StartDate = new(2023, 8, 14, 0, 0, 0, DateTimeKind.Utc);
-        static int authheycache;
-        static DateTime GetDateFromAuthKey(int authKey)
-        {
-            // 从验证键中解析出小时数
-            int hoursSince2020 = authKey / 10000;
-
-            // 计算日期和时间
-            DateTime date = StartDate.AddHours(hoursSince2020);
-
-            return date;
-        }
-        public async Task<int> GenerateAuthKey()
-        {
-            if (!IsSteamUser)
-                return 0;
-
-            bool genck = false;
-            long steamId = (long)SteamClient.SteamId.Value;
-
-            while (true)
-            {
-                if (authheycache != 0)
-                {
-                    DateTime dt = GetDateFromAuthKey(authheycache);
-                    if (!(dt > DateTime.UtcNow.AddDays(1) || dt < DateTime.UtcNow.AddHours(-2)))
-                    {
-                        return authheycache;
-                    }
-                }
-
-                // 加 ConfigureAwait(false)
-                Leaderboard? leaderboard = await SteamUserStats
-                    .FindLeaderboardAsync("chatgpt_auth")
-                    .ConfigureAwait(false);
-
-                if (!leaderboard.HasValue)
-                    return 0;
-
-                var lb = leaderboard.Value;
-
-                // 加 ConfigureAwait(false)
-                LeaderboardEntry[] key = await lb
-                    .GetScoresAroundUserAsync(0, 0)
-                    .ConfigureAwait(false);
-
-                if (key == null || key.Length == 0 || genck)
-                {
-                    int hoursSince2020 = (int)(DateTime.UtcNow - StartDate).TotalHours;
-                    authheycache = hoursSince2020 * 10000 + Function.Rnd.Next(10000);
-                    await lb.ReplaceScore(authheycache).ConfigureAwait(false);
-                    return authheycache;
-                }
-                else
-                {
-                    authheycache = key.First().Score;
-                    genck = true;
-                }
-            }
         }
         /// <summary>
         /// 添加物品到物品栏 (自动合并)

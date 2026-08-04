@@ -223,16 +223,6 @@
                                         ToggleBrush="{DynamicResource PrimaryDark}" ToggleShadowColor="{x:Null}"
                                         ToggleSize="14" ToolTip="{ll:Str '该游戏随着开机启动该程序\&#13;如需卸载游戏\&#13;请关闭该选项'}"
                                         Unchecked="StartUpBox_Checked" />
-                                <pu:Switch x:Name="StartUpSteamBox" Grid.Column="1" Background="Transparent"
-                                        BorderBrush="{DynamicResource PrimaryDark}" BoxHeight="18" BoxWidth="35"
-                                        Checked="StartUpSteamBox_Checked" CheckedBackground="{DynamicResource Primary}"
-                                        CheckedBorderBrush="{DynamicResource Primary}"
-                                        CheckedToggleBrush="{DynamicResource DARKPrimaryText}"
-                                        Content="{ll:Str 从Steam启动}"
-                                        IsEnabled="{Binding ElementName=StartUpBox, Path=IsChecked}"
-                                        ToggleBrush="{DynamicResource PrimaryDark}" ToggleShadowColor="{x:Null}"
-                                        ToggleSize="14" ToolTip="{ll:Str '从Steam启动该游戏, 统计时长不能停'}"
-                                        Unchecked="StartUpSteamBox_Checked" />
                             </Grid>
                             <TextBlock Grid.Row="11" VerticalAlignment="Center" Text="{ll:Str 宠物动画}" />
                             <TextBlock x:Name="PetIntor" Grid.Row="12" Grid.Column="2" VerticalAlignment="Center"
@@ -993,20 +983,6 @@
                                         Foreground="{DynamicResource DARKPrimaryDarker}"
                                         MouseDown="ButtonDisEnable_MouseDown" Text="{ll:Str '停用该模组'}"
                                         TextDecorations="Underline" TextWrapping="Wrap" />
-                                <TextBlock x:Name="ButtonPublish" Margin="0,2,0,0" HorizontalAlignment="Left"
-                                        VerticalAlignment="Top" Cursor="Hand" FontSize="14" Foreground="DimGray"
-                                        MouseDown="ButtonPublish_MouseDown" Text="{ll:Str 更新至Steam}"
-                                        TextDecorations="Underline" TextWrapping="Wrap" />
-                                <TextBlock x:Name="ButtonSteam" Margin="0,2,0,0" HorizontalAlignment="Left"
-                                        VerticalAlignment="Top" Cursor="Hand" FontSize="14" Foreground="DimGray"
-                                        MouseDown="ButtonSteam_MouseDown" Text="{ll:Str 创意工坊页面}"
-                                        TextDecorations="Underline" TextWrapping="Wrap" />
-                                <ProgressBar x:Name="ProgressBarUpload" Height="30" Margin="0,2,0,0"
-                                        VerticalAlignment="Top" pu:ProgressBarHelper.CornerRadius="2"
-                                        pu:ProgressBarHelper.IsPercentVisible="True"
-                                        Background="{DynamicResource Primary}"
-                                        BorderBrush="{DynamicResource PrimaryDarker}" BorderThickness="2"
-                                        Foreground="{DynamicResource DARKPrimary}" Visibility="Collapsed" Value="60" />
                                 <TextBlock x:Name="ButtonSetting" Margin="0,2,0,0" HorizontalAlignment="Left"
                                         VerticalAlignment="Top" Cursor="Hand" FontSize="14"
                                         Foreground="{DynamicResource DARKPrimaryDarker}"
@@ -1092,12 +1068,11 @@
                         <LineBreak />
                         <Hyperlink Foreground="{DynamicResource PrimaryText}">Panuon.WPF.UI</Hyperlink>
                         <Hyperlink Foreground="{DynamicResource PrimaryText}">LinePutScript</Hyperlink><LineBreak />
-                        <Hyperlink Foreground="{DynamicResource PrimaryText}">Facepunch.Steamworks</Hyperlink>
                         <Hyperlink Click="Using_Click" Foreground="{DynamicResource PrimaryText}">
                             <Run Text="{ll:Str 查看引用名单}" />
                         </Hyperlink><LineBreak /><LineBreak />
-                        <Hyperlink Click="Steam_Click">
-                            <Run Text="{ll:Str 访问Steam页面}" />
+                        <Hyperlink Click="Github_Click">
+                            <Run Text="{ll:Str 访问Github页面}" />
                         </Hyperlink>
                         <Hyperlink Click="Github_Click">
                             <Run Text="{ll:Str 访问Github页面}" />
