@@ -81,18 +81,54 @@ namespace VPet_Simulator.Windows
         }
         public CoreMOD(DirectoryInfo directory, MainWindow mw)
         {
+#if DEBUG
+            var dbgSw = System.Diagnostics.Stopwatch.StartNew();
+            Action<string> dbgLog = (msg) => {
+                var line = $"[CoreMOD] {directory.Name}: {msg} ({dbgSw.ElapsedMilliseconds}ms)";
+                System.Diagnostics.Debug.WriteLine(line);
+                try { System.IO.File.AppendAllText("logs/debug-load.log", line + "\n"); } catch { }
+            };
+            dbgLog("Constructor start");
+#endif
 #if !DEBUG
             try
             {
 #endif
             Path = directory;
+#if DEBUG
+            dbgLog("Reading info.lps");
+#endif
             LpsDocument modlps = new LpsDocument(File.ReadAllText(directory.FullName + @"\info.lps"));
+#if DEBUG
+            dbgLog("Parsed info.lps, lines=" + modlps.Count);
+#endif
             Name = modlps.FindLine("vupmod").Info;
+#if DEBUG
+            dbgLog("Name=" + Name);
+#endif
             NowLoading = Name;
+#if DEBUG
+            dbgLog("Before FindLine intro");
+#endif
             Intro = modlps.FindLine("intro").Info;
+#if DEBUG
+            dbgLog("Intro=" + Intro);
+            dbgLog("Before FindSub gamever");
+#endif
             GameVer = modlps.FindSub("gamever").InfoToInt;
+#if DEBUG
+            dbgLog("GameVer=" + GameVer);
+            dbgLog("Before FindSub ver");
+#endif
             Ver = modlps.FindSub("ver").InfoToInt;
+#if DEBUG
+            dbgLog("Ver=" + Ver);
+            dbgLog("Before FindSub author");
+#endif
             Author = modlps.FindSub("author").Info.Split('[').First();
+#if DEBUG
+            dbgLog("Author=" + Author);
+#endif
             if (modlps.FindLine("authorid") != null)
                 AuthorID = modlps.FindLine("authorid").InfoToInt64;
             else
@@ -110,6 +146,9 @@ namespace VPet_Simulator.Windows
             {
                 CacheDate = DateTime.MinValue;
             }
+#if DEBUG
+            dbgLog("Basic info parsed, Author=" + Author + " Ver=" + Ver);
+#endif
 
             foreach (var line in modlps.FindAllLine("lang"))
             {
@@ -120,11 +159,17 @@ namespace VPet_Simulator.Windows
                 }
                 LocalizeCore.AddCulture(line.info, ls);
             }
+#if DEBUG
+            dbgLog("Lang lines processed");
+#endif
 
             if (mw.CoreMODs.FirstOrDefault(x => x.Name == Name) != null)
             {
                 Name += $"({"Mod name duplicated".Translate()})";
                 ErrorMessage = "Mod name duplicated".Translate();
+#if DEBUG
+                dbgLog("DUPLICATE MOD, returning");
+#endif
                 return;
             }
 
@@ -133,8 +178,14 @@ namespace VPet_Simulator.Windows
                 Tag.Add("This mod is Disable");
                 foreach (DirectoryInfo di in Path.EnumerateDirectories())
                     Tag.Add(di.Name.ToLowerInvariant());
+#if DEBUG
+                dbgLog("MOD is disabled, returning");
+#endif
                 return;
             }
+#if DEBUG
+            dbgLog("IsOnMOD=true, enumerating directories: " + string.Join(", ", Path.EnumerateDirectories().Select(d => d.Name)));
+#endif
 
             foreach (DirectoryInfo di in Path.EnumerateDirectories())
             {

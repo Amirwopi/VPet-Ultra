@@ -1336,10 +1336,40 @@ namespace VPet_Simulator.Windows
                 if (!File.Exists(di.FullName + @"\info.lps"))
                     continue;
                 await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = $"Loading MOD: {di.Name}"));
+#if DEBUG
+                var sw = System.Diagnostics.Stopwatch.StartNew();
+                var logMsg = $"[GameLoad] Start loading MOD: {di.Name} at {DateTime.Now:HH:mm:ss.fff}";
+                System.Diagnostics.Debug.WriteLine(logMsg);
+                try { File.AppendAllText("logs/debug-load.log", logMsg + "\n"); } catch { }
+#endif
                 CoreMODs.Add(new CoreMOD(di, this));
+#if DEBUG
+                sw.Stop();
+                logMsg = $"[GameLoad] Finished loading MOD: {di.Name} in {sw.ElapsedMilliseconds}ms";
+                System.Diagnostics.Debug.WriteLine(logMsg);
+                try { File.AppendAllText("logs/debug-load.log", logMsg + "\n"); } catch { }
+#endif
             }
 
             CoreMOD.NowLoading = null;
+
+#if DEBUG
+            var summary = $"[GameLoad] All MODs loaded. CoreMODs count: {CoreMODs.Count}";
+            System.Diagnostics.Debug.WriteLine(summary);
+            try { File.AppendAllText("logs/debug-load.log", summary + "\n"); } catch { }
+            foreach (var cm in CoreMODs)
+            {
+                var modInfo = $"[GameLoad]   MOD: {cm.Name}, SuccessLoad={cm.SuccessLoad}, Tags={string.Join(",", cm.Tag)}";
+                System.Diagnostics.Debug.WriteLine(modInfo);
+                try { File.AppendAllText("logs/debug-load.log", modInfo + "\n"); } catch { }
+                if (!string.IsNullOrEmpty(cm.ErrorMessage))
+                {
+                    var errMsg = $"[GameLoad]   ERROR: {cm.ErrorMessage}";
+                    System.Diagnostics.Debug.WriteLine(errMsg);
+                    try { File.AppendAllText("logs/debug-load.log", errMsg + "\n"); } catch { }
+                }
+            }
+#endif
 
             if (App.MainWindows.Count == 1 && Set.LastCacheDate < CoreMODs.Max(x => x.CacheDate))
             {
@@ -1529,11 +1559,22 @@ namespace VPet_Simulator.Windows
 
             //await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "Attempting to load animations".Translate()));
             await Dispatcher.InvokeAsync(new Action(() => LoadingText.Content = "Attempting to load animations and generate cache\\nThis step may take a while\\nPlease be patient".Translate()));
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"[GameLoad] Starting petloader.Graph (Resolution={Set.Resolution}) at {DateTime.Now:HH:mm:ss.fff}");
+            var graphSw = System.Diagnostics.Stopwatch.StartNew();
+#endif
             Core.Graph = petloader.Graph(Set.Resolution, Dispatcher);
+#if DEBUG
+            graphSw.Stop();
+            System.Diagnostics.Debug.WriteLine($"[GameLoad] petloader.Graph done in {graphSw.ElapsedMilliseconds}ms, GraphCount={petloader.GraphCount}");
+#endif
 
             Main = await Dispatcher.InvokeAsync(() => new Main(Core));
 
             int totalGraphs = petloader.GraphCount;
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"[GameLoad] Starting LoadALL, totalGraphs={totalGraphs} at {DateTime.Now:HH:mm:ss.fff}");
+#endif
 
             // Periodic progress timer: updates the UI every 500ms even if no
             // graph just became ready. This prevents the loading screen from

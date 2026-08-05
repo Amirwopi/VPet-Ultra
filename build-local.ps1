@@ -113,13 +113,16 @@ Write-Host "[7/8] Copying cognition plugin..." -ForegroundColor Yellow
 $modPath = Join-Path $OutputDir "mod/0000_cognition"
 New-Item -ItemType Directory -Force -Path $modPath | Out-Null
 
-# Create info.lps — VPet REQUIRES this to recognize a mod folder
-$infoLps = "vupmod#Cognition:|author#VPet-Ultra:|gamever#11000:|ver#100:|intro#AI Cognition Plugin - Offline LLM, Memory, Personality, Emotion, Voice, Agent:|authorid#0:|itemid#0:|lang#en:|Cognition#Cognition:|"
-$infoLps | Out-File -FilePath (Join-Path $modPath "info.lps") -Encoding UTF8
+# Create info.lps - VPet REQUIRES this to recognize a mod folder.
+# LPS format: first line has name#info:| with sub-fields separated by |
+# Use WriteAllText with UTF8NoBOM because LpsDocument parser chokes on BOM.
+$infoLps = "vupmod#Cognition:|author#VPet-Ultra:|gamever#11000:|ver#100:|`nintro#AI Cognition Plugin - Offline LLM Memory Personality Emotion Voice Agent:|`nauthorid#0:|`nitemid#0:|`nlang#en:|`nCognition#Cognition:|"
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText((Join-Path $modPath "info.lps"), $infoLps, $utf8NoBom)
 Write-Host "  Created: info.lps"
 
 # Create version.txt
-$Version | Out-File -FilePath (Join-Path $modPath "version.txt") -Encoding UTF8
+[System.IO.File]::WriteAllText((Join-Path $modPath "version.txt"), $Version, $utf8NoBom)
 Write-Host "  Created: version.txt ($Version)"
 
 # Copy cognition DLLs
@@ -208,7 +211,7 @@ $appsettings = @'
 }
 '@
 $appsettingsPath = Join-Path $OutputDir "appsettings.json"
-$appsettings | Out-File -FilePath $appsettingsPath -Encoding UTF8
+[System.IO.File]::WriteAllText($appsettingsPath, $appsettings, $utf8NoBom)
 Write-Host "  Created: appsettings.json"
 
 # Create runtime directories
