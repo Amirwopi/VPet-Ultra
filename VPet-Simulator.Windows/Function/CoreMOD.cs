@@ -19,7 +19,15 @@ namespace VPet_Simulator.Windows
     {
         /// <summary>
         /// </summary>
-        public static readonly string[] OnModDefList = new string[] { "Core", "PCat" };
+        public static readonly string[] OnModDefList = new string[] { "Core", "PCat", "Cognition" };
+
+        /// <summary>
+        /// Built-in mods that are always trusted (no certificate check required).
+        /// </summary>
+        public static readonly HashSet<string> TrustedMods = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Cognition"
+        };
 
         public static HashSet<string> LoadedDLL { get; } = new HashSet<string>()
         {
@@ -411,7 +419,7 @@ namespace VPet_Simulator.Windows
                                         certificate.Issuer.Contains(".NET Foundation Projects") ||
                                         certificate.Issuer == "CN=DigiCert Trusted G4 Code Signing RSA4096 SHA384 2021 CA1, O=\"DigiCert, Inc.\", C=US" ||
                                         certificate.Issuer == "CN=Certum Extended Validation Code Signing 2021 CA, O=Asseco Data Systems S.A., C=PL")
-                                        && !IsPassMOD(mw))
+                                        && !IsPassMOD(mw) && !TrustedMods.Contains(Name))
                                     {
                                         SuccessLoad = false;
                                         continue;
@@ -420,14 +428,20 @@ namespace VPet_Simulator.Windows
                                 else
                                 {
                                     authtype = "FAIL";
-                                    if (!IsPassMOD(mw))
+                                    if (!IsPassMOD(mw) && !TrustedMods.Contains(Name))
                                     {
                                         SuccessLoad = false;
                                         Author = modlps.FindSub("author").Info.Split('[').First();
                                         continue;
                                     }
                                 }
-                                Assembly dll = Assembly.LoadFrom(tmpfi.FullName);
+                                Assembly dll = null;
+                                try { dll = Assembly.LoadFrom(tmpfi.FullName); }
+                                catch (BadImageFormatException)
+                                {
+                                    // Native DLL (e.g. e_sqlite3.dll, ggml.dll, llama.dll) — skip silently
+                                    continue;
+                                }
                                 var v = dll.GetExportedTypes();
                                 foreach (Type exportedType in v)
                                 {

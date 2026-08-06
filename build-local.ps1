@@ -100,11 +100,11 @@ $modFileCount = (Get-ChildItem $dstCore -Recurse | Measure-Object).Count
 Write-Host "  Copied 0000_core ($modFileCount files)"
 Write-Host ""
 
-# Step 6: Build cognition Host
-Write-Host "[6/8] Building cognition Host..." -ForegroundColor Yellow
+# Step 6: Publish cognition Host (use publish to get all NuGet dependencies)
+Write-Host "[6/8] Publishing cognition Host..." -ForegroundColor Yellow
 dotnet restore VPet.Cognition.Host/VPet.Cognition.Host.csproj
-dotnet build VPet.Cognition.Host/VPet.Cognition.Host.csproj -c $Configuration
-if ($LASTEXITCODE -ne 0) { Write-Host "Cognition Host build failed!" -ForegroundColor Red; exit 1 }
+dotnet publish VPet.Cognition.Host/VPet.Cognition.Host.csproj -c $Configuration -o "VPet.Cognition.Host/bin/$Configuration/publish" --no-restore
+if ($LASTEXITCODE -ne 0) { Write-Host "Cognition Host publish failed!" -ForegroundColor Red; exit 1 }
 Write-Host "  OK" -ForegroundColor Green
 Write-Host ""
 
@@ -116,7 +116,7 @@ New-Item -ItemType Directory -Force -Path $modPath | Out-Null
 # Create info.lps - VPet REQUIRES this to recognize a mod folder.
 # LPS format: first line has name#info:| with sub-fields separated by |
 # Use WriteAllText with UTF8NoBOM because LpsDocument parser chokes on BOM.
-$infoLps = "vupmod#Cognition:|author#VPet-Ultra:|gamever#11000:|ver#100:|`nintro#AI Cognition Plugin - Offline LLM Memory Personality Emotion Voice Agent:|`nauthorid#0:|`nitemid#0:|`nlang#en:|`nCognition#Cognition:|"
+$infoLps = "vupmod#Cognition:|author#VPet-Ultra:|gamever#11000:|ver#100:|`nintro#AI Cognition Plugin - Offline LLM Memory Personality Emotion Voice Agent:|`nauthorid#0:|`nitemid#0:|`nlang#en:|`nCognition#Cognition:|`n"
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 [System.IO.File]::WriteAllText((Join-Path $modPath "info.lps"), $infoLps, $utf8NoBom)
 Write-Host "  Created: info.lps"
@@ -125,23 +125,22 @@ Write-Host "  Created: info.lps"
 [System.IO.File]::WriteAllText((Join-Path $modPath "version.txt"), $Version, $utf8NoBom)
 Write-Host "  Created: version.txt ($Version)"
 
-# Copy cognition DLLs
-$hostBin = "VPet.Cognition.Host/bin/$Configuration/net8.0-windows"
-if (-not (Test-Path $hostBin)) {
-    # Try publish subfolder
-    $hostBin = "VPet.Cognition.Host/bin/$Configuration/net8.0-windows/publish"
-}
+# Copy cognition DLLs to plugin/ subfolder (VPet loader expects this structure)
+$pluginPath = Join-Path $modPath "plugin"
+New-Item -ItemType Directory -Force -Path $pluginPath | Out-Null
+
+$hostBin = "VPet.Cognition.Host/bin/$Configuration/publish"
 
 $cognitionDlls = Get-ChildItem -Path $hostBin -Filter "VPet.Cognition.*.dll" -Recurse -ErrorAction SilentlyContinue
 foreach ($dll in $cognitionDlls) {
-    $dest = Join-Path $modPath $dll.Name
+    $dest = Join-Path $pluginPath $dll.Name
     if (-not (Test-Path $dest)) {
-        Copy-Item $dll.FullName -Destination $modPath -Force
+        Copy-Item $dll.FullName -Destination $pluginPath -Force
         Write-Host "  Copied: $($dll.Name)"
     }
 }
 
-# Copy dependency DLLs — skip ones already in main app
+# Copy dependency DLLs to plugin/ — skip ones already in main app
 $skipPatterns = @("VPet.Cognition.*","VPet-Simulator.*","LinePutScript.*","Panuon.*","steam_api*","Facepunch.*","NAudio.*","Skia*","libSkia*","WpfAnimatedGif*")
 $depDlls = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue |
     Where-Object {
@@ -149,21 +148,29 @@ $depDlls = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse -ErrorAction Si
         -not ($skipPatterns | Where-Object { $name -like $_ })
     }
 foreach ($dll in $depDlls) {
-    $dest = Join-Path $modPath $dll.Name
+    $dest = Join-Path $pluginPath $dll.Name
     if (-not (Test-Path $dest)) {
-        Copy-Item $dll.FullName -Destination $modPath -Force
+        Copy-Item $dll.FullName -Destination $pluginPath -Force
         Write-Host "  Copied dep: $($dll.Name)"
     }
 }
 
-# Copy LLamaSharp native libraries
+# Copy LLamaSharp native libraries and other native DLLs to main app folder
+# Native DLLs must be in the app root so the runtime can find them via P/Invoke
+$nativeLibNames = @("llama.dll", "ggml.dll", "ggml-base.dll", "llava_shared.dll", "e_sqlite3.dll", "onnxruntime.dll", "espeak-ng.dll", "piper_phonemize.dll", "onnxruntime_providers_shared.dll")
 $nativeLibs = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -like "llama.dll" -or $_.Name -like "ggml*.dll" -or $_.Name -like "cuda*.dll" }
+    Where-Object { $nativeLibNames -contains $_.Name }
 foreach ($lib in $nativeLibs) {
-    $dest = Join-Path $modPath $lib.Name
+    $dest = Join-Path $OutputDir $lib.Name
     if (-not (Test-Path $dest)) {
-        Copy-Item $lib.FullName -Destination $modPath -Force
-        Write-Host "  Copied native: $($lib.Name)"
+        Copy-Item $lib.FullName -Destination $OutputDir -Force
+        Write-Host "  Copied native to app root: $($lib.Name)"
+    }
+    # Also remove from plugin folder to avoid BadImageFormatException in loader
+    $pluginCopy = Join-Path $pluginPath $lib.Name
+    if (Test-Path $pluginCopy) {
+        Remove-Item $pluginCopy -Force
+        Write-Host "  Removed native from plugin: $($lib.Name)"
     }
 }
 Write-Host "  OK" -ForegroundColor Green
