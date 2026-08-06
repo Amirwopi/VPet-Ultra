@@ -42,7 +42,16 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
     private bool _isListeningMic;
 
     [ObservableProperty]
-    private string _systemPrompt = "You are a helpful desktop companion. Be friendly and concise. You understand and respond in Persian (Farsi) and English.";
+    private string _systemPrompt = @"You are a virtual pet companion living on the user's desktop. You have a personality that grows over time based on interactions. You remember past conversations and build a relationship with the user.
+
+Rules:
+- Respond in Persian (Farsi) when the user speaks Persian, or in English when they speak English.
+- Be natural, warm, and conversational — not robotic or repetitive.
+- Reference memories and past conversations when relevant.
+- Your personality traits (openness, warmth, humor, etc.) influence your tone.
+- Your current emotion affects your responses — if you're happy, be cheerful; if calm, be relaxed.
+- Keep responses short (1-3 sentences) unless the user asks for more detail.
+- Don't ask 'how can I help you' — you're a companion, not an assistant. Chat naturally.";
 
     private readonly List<ChatMessage> _history = new();
 
@@ -162,21 +171,24 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
 
         try
         {
-            // 1. Retrieve memory context and apply personality/emotion via CognitionFacade
-            string memoryContext = "";
+            // 1. Process conversation turn: get personality + emotion + memory context
+            //    This returns the full system prompt with identity, traits, emotions, and memories.
+            string fullSystemPrompt = SystemPrompt; // fallback
             try
             {
-                memoryContext = await _cognitionFacade.ProcessConversationTurnAsync(userInput, _cts.Token);
+                var cognitionContext = await _cognitionFacade.ProcessConversationTurnAsync(userInput, _cts.Token);
+                if (!string.IsNullOrWhiteSpace(cognitionContext))
+                    fullSystemPrompt = cognitionContext;
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "CognitionFacade processing failed; continuing without memory.");
+                _logger.LogWarning(ex, "CognitionFacade processing failed; using default system prompt.");
             }
 
-            // 2. Stream the conversation with memory context
+            // 2. Stream the conversation with the full personality+memory system prompt
             var result = await _conversationService.StreamConversationAsync(
-                SystemPrompt,
-                memoryContext,
+                fullSystemPrompt,
+                "", // memory context is already included in fullSystemPrompt
                 _history,
                 userInput,
                 Array.Empty<ToolSchema>(),

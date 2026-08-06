@@ -1,5 +1,6 @@
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -384,36 +385,58 @@ public sealed class CognitionHost : ICognitionFacade
     /// <summary>
     /// Process a conversation turn: retrieve memory context, apply personality,
     /// feed emotion stimulus, and store the result.
+    /// Returns the full system prompt (personality + emotion + memory context).
     /// </summary>
     public async Task<string> ProcessConversationTurnAsync(string userInput, CancellationToken ct = default)
     {
         _turnCount++;
 
-        // 1. Retrieve memory context for the user input
-        string memoryContext = "";
-        try
-        {
-            var context = await _memoryService.RetrieveContextAsync(userInput, maxMemories: 5, ct);
-            memoryContext = context;
-            _logger.LogDebug("Retrieved {Len} chars of memory context.", context.Length);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Memory retrieval failed; continuing without context.");
-        }
+        var sb = new StringBuilder();
 
-        // 2. Get personality system prompt
-        string personalityPrompt = "";
+        // 1. Get personality system prompt (identity, traits, relationship, preferences)
         try
         {
-            personalityPrompt = await _personalityEngine.RenderSystemPromptAsync(ct);
+            var personalityPrompt = await _personalityEngine.RenderSystemPromptAsync(ct);
+            sb.Append(personalityPrompt);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Personality prompt rendering failed.");
         }
 
-        // 3. Analyze sentiment and apply emotion stimulus
+        // 2. Get current emotion state
+        try
+        {
+            var emotion = await _emotionEngine.GetAsync(ct);
+            sb.AppendLine();
+            sb.AppendLine("# Your Current Emotion");
+            sb.AppendLine($"Dominant emotion: {emotion.Dominant}");
+            sb.AppendLine($"Arousal: {emotion.Arousal:F2} (low=calm, high=excited)");
+            sb.AppendLine($"Valence: {emotion.Valence:F2} (negative=sad, positive=happy)");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Emotion state retrieval failed.");
+        }
+
+        // 3. Retrieve memory context for the user input
+        try
+        {
+            var context = await _memoryService.RetrieveContextAsync(userInput, maxMemories: 5, ct);
+            if (!string.IsNullOrEmpty(context))
+            {
+                sb.AppendLine();
+                sb.AppendLine("# Memories (from past conversations)");
+                sb.Append(context);
+                _logger.LogInformation("Retrieved {Len} chars of memory context.", context.Length);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Memory retrieval failed; continuing without context.");
+        }
+
+        // 4. Analyze sentiment and apply emotion stimulus
         try
         {
             var stimulus = AnalyzeSentiment(userInput);
@@ -427,7 +450,7 @@ public sealed class CognitionHost : ICognitionFacade
             _logger.LogDebug(ex, "Emotion stimulus application failed.");
         }
 
-        // 4. Evolve personality based on interaction
+        // 5. Evolve personality based on interaction
         try
         {
             var delta = new VPet.Cognition.Domain.Abstractions.PersonalityDelta
@@ -444,7 +467,7 @@ public sealed class CognitionHost : ICognitionFacade
             _logger.LogDebug(ex, "Personality evolution failed.");
         }
 
-        // 5. Periodic reflection (every N turns)
+        // 6. Periodic reflection (every N turns)
         if (_turnCount % _options.Value.Personality.ReflectionIntervalTurns == 0)
         {
             try
@@ -457,7 +480,7 @@ public sealed class CognitionHost : ICognitionFacade
             }
         }
 
-        return memoryContext;
+        return sb.ToString();
     }
 
     /// <summary>
