@@ -20,7 +20,7 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
 {
     private readonly ConversationService _conversationService;
     private readonly ICognitionFacade _cognitionFacade;
-    private readonly WhisperSttProvider _sttProvider;
+    private readonly ISttProvider _sttProvider;
     private readonly ITtsProvider _ttsProvider;
     private readonly ILogger<ConversationVM> _logger;
     private CancellationTokenSource? _cts;
@@ -49,7 +49,7 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
     public ConversationVM(
         ConversationService conversationService,
         ICognitionFacade cognitionFacade,
-        WhisperSttProvider sttProvider,
+        ISttProvider sttProvider,
         ITtsProvider ttsProvider,
         ILogger<ConversationVM> logger)
     {
@@ -95,12 +95,20 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
     {
         try
         {
-            _logger.LogInformation("Transcribing audio chunk: {File}", Path.GetFileName(wavFile));
+            // Save a copy to voice-history so the user can verify recording
+            var historyDir = Path.Combine(AppContext.BaseDirectory, "voice-history");
+            Directory.CreateDirectory(historyDir);
+            var historyFile = Path.Combine(historyDir, Path.GetFileName(wavFile));
+            try { File.Copy(wavFile, historyFile, true); } catch { /* ignore */ }
+
+            _logger.LogInformation("Transcribing audio chunk: {File} ({Size} bytes), STT provider: {Type}",
+                Path.GetFileName(wavFile), new FileInfo(wavFile).Length, _sttProvider.GetType().Name);
             var transcript = await _sttProvider.TranscribeFileAsync(wavFile);
+
+            _logger.LogInformation("Transcribed result: \"{Text}\" (confidence={Conf})", transcript.Text, transcript.Confidence);
 
             if (!string.IsNullOrWhiteSpace(transcript.Text))
             {
-                _logger.LogInformation("Transcribed: {Text}", transcript.Text);
                 // Put transcribed text into input box and auto-send
                 InputText = transcript.Text.Trim();
                 if (CanSend && SendCommand.CanExecute(null))
@@ -111,7 +119,7 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "STT transcription failed.");
+            _logger.LogError(ex, "STT transcription failed: {Type}", _sttProvider.GetType().Name);
         }
     }
 

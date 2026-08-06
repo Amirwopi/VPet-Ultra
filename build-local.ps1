@@ -271,9 +271,10 @@ $appsettings = @'
       "ContinuousMode": false,
       "SilenceTimeoutSec": 3,
       "Stt": {
-        "Provider": "whisper",
-        "ExecutablePath": "whisper/Release/whisper-cli.exe",
+        "Provider": "handy",
+        "ExecutablePath": "C:/Users/Amirwopi/AppData/Local/Handy/handy.exe",
         "ModelPath": "models/whisper/whisper-medium-Q8_0.gguf",
+        "ModelId": "handy-computer/whisper-medium-gguf/whisper-medium-Q8_0.gguf",
         "Language": "fa",
         "Threads": 4,
         "Device": "cpu"

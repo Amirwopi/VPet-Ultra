@@ -33,7 +33,7 @@ public interface IWakeWordProvider : IAsyncDisposable
 }
 
 /// <summary>
-/// Abstraction over a streaming speech-to-text provider (Faster Whisper, whisper.cpp).
+/// Abstraction over a streaming speech-to-text provider (Faster Whisper, whisper.cpp, Handy).
 /// </summary>
 public interface ISttProvider : IAsyncDisposable
 {
@@ -43,6 +43,16 @@ public interface ISttProvider : IAsyncDisposable
     event Action<TranscriptChunk>? FinalTranscript;
     event Action? VoiceActivityDetected;
     event Action? VoiceActivityEnded;
+
+    /// <summary>
+    /// Transcribe a complete audio file (non-streaming convenience method).
+    /// </summary>
+    Task<TranscriptChunk> TranscribeFileAsync(string audioFilePath, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Quick availability check (executable + model exist).
+    /// </summary>
+    Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>

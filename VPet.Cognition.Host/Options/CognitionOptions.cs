@@ -98,9 +98,23 @@ public sealed class WakeWordOptions
 
 public sealed class SttOptions
 {
+    /// <summary>
+    /// STT engine: "whisper" (whisper-cli.exe) or "handy" (handy.exe, supports GGUF v3 + Vulkan).
+    /// </summary>
     public string Provider { get; set; } = "whisper";
+
+    /// <summary>Path to the STT executable (whisper-cli.exe or handy.exe).</summary>
     public string ExecutablePath { get; set; } = "whisper-cli";
+
+    /// <summary>Model file path (whisper) — used when Provider == "whisper".</summary>
     public string ModelPath { get; set; } = "models/ggml-base.en.bin";
+
+    /// <summary>
+    /// Handy model id (e.g. "handy-computer/whisper-medium-gguf/whisper-medium-Q8_0.gguf").
+    /// Used when Provider == "handy". If empty, Handy uses its persisted selected_model.
+    /// </summary>
+    public string ModelId { get; set; } = string.Empty;
+
     public string Language { get; set; } = "auto";
     public int Threads { get; set; } = 4;
     public string Device { get; set; } = "cpu";

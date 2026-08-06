@@ -846,6 +846,18 @@ public static class CognitionHostBuilder
         services.AddHostedService<VPet.Cognition.Host.Services.PersonalityEvaluationService>();
 
         // ── Voice providers (STT) ──
+        // vpet-transcribe is a standalone CLI built from transcribe-cpp (same engine as Handy).
+        // Supports GGUF v3 models + CPU backends. See: tools/vpet-transcribe/
+        services.AddSingleton<HandySttProvider>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var stt = opts.Voice.Stt;
+            var logger = sp.GetRequiredService<ILogger<HandySttProvider>>();
+            var baseDir = ExtensionValue.BaseDirectory ?? ".";
+            var exePath = Path.IsPathRooted(stt.ExecutablePath) ? stt.ExecutablePath : Path.Combine(baseDir, stt.ExecutablePath);
+            var modelPath = Path.IsPathRooted(stt.ModelPath) ? stt.ModelPath : Path.Combine(baseDir, stt.ModelPath);
+            return new HandySttProvider(exePath, modelPath, stt.Language, logger);
+        });
         services.AddSingleton<WhisperSttProvider>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
@@ -853,7 +865,16 @@ public static class CognitionHostBuilder
             var logger = sp.GetRequiredService<ILogger<WhisperSttProvider>>();
             return new WhisperSttProvider(stt.ExecutablePath, stt.ModelPath, stt.Language, stt.Threads, logger);
         });
-        services.AddSingleton<ISttProvider>(sp => sp.GetRequiredService<WhisperSttProvider>());
+        services.AddSingleton<ISttProvider>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
+            var provider = opts.Voice.Stt.Provider.ToLowerInvariant();
+            return provider switch
+            {
+                "handy" => sp.GetRequiredService<HandySttProvider>(),
+                _ => sp.GetRequiredService<WhisperSttProvider>(),
+            };
+        });
 
         // ── Voice providers (TTS) ──
         services.AddSingleton<ITtsProvider>(sp =>
