@@ -620,9 +620,8 @@ public static class CognitionHostBuilder
         var services = new ServiceCollection();
 
         // ── Configuration: read appsettings.json from the VPet base directory ──
-        var baseDir = Path.GetDirectoryName(
-            System.Reflection.Assembly.GetAssembly(typeof(MainPlugin))?.Location) ?? ".";
-        var configPath = Path.Combine(baseDir, "appsettings.json");
+        // The plugin DLL is in mod/0000_cognition/plugin/ but appsettings.json is in the app root.
+        var baseDir = ExtensionValue.BaseDirectory ?? ".";
 
         var configBuilder = new ConfigurationBuilder()
             .SetBasePath(baseDir)
@@ -847,13 +846,14 @@ public static class CognitionHostBuilder
         services.AddHostedService<VPet.Cognition.Host.Services.PersonalityEvaluationService>();
 
         // ── Voice providers (STT) ──
-        services.AddSingleton<ISttProvider>(sp =>
+        services.AddSingleton<WhisperSttProvider>(sp =>
         {
             var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
             var stt = opts.Voice.Stt;
             var logger = sp.GetRequiredService<ILogger<WhisperSttProvider>>();
             return new WhisperSttProvider(stt.ExecutablePath, stt.ModelPath, stt.Language, stt.Threads, logger);
         });
+        services.AddSingleton<ISttProvider>(sp => sp.GetRequiredService<WhisperSttProvider>());
 
         // ── Voice providers (TTS) ──
         services.AddSingleton<ITtsProvider>(sp =>

@@ -179,43 +179,138 @@ foreach ($name in $nativeLibNames) {
 Write-Host "  OK" -ForegroundColor Green
 Write-Host ""
 
-# Step 7b: Create appsettings.json
-Write-Host "[7b/8] Creating config files..." -ForegroundColor Yellow
+# Step 7b: Copy model files from repo models/ folder to publish folder
+Write-Host "[7b/8] Copying model files..." -ForegroundColor Yellow
+$modelsSource = "models"
+$modelsDest = Join-Path $OutputDir "models"
+if (Test-Path $modelsSource) {
+    # Copy piper models
+    if (Test-Path "$modelsSource\piper") {
+        New-Item -ItemType Directory -Force -Path "$modelsDest\piper" | Out-Null
+        Get-ChildItem "$modelsSource\piper" -Filter "*.onnx" | ForEach-Object {
+            Copy-Item $_.FullName "$modelsDest\piper\" -Force
+            Write-Host "  Copied piper model: $($_.Name)"
+        }
+        # Copy .json config files if present
+        Get-ChildItem "$modelsSource\piper" -Filter "*.json" | ForEach-Object {
+            Copy-Item $_.FullName "$modelsDest\piper\" -Force
+        }
+    }
+    # Copy whisper models
+    if (Test-Path "$modelsSource\whisper") {
+        New-Item -ItemType Directory -Force -Path "$modelsDest\whisper" | Out-Null
+        Get-ChildItem "$modelsSource\whisper" -Filter "*.gguf" | ForEach-Object {
+            Copy-Item $_.FullName "$modelsDest\whisper\" -Force
+            Write-Host "  Copied whisper model: $($_.Name)"
+        }
+        Get-ChildItem "$modelsSource\whisper" -Filter "*.bin" | ForEach-Object {
+            Copy-Item $_.FullName "$modelsDest\whisper\" -Force
+            Write-Host "  Copied whisper model: $($_.Name)"
+        }
+    }
+    # Copy LLM models (gguf)
+    Get-ChildItem $modelsSource -Filter "*.gguf" -ErrorAction SilentlyContinue | ForEach-Object {
+        Copy-Item $_.FullName $modelsDest -Force
+        Write-Host "  Copied LLM model: $($_.Name)"
+    }
+    Write-Host "  OK" -ForegroundColor Green
+} else {
+    Write-Host "  models/ folder not found, skipping" -ForegroundColor Yellow
+}
+Write-Host ""
+
+# Step 7c: Create appsettings.json
+Write-Host "[7c/8] Creating config files..." -ForegroundColor Yellow
 $appsettings = @'
 {
   "Cognition": {
     "Enabled": true,
     "Llm": {
-      "Provider": "local",
-      "Model": "qwen2.5-3b-instruct-q4_k_m",
-      "ModelsDirectory": "models",
-      "GpuLayerCount": 0,
-      "ContextSize": 4096,
-      "EnableVision": false,
+      "Provider": "ollama",
+      "Endpoint": "http://46.105.71.45:11434",
+      "Model": "qwen2.5vl:7b",
+      "ApiKey": "",
       "MaxTokens": 1024,
       "Temperature": 0.7,
-      "Endpoint": "http://localhost:11434",
-      "ApiKey": ""
+      "Timeout": "00:02:00",
+      "GpuLayerCount": 0,
+      "ContextSize": 4096,
+      "ModelsDirectory": "models",
+      "EnableVision": true
     },
     "Memory": {
       "DbPath": "data/cognition.db",
+      "Encrypt": false,
+      "VectorDimensions": 768,
       "EmbeddingProvider": "local",
-      "VectorDimensions": 384
+      "EmbeddingModel": "models/bge-small.onnx",
+      "ConsolidationInterval": "00:05:00",
+      "ForgettingInterval": "1.00:00:00",
+      "MaxDbSizeMb": 500
+    },
+    "Personality": {
+      "Seed": {
+        "Name": "Vpet",
+        "Description": "A desktop companion."
+      },
+      "EvolutionRate": 0.02,
+      "ReflectionIntervalTurns": 10,
+      "EvaluationIntervalTurns": 5,
+      "CoreTraitMaxDrift": 0.1
+    },
+    "Emotion": {
+      "BlendFactor": 0.3,
+      "DecayRatePerSec": 0.01,
+      "PersistInterval": "00:01:00",
+      "AntagonisticSuppression": 0.5,
+      "SentimentMethod": "rule"
     },
     "Voice": {
-      "Enabled": false,
+      "Enabled": true,
+      "BargeIn": true,
+      "ContinuousMode": false,
+      "SilenceTimeoutSec": 3,
       "Stt": {
         "Provider": "whisper",
-        "ExecutablePath": "whisper-cli.exe",
-        "ModelPath": "models/ggml-base.bin",
-        "Language": "auto",
-        "Threads": 4
+        "ExecutablePath": "whisper/Release/whisper-cli.exe",
+        "ModelPath": "models/whisper/whisper-medium-Q8_0.gguf",
+        "Language": "fa",
+        "Threads": 4,
+        "Device": "cpu"
       },
       "Tts": {
         "Provider": "piper",
-        "ExecutablePath": "piper.exe",
-        "ModelPath": "models/en_US-amy-medium.onnx"
+        "ExecutablePath": "piper/piper/piper.exe",
+        "ModelPath": "models/piper/fa_IR-mana-medium.onnx",
+        "LengthScale": 1.0,
+        "NoiseScale": 0.667,
+        "NoiseW": 0.8,
+        "Device": "cpu"
       }
+    },
+    "Tools": {
+      "Enabled": true,
+      "TimeoutSec": 30,
+      "PromptTimeoutSec": 30
+    },
+    "Agent": {
+      "Enabled": true,
+      "MaxStepsPerPlan": 10,
+      "MaxRetries": 3,
+      "ConfidenceThreshold": 0.5,
+      "MinConfidence": 0.3,
+      "MaxConcurrentGoals": 3
+    },
+    "Animation": {
+      "EmotionBiasEnabled": true,
+      "EmotionOverrideThreshold": 0.6,
+      "LipSyncEnabled": true,
+      "LipSyncVisemeCount": 5
+    },
+    "Logging": {
+      "Level": "Information",
+      "File": "logs/cognition-.log",
+      "Console": true
     }
   }
 }

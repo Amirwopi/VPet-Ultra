@@ -1,23 +1,33 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using VPet.Cognition.Domain.Abstractions;
 using VPet.Cognition.Domain.Entities;
 using VPet.Cognition.LLM;
+using VPet.Cognition.Voice.Audio;
+using VPet.Cognition.Voice.Stt;
+using VPet.Cognition.Voice.Tts;
 
 namespace VPet.Cognition.Wpf.ViewModels;
 
 /// <summary>
-/// View-model for the conversation window. Manages message history, streaming, and cancel.
-/// Integrates memory retrieval, personality, and emotion via CognitionHost.
+/// View-model for the conversation window. Manages message history, streaming, cancel,
+/// microphone capture (STT), and TTS playback.
 /// </summary>
-public sealed partial class ConversationVM : ObservableObject
+public sealed partial class ConversationVM : ObservableObject, IDisposable
 {
     private readonly ConversationService _conversationService;
     private readonly ICognitionFacade _cognitionFacade;
+    private readonly WhisperSttProvider _sttProvider;
+    private readonly ITtsProvider _ttsProvider;
     private readonly ILogger<ConversationVM> _logger;
     private CancellationTokenSource? _cts;
+
+    private AudioCapture? _audioCapture;
+    private AudioPlayer? _audioPlayer;
+    private string _sttTempDir;
 
     public ObservableCollection<ChatMessageVm> Messages { get; } = new();
 
@@ -29,18 +39,80 @@ public sealed partial class ConversationVM : ObservableObject
     private bool _isStreaming;
 
     [ObservableProperty]
-    private string _systemPrompt = "You are a helpful desktop companion. Be friendly and concise.";
+    private bool _isListeningMic;
+
+    [ObservableProperty]
+    private string _systemPrompt = "You are a helpful desktop companion. Be friendly and concise. You understand and respond in Persian (Farsi) and English.";
 
     private readonly List<ChatMessage> _history = new();
 
     public ConversationVM(
         ConversationService conversationService,
         ICognitionFacade cognitionFacade,
+        WhisperSttProvider sttProvider,
+        ITtsProvider ttsProvider,
         ILogger<ConversationVM> logger)
     {
         _conversationService = conversationService;
         _cognitionFacade = cognitionFacade;
+        _sttProvider = sttProvider;
+        _ttsProvider = ttsProvider;
         _logger = logger;
+
+        _sttTempDir = Path.Combine(Path.GetTempPath(), "vpet_stt");
+        Directory.CreateDirectory(_sttTempDir);
+
+        var audioLogger = Microsoft.Extensions.Logging.Abstractions.NullLogger<AudioPlayer>.Instance;
+        var captureLogger = Microsoft.Extensions.Logging.Abstractions.NullLogger<AudioCapture>.Instance;
+        _audioPlayer = new AudioPlayer(audioLogger);
+        _audioCapture = new AudioCapture(_sttTempDir, captureLogger);
+        _audioCapture.ChunkReady += OnAudioChunkReady;
+    }
+
+    /// <summary>
+    /// Toggle microphone listening. When enabled, captures audio and transcribes via Whisper.
+    /// </summary>
+    [RelayCommand]
+    private void ToggleMic()
+    {
+        if (IsListeningMic)
+        {
+            _audioCapture?.Stop();
+            IsListeningMic = false;
+            _logger.LogInformation("Microphone stopped.");
+        }
+        else
+        {
+            // Clear old chunks
+            try { Array.ForEach(Directory.GetFiles(_sttTempDir, "*.wav"), File.Delete); } catch { }
+            _audioCapture?.Start();
+            IsListeningMic = true;
+            _logger.LogInformation("Microphone started. Speak now...");
+        }
+    }
+
+    private async void OnAudioChunkReady(string wavFile)
+    {
+        try
+        {
+            _logger.LogInformation("Transcribing audio chunk: {File}", Path.GetFileName(wavFile));
+            var transcript = await _sttProvider.TranscribeFileAsync(wavFile);
+
+            if (!string.IsNullOrWhiteSpace(transcript.Text))
+            {
+                _logger.LogInformation("Transcribed: {Text}", transcript.Text);
+                // Put transcribed text into input box and auto-send
+                InputText = transcript.Text.Trim();
+                if (CanSend && SendCommand.CanExecute(null))
+                {
+                    await SendAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "STT transcription failed.");
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanSend))]
@@ -99,6 +171,9 @@ public sealed partial class ConversationVM : ObservableObject
                 {
                     _logger.LogWarning(ex, "Failed to store conversation to memory.");
                 }
+
+                // 4. Speak the response via TTS
+                await SpeakAsync(result.Value.Text, _cts.Token);
             }
             else
             {
@@ -111,11 +186,51 @@ public sealed partial class ConversationVM : ObservableObject
             companionMsg.AppendToken(" [cancelled]");
             _logger.LogInformation("Conversation cancelled");
         }
+        catch (Exception ex)
+        {
+            companionMsg.AppendToken($"[Error: {ex.Message}]");
+            _logger.LogError(ex, "Send failed");
+        }
         finally
         {
             IsStreaming = false;
             _cts?.Dispose();
             _cts = null;
+        }
+    }
+
+    /// <summary>
+    /// Synthesize and play text via TTS (Piper).
+    /// </summary>
+    private async Task SpeakAsync(string text, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return;
+
+            _logger.LogInformation("Speaking via TTS: {Text}...", text.Substring(0, Math.Min(50, text.Length)));
+
+            // Synthesize to a temp WAV file
+            var tempWav = Path.Combine(Path.GetTempPath(), $"vpet_tts_{Guid.NewGuid():N}.wav");
+            await using (var fs = File.Create(tempWav))
+            {
+                await foreach (var chunk in _ttsProvider.SynthesizeAsync(text, new VoiceProsody(1.0, 1.0, 1.0), cancellationToken))
+                {
+                    await fs.WriteAsync(chunk.PcmData, cancellationToken);
+                }
+            }
+
+            // Play the audio
+            if (File.Exists(tempWav))
+            {
+                await _audioPlayer!.PlayAsync(tempWav, cancellationToken);
+                try { File.Delete(tempWav); } catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "TTS playback failed.");
         }
     }
 
@@ -126,6 +241,12 @@ public sealed partial class ConversationVM : ObservableObject
     }
 
     private bool CanSend => !IsStreaming && !string.IsNullOrWhiteSpace(InputText);
+
+    public void Dispose()
+    {
+        _audioCapture?.Dispose();
+        _audioPlayer?.Dispose();
+    }
 }
 
 /// <summary>
