@@ -5,16 +5,32 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+## [3.5.2] — 2026-08-07
+
 ### Added
-- **CLion support** — professional `CMakeLists.txt` wrapping the `dotnet` CLI so the .NET 8 solution can be opened, built, run, and debugged from CLion.
-  - 16 per-project build targets (`build-<Project>`)
-  - Solution-level targets: `build-all`, `restore`, `clean-all`, `test`, `test-build`, `publish`
-  - Run targets: `run-VPet.Windows`, `run-VPet.Solution`, `run-VPet.Tool`
-  - Debug targets with `netcoredbg`: `debug-VPet.Windows`, `debug-VPet.Solution`
-  - 7 CLion run configurations pre-configured (Build All, Restore, Run, Tests, Clean, Publish)
-  - `scripts/install-netcoredbg.ps1` helper to install the .NET debugger
-  - CMake profiles (Debug/Release) registered in `.idea/workspace.xml`
-- `.gitignore` updated to exclude CMake build directories
+- **Push-to-Talk (Alt+Q)** — hold Alt+Q to record, release to send. Beep on start/stop.
+- **Standalone STT** — `vpet-transcribe.exe` (Rust, transcribe-cpp/GGUF v3) replaces whisper.cpp
+- **Piper TTS** — Persian voice (`fa_IR-mana-medium.onnx`) with UTF-8 stdin fix
+- **Ollama integration** — stream:false, 3x retry, per-attempt CTS, KeepAlivePing
+- **Personality + Memory** — Big Five traits, emotion state, Persian memory format
+- **Persian system prompt** — full Persian prompt with personality, emotion, memory tags
+- **Multi-turn conversation** — `_sttLock` semaphore, Dispatcher UI updates, 120s timeout
+- **LowLevelKeyboardHook** — Windows WH_KEYBOARD_LL for Alt+Q hotkey
+- **Direct download links** — README, INSTALL, AI-Models now have direct HuggingFace links
+- **GitHub Actions release** — build-windows.yml updated with Rust STT build, Ollama config, Piper TTS
+
+### Changed
+- LLM provider changed from local (LLamaSharp) to Ollama (stream:false for reliability)
+- STT provider changed from whisper to handy (vpet-transcribe.exe)
+- TTS model changed from English to Persian (fa_IR-mana-medium)
+- appsettings.json now defaults to Ollama + handy STT + piper TTS
+- Release body includes direct download links for all models
+
+### Fixed
+- Ollama streaming connections dropped (SocketException 10054) — switched to stream:false
+- Piper TTS Persian encoding — write text to temp file as UTF-8 bytes
+- Multi-turn conversation crash — CollectionView from STT thread fixed with Dispatcher
+- SQLite e_sqlite3.dll — replaced with x64 version
 
 ## [0.2.0] — 2026-08-04
 

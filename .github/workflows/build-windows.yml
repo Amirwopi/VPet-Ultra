@@ -20,6 +20,9 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Restore solution
         run: dotnet restore VPet.sln
 
@@ -28,6 +31,28 @@ jobs:
 
       - name: Test
         run: dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release --no-build --logger "console;verbosity=minimal"
+
+      # ── Build Rust STT tool (vpet-transcribe) ──
+      - name: Build vpet-transcribe (Rust)
+        shell: pwsh
+        run: |
+          cd tools/vpet-transcribe
+          cargo build --release
+          Write-Host "Built vpet-transcribe"
+          # Copy the binary and required DLLs to publish folder
+          $transcribeDir = "../../publish/vpet-ultra/transcribe"
+          New-Item -ItemType Directory -Force -Path $transcribeDir
+          Copy-Item "target/release/vpet-transcribe.exe" -Destination $transcribeDir -Force
+          # Copy ggml DLLs from transcribe-cpp dependency
+          $depDir = "target/release"
+          $ggmlDlls = Get-ChildItem $depDir -Filter "ggml*.dll" -ErrorAction SilentlyContinue
+          $transcribeDll = Get-ChildItem $depDir -Filter "transcribe.dll" -ErrorAction SilentlyContinue
+          foreach ($dll in @($ggmlDlls) + @($transcribeDll)) {
+            if ($dll) {
+              Copy-Item $dll.FullName -Destination $transcribeDir -Force
+              Write-Host "Copied: $($dll.Name)"
+            }
+          }
 
       # ── Publish the main VPet application (x64) ──
       - name: Publish VPet-Simulator.Windows (x64)
@@ -62,13 +87,12 @@ jobs:
           New-Item -ItemType Directory -Force -Path $modPath
 
           # Create info.lps -- VPet REQUIRES this to recognize a mod folder
-          # Without it, the mod loader skips the folder entirely
           $infoLps = 'vupmod#Cognition:|author#VPet-Ultra:|gamever#11000:|ver#100:|intro#AI Cognition Plugin:|authorid#0:|itemid#0:|lang#en:|Cognition#Cognition:|'
           $infoLps | Out-File -FilePath "$modPath/info.lps" -Encoding UTF8
           Write-Host 'Created: info.lps'
 
           # Create version.txt for update checking
-          $version = '0.2.0'
+          $version = '3.5.2'
           if ($env:GITHUB_REF -like 'refs/tags/v*') {
             $version = $env:GITHUB_REF.Substring(11)
           }
@@ -105,7 +129,7 @@ jobs:
             Write-Host "Copied native: $($lib.Name)"
           }
 
-      # ── Create appsettings.json ──
+      # ── Create appsettings.json (Ollama + handy STT + piper TTS) ──
       - name: Create appsettings.json
         shell: pwsh
         run: |
@@ -114,34 +138,92 @@ jobs:
             "Cognition": {
               "Enabled": true,
               "Llm": {
-                "Provider": "local",
-                "Model": "qwen2.5-3b-instruct-q4_k_m",
-                "ModelsDirectory": "models",
-                "GpuLayerCount": 0,
-                "ContextSize": 4096,
-                "EnableVision": false,
+                "Provider": "ollama",
+                "Endpoint": "http://localhost:11434",
+                "Model": "qwen2.5:3b",
+                "ApiKey": "",
                 "MaxTokens": 1024,
                 "Temperature": 0.7,
-                "Endpoint": "http://localhost:11434",
-                "ApiKey": ""
+                "Timeout": "00:02:00",
+                "GpuLayerCount": 0,
+                "ContextSize": 4096,
+                "ModelsDirectory": "models",
+                "EnableVision": false
               },
               "Memory": {
-                "DbPath": "data/cognition.db"
+                "DbPath": "data/cognition.db",
+                "Encrypt": false,
+                "VectorDimensions": 768,
+                "EmbeddingProvider": "local",
+                "EmbeddingModel": "models/bge-small.onnx",
+                "ConsolidationInterval": "00:05:00",
+                "ForgettingInterval": "1.00:00:00",
+                "MaxDbSizeMb": 500
+              },
+              "Personality": {
+                "Seed": {
+                  "Name": "Vpet",
+                  "Description": "A desktop companion."
+                },
+                "EvolutionRate": 0.02,
+                "ReflectionIntervalTurns": 10,
+                "EvaluationIntervalTurns": 5,
+                "CoreTraitMaxDrift": 0.1
+              },
+              "Emotion": {
+                "BlendFactor": 0.3,
+                "DecayRatePerSec": 0.01,
+                "PersistInterval": "00:01:00",
+                "AntagonisticSuppression": 0.5,
+                "SentimentMethod": "rule"
               },
               "Voice": {
-                "Enabled": false,
+                "Enabled": true,
+                "BargeIn": true,
+                "ContinuousMode": false,
+                "SilenceTimeoutSec": 3,
                 "Stt": {
-                  "Provider": "whisper",
-                  "ExecutablePath": "whisper-cli.exe",
-                  "ModelPath": "models/ggml-base.bin",
-                  "Language": "auto",
-                  "Threads": 4
+                  "Provider": "handy",
+                  "ExecutablePath": "transcribe/vpet-transcribe.exe",
+                  "ModelPath": "models/whisper/whisper-medium-Q8_0.gguf",
+                  "ModelId": "models/whisper/whisper-medium-Q8_0.gguf",
+                  "Language": "fa",
+                  "Threads": 4,
+                  "Device": "cpu"
                 },
                 "Tts": {
                   "Provider": "piper",
-                  "ExecutablePath": "piper.exe",
-                  "ModelPath": "models/en_US-amy-medium.onnx"
+                  "ExecutablePath": "piper/piper/piper.exe",
+                  "ModelPath": "models/piper/fa_IR-mana-medium.onnx",
+                  "LengthScale": 1.0,
+                  "NoiseScale": 0.667,
+                  "NoiseW": 0.8,
+                  "Device": "cpu"
                 }
+              },
+              "Tools": {
+                "Enabled": true,
+                "TimeoutSec": 30,
+                "PromptTimeoutSec": 30
+              },
+              "Agent": {
+                "Enabled": true,
+                "MaxStepsPerPlan": 10,
+                "MaxRetries": 3,
+                "ConfidenceThreshold": 0.5,
+                "MinConfidence": 0.3,
+                "MaxConcurrentGoals": 3
+              },
+              "Animation": {
+                "EmotionBiasEnabled": true,
+                "EmotionOverrideThreshold": 0.6,
+                "LipSyncEnabled": true,
+                "LipSyncVisemeCount": 5
+              },
+              "Logging": {
+                "Level": "Information",
+                "File": "logs/cognition-.log",
+                "Console": true
               }
             }
           }
@@ -152,7 +234,8 @@ jobs:
       - name: Create runtime directories
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path "publish/vpet-ultra/models"
+          New-Item -ItemType Directory -Force -Path "publish/vpet-ultra/models/whisper"
+          New-Item -ItemType Directory -Force -Path "publish/vpet-ultra/models/piper"
           New-Item -ItemType Directory -Force -Path "publish/vpet-ultra/data"
           New-Item -ItemType Directory -Force -Path "publish/vpet-ultra/logs"
 
@@ -162,7 +245,7 @@ jobs:
         run: |
           Copy-Item "INSTALL.md" -Destination "publish/vpet-ultra/" -Force
           Copy-Item "TESTING.md" -Destination "publish/vpet-ultra/" -Force
-          Copy-Item "docs/MODELS.md" -Destination "publish/vpet-ultra/" -Force
+          Copy-Item "wiki/AI-Models.md" -Destination "publish/vpet-ultra/" -Force
 
       # ── Zip the full package ──
       - name: Zip full package
@@ -182,27 +265,20 @@ jobs:
           # Copy only the cognition mod folder
           Copy-Item -Path "publish/vpet-ultra/mod/0000_cognition" -Destination "$pluginPath/mod/0000_cognition" -Recurse -Force
 
+          # Copy transcribe tool
+          Copy-Item -Path "publish/vpet-ultra/transcribe" -Destination "$pluginPath/transcribe" -Recurse -Force
+
           # Copy appsettings.json template
           Copy-Item -Path "publish/vpet-ultra/appsettings.json" -Destination $pluginPath -Force
 
           # Copy docs
           Copy-Item "INSTALL.md" -Destination $pluginPath -Force
           Copy-Item "TESTING.md" -Destination $pluginPath -Force
-          Copy-Item "docs/MODELS.md" -Destination $pluginPath -Force
+          Copy-Item "wiki/AI-Models.md" -Destination $pluginPath -Force
 
           Compress-Archive -Path "$pluginPath/*" -DestinationPath "VPet-Ultra-Plugin.zip" -Force
           $size = [math]::Round((Get-Item "VPet-Ultra-Plugin.zip").Length / 1MB, 1)
           Write-Host "Plugin zip: $size MB"
-
-      # Skip artifact upload to avoid storage quota — use Release downloads instead
-      # - name: Upload artifacts
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: VPet-Ultra-Build
-      #     path: |
-      #       VPet-Ultra-Full.zip
-      #       VPet-Ultra-Plugin.zip
-      #     retention-days: 7
 
       - name: Upload to Release (on tag)
         if: startsWith(github.ref, 'refs/tags/v')
@@ -219,37 +295,56 @@ jobs:
 
             | فایل | حجم | برای چه |
             |---|---|---|
-            | `VPet-Ultra-Full.zip` | ~914 MB | **اولین نصب** — کل برنامه + پلاگین AI + داده‌های بازی |
-            | `VPet-Ultra-Plugin.zip` | ~50 MB | **آپدیت** — فقط پلاگین AI (اگه قبلا Full رو نصب کردی) |
+            | `VPet-Ultra-Full.zip` | ~920 MB | **اولین نصب** — کل برنامه + پلاگین AI + داده‌های بازی |
+            | `VPet-Ultra-Plugin.zip` | ~60 MB | **آپدیت** — فقط پلاگین AI (اگه قبلا Full رو نصب کردی) |
 
             ---
 
-            ### Installation (First Time)
-            1. Download and extract `VPet-Ultra-Full.zip`
-            2. Follow `INSTALL.md` (included in the zip)
-            3. Download AI models as described in `MODELS.md`
-            4. Run `VPet-Simulator.Windows.exe`
-            5. Click the Chat button on the pet's toolbar
+            ### نصب (اولین بار) — Installation
 
-            ### Update (Already Installed)
-            1. Download `VPet-Ultra-Plugin.zip`
-            2. Extract and replace the `mod/0000_cognition/` folder in your existing VPet installation
-            3. Replace `appsettings.json` if settings changed
-            4. Restart VPet — done!
+            1. `VPet-Ultra-Full.zip` رو دانلود و از حالت فشرده خارج کن
+            2. فایل `INSTALL.md` رو بخون (داخل zip هست)
+            3. مدل‌های AI رو طبق `AI-Models.md` دانلود کن (لینک مستقیم پایین)
+            4. `VPet-Simulator.Windows.exe` رو اجرا کن
+            5. روی دکمه **Chat** توی تولبار پت کلیک کن
 
-            ### What's Included (Full)
-            - **VPet-Simulator.Windows** — the full desktop pet application (x64)
-            - **mod/0000_core** — core game data (pets, food, themes, images)
-            - **mod/0000_cognition** — AI cognition plugin (LLamaSharp + all cognition DLLs)
-            - `appsettings.json` — pre-configured for local LLamaSharp + Qwen2.5-3B
-            - Documentation: INSTALL.md, TESTING.md, MODELS.md
+            ### آپدیت (قبلا نصب کردی) — Update
+
+            1. `VPet-Ultra-Plugin.zip` رو دانلود کن
+            2. پوشه `mod/0000_cognition/` رو با نسخه جدید عوض کن
+            3. `appsettings.json` رو اگه تنظیمات عوض شده عوض کن
+            4. VPet رو ری‌استارت کن — تمام!
+
+            ---
+
+            ### مدل‌های مورد نیاز — Required AI Models
+
+            برنامه خودش مدل‌ها رو نداره. باید جداگانه دانلود کنی:
+
+            | مدل | حجم | لینک دانلود مستقیم | محل قرارگیری |
+            |---|---|---|---|
+            | **Whisper Medium (STT)** | ~793 MB | [whisper-medium-Q8_0.gguf](https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium-q8_0.bin) | `models/whisper/whisper-medium-Q8_0.gguf` |
+            | **Piper Persian TTS** | ~63 MB | [fa_IR-mana-medium.onnx](https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.3/fa/ir/mana/medium/fa_IR-mana-medium.onnx) | `models/piper/fa_IR-mana-medium.onnx` |
+            | **Piper TTS Config** | ~1 KB | [fa_IR-mana-medium.onnx.json](https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.3/fa/ir/mana/medium/fa_IR-mana-medium.onnx.json) | `models/piper/fa_IR-mana-medium.onnx.json` |
+            | **Qwen2.5 LLM** | via Ollama | `ollama pull qwen2.5:3b` | Ollama manages this |
+
+            ### برنامه‌های مورد نیاز — Required Software
+
+            | برنامه | لینک دانلود | توضیح |
+            |---|---|---|
+            | **Ollama** | [ollama.com/download](https://ollama.com/download) | سرور LLM — بعد از نصب: `ollama pull qwen2.5:3b` |
+            | **.NET 8 Runtime** | [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet/8.0) | فقط اگر خطا داد (معمولاً داخل پکیج هست) |
 
             ### Quick Start
+
             ```
-            1. Download qwen2.5-3b-instruct-q4_k_m.gguf from HuggingFace
-            2. Place it in the models/ folder
-            3. Run VPet-Simulator.Windows.exe
-            4. Click Chat on the pet's toolbar
+            1. Ollama رو نصب کن: https://ollama.com/download
+            2. مدل رو بکش: ollama pull qwen2.5:3b
+            3. Whisper model رو دانلود کن و بذار تو models/whisper/
+            4. Piper TTS model رو دانلود کن و بذار تو models/piper/
+            5. VPet-Simulator.Windows.exe رو اجرا کن
+            6. روی Chat کلیک کن
+            7. Alt+Q رو نگه دار تا حرف بزنی، رها کن تا بفرسته
             ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

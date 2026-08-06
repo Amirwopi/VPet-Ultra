@@ -29,7 +29,7 @@
 | **Memory** | SQLite-backed episodic + semantic memory با embedding retrieval، importance decay و consolidation. |
 | **Personality** | Big Five core traits + adaptive traits که در طول conversation تکامل پیدا می‌کنن. Relationship state (trust، familiarity، affection). |
 | **Emotion** | 10-dimensional emotion vector با stimulus blending، antagonistic suppression و decay. به animation، voice prosody و decision bias map می‌شه. |
-| **Voice** | Whisper (whisper.cpp) برای speech-to-text، Piper یا Kokoro برای text-to-speech. همه آفلاین. |
+| **Voice** | Whisper (whisper.cpp / transcribe-cpp) برای speech-to-text، Piper برای text-to-speech. پشتیبانی از زبان فارسی. Push-to-talk با Alt+Q. |
 | **Agent** | Goal-driven autonomous runtime با plan execution، tool dispatch و permission gating. |
 | **Tools** | Open application، read file، open browser، clipboard. Path validation و command blocklist. |
 | **Security** | Secret redaction در logs، path traversal prevention، dangerous command detection. |
@@ -37,17 +37,50 @@
 
 ## 🚀 Quick Start
 
+### دانلود ریلیز — Download Release
+
+به‌جای build از سورس، می‌تونی ریلیز آماده رو دانلود کنی:
+
+👉 **[Releases page](https://github.com/Amirwopi/VPet-Ultra/releases)**
+
+دو نوع پکیج هست:
+
+| فایل | حجم | برای چه |
+|---|---|---|
+| `VPet-Ultra-Full.zip` | ~920 MB | **اولین نصب** — کل برنامه + پلاگین AI + داده‌های بازی |
+| `VPet-Ultra-Plugin.zip` | ~60 MB | **آپدیت** — فقط پلاگین AI (اگه قبلا Full رو نصب کردی) |
+
 ### Prerequisites
 
-1. **.NET 8 SDK** — [download](https://dotnet.microsoft.com/download/dotnet/8.0)
-2. **Windows** (یا Linux با Wine) برای اجرای WPF
-3. **یک GGUF model** (برای AI):
-   ```bash
-   # مثال: Qwen2.5-3B (recommended، ~2GB، روی CPU اجرا می‌شه)
-   # توی پوشه‌ی models/ کنار VPet.exe قرار بده
-   ```
+1. **Ollama** — [دانلود از ollama.com/download](https://ollama.com/download)
+   - بعد از نصب: `ollama pull qwen2.5:3b`
+2. **Windows 10/11** (یا Linux با Wine) برای اجرای WPF
+3. **.NET 8 Runtime** — [دانلود](https://dotnet.microsoft.com/download/dotnet/8.0) (معمولاً داخل پکیج هست)
 
-### Build
+### مدل‌های AI — AI Models (باید جداگانه دانلود کنی)
+
+برنامه خودش مدل‌ها رو نداره. این فایل‌ها رو دانلود کن و توی پوشه‌های مشخص‌شده بذار:
+
+| مدل | حجم | لینک دانلود مستقیم | محل قرارگیری |
+|---|---|---|---|
+| **Whisper Medium (STT)** | ~793 MB | [⬇️ ggml-medium-q8_0.bin](https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium-q8_0.bin) | `models/whisper/whisper-medium-Q8_0.gguf` |
+| **Piper Persian TTS** | ~63 MB | [⬇️ fa_IR-mana-medium.onnx](https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.3/fa/ir/mana/medium/fa_IR-mana-medium.onnx) | `models/piper/fa_IR-mana-medium.onnx` |
+| **Piper TTS Config** | ~1 KB | [⬇️ fa_IR-mana-medium.onnx.json](https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.3/fa/ir/mana/medium/fa_IR-mana-medium.onnx.json) | `models/piper/fa_IR-mana-medium.onnx.json` |
+| **Qwen2.5 LLM** | via Ollama | `ollama pull qwen2.5:3b` | Ollama manages this |
+
+> **نکته:** فایل Whisper رو بعد از دانلود به `whisper-medium-Q8_0.gguf` تغییر نام بده.
+
+### نصب — Installation
+
+1. `VPet-Ultra-Full.zip` رو دانلود و از حالت فشرده خارج کن
+2. **Ollama** رو نصب کن: [ollama.com/download](https://ollama.com/download)
+3. مدل LLM رو بکش: `ollama pull qwen2.5:3b`
+4. مدل‌های Whisper و Piper رو (از جدول بالا) دانلود و توی پوشه‌های `models/whisper/` و `models/piper/` بذار
+5. `VPet-Simulator.Windows.exe` رو اجرا کن
+6. روی دکمه **Chat** توی تولبار پت کلیک کن
+7. **Alt+Q** رو نگه دار تا حرف بزنی، رها کن تا بفرسته
+
+### Build از سورس — Build from Source
 
 ```bash
 git clone https://github.com/Amirwopi/VPet-Ultra.git
@@ -112,34 +145,46 @@ dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release
 
 ### Configure
 
-فایل `appsettings.json` توی output directory بساز. default، local inference (LLamaSharp) هست:
+فایل `appsettings.json` توی output directory. default، Ollama + handy STT + piper TTS هست:
 
 ```json
 {
   "Cognition": {
     "Enabled": true,
     "Llm": {
-      "Provider": "local",
-      "Model": "qwen2.5-3b-instruct-q4_k_m",
-      "ModelsDirectory": "models",
-      "GpuLayerCount": 0,
-      "ContextSize": 4096,
-      "Temperature": 0.8
+      "Provider": "ollama",
+      "Endpoint": "http://localhost:11434",
+      "Model": "qwen2.5:3b"
+    },
+    "Voice": {
+      "Enabled": true,
+      "Stt": {
+        "Provider": "handy",
+        "ExecutablePath": "transcribe/vpet-transcribe.exe",
+        "ModelPath": "models/whisper/whisper-medium-Q8_0.gguf",
+        "Language": "fa"
+      },
+      "Tts": {
+        "Provider": "piper",
+        "ExecutablePath": "piper/piper/piper.exe",
+        "ModelPath": "models/piper/fa_IR-mana-medium.onnx"
+      }
     }
   }
 }
 ```
 
-برای online mode:
+برای local inference (بدون Ollama):
 
 ```json
 {
   "Cognition": {
-    "Enabled": true,
     "Llm": {
-      "Provider": "online",
-      "Endpoint": "http://localhost:11434",
-      "Model": "qwen2.5:3b"
+      "Provider": "local",
+      "Model": "qwen2.5-3b-instruct-q4_k_m",
+      "ModelsDirectory": "models",
+      "GpuLayerCount": 0,
+      "ContextSize": 4096
     }
   }
 }

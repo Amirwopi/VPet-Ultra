@@ -1,233 +1,204 @@
-# راهنمای نصب صفر تا صد — VPet-Ultra
+# راهنمای نصب صفر تا صد — VPet-Ultra v3.5.2
 
-این راهنما از صفر تا اجرای کامل پت هوشمند رو توضیح می‌ده. مرحله به مرحله پیش برو.
+این راهنما از صفر تا اجرای کامل پت هوشمند با صدا رو توضیح می‌ده. مرحله به مرحله پیش برو.
 
 ---
 
 ## مرحله ۰: پیش‌نیازها
 
-### ۰.۱ — .NET 8 SDK
+### ۰.۱ — Ollama (سرور LLM)
 
-1. برو به https://dotnet.microsoft.com/download/dotnet/8.0
-2. **.NET SDK 8.0.x** برای Windows رو دانلود کن (نه Runtime، SDK رو)
-3. نصب کن
+1. برو به **[ollama.com/download](https://ollama.com/download)**
+2. نسخه Windows رو دانلود و نصب کن
+3. بعد از نصب، Command Prompt رو باز کن و مدل رو بکش:
+   ```powershell
+   ollama pull qwen2.5:3b
+   ```
+   (این حدود ۲ گیگابایت دانلود می‌کنه — یکبار)
 4. تست کن:
    ```powershell
-   dotnet --version
+   ollama list
    ```
-   باید `8.0.x` نشون بده.
+   باید `qwen2.5:3b` رو نشون بده.
 
-### ۰.۲ — Git (برای کلون کردن)
+> **نکته:** Ollama به‌صورت خودکار تو بک‌گراند اجرا میشه. نیازی به دستی اجرا کردن نیست.
 
-```powershell
-git --version
-```
-اگه نصب نیست، از https://git-scm.com دانلود کن.
+### ۰.۲ — .NET 8 Runtime (معمولاً داخل پکیج هست)
+
+اگه برنامه خطای `.NET` داد:
+
+1. برو به **[dotnet.microsoft.com/download/dotnet/8.0](https://dotnet.microsoft.com/download/dotnet/8.0)**
+2. **.NET Desktop Runtime 8.0.x** برای Windows رو دانلود کن
+3. نصب کن
 
 ---
 
 ## مرحله ۱: دانلود VPet-Ultra
 
-### روش A: دانلود ZIP آماده (ساده‌ترین)
-
-1. برو به https://github.com/Amirwopi/VPet-Ultra/releases
-2. آخرین نسخه `VPet-Ultra-Cognition.zip` رو دانلود کن
-3. محتویاتش رو کنار VPet اصلی اکسترکت کن
-4. پوشه `mod/0000_cognition/` باید ساخته بشه
-5. برو به **مرحله ۳**
-
-### روش B: کلون و build دستی
-
-```powershell
-git clone https://github.com/Amirwopi/VPet-Ultra.git
-cd VPet-Ultra
-.\build-windows.ps1
-```
-
-اگه `build-windows.ps1` خطا داد:
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
-.\build-windows.ps1
-```
-
-خروجی تو پوشه `publish/vpet-cognition/` ساخته میشه.
+1. برو به **[github.com/Amirwopi/VPet-Ultra/releases](https://github.com/Amirwopi/VPet-Ultra/releases)**
+2. آخرین نسخه `VPet-Ultra-Full.zip` رو دانلود کن (~۹۲۰ مگابایت)
+3. فایل zip رو از حالت فشرده خارج کن (مثلاً تو `C:\VPet-Ultra\`)
+4. ساختار پوشه‌ها باید این‌طور باشه:
+   ```
+   C:\VPet-Ultra\
+   ├── VPet-Simulator.Windows.exe
+   ├── appsettings.json
+   ├── mod\
+   │   ├── 0000_core\        (داده‌های بازی)
+   │   └── 0000_cognition\   (پلاگین AI)
+   ├── transcribe\            (ابزار تشخیص صدا)
+   ├── models\
+   │   ├── whisper\           (اینجا مدل صدا بذار)
+   │   └── piper\             (اینجا مدل TTS بذار)
+   └── ...
+   ```
 
 ---
 
-## مرحله ۲: دانلود مدل AI (مغز پت)
+## مرحله ۲: دانلود مدل‌های AI
 
-VPet-Ultra به صورت پیش‌فرض مدل‌های AI رو **داخل خودش** اجرا می‌کنه (با LLamaSharp). نیازی به Ollama یا سرور جداگانه نیست!
+برنامه خودش مدل‌ها رو نداره. باید جداگانه دانلود کنی:
 
-### ۲.۱ — مدل متن (اجباری)
+### ۲.۱ — مدل تشخیص صدا (Whisper STT) — اجباری برای صدا
 
-1. برو به https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/tree/main
-2. فایل `qwen2.5-3b-instruct-q4_k_m.gguf` رو دانلود کن (~۲ گیگابایت)
-3. تو پوشه `models/` کنار VPet قرار بده:
-   ```
-   VPet\
-   ├── models\
-   │   └── qwen2.5-3b-instruct-q4_k_m.gguf
-   ├── mod\
-   │   └── 0000_cognition\
-   └── VPet-Simulator.Windows.exe
-   ```
+| فایل | حجم | لینک دانلود مستقیم | محل قرارگیری |
+|---|---|---|---|
+| **Whisper Medium Q8** | ~793 MB | **[⬇️ ggml-medium-q8_0.bin](https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium-q8_0.bin)** | `models/whisper/whisper-medium-Q8_0.gguf` |
 
-> **نکته:** اگه RAM/CPU قوی داری، می‌تونی مدل 7B رو دانلود کنی (بهتر ولی کندتر):
-> `qwen2.5-7b-instruct-q4_k_m.gguf` (~۴.۵ گیگابایت)
+**دستورالعمل:**
+1. از لینک بالا فایل `ggml-medium-q8_0.bin` رو دانلود کن
+2. اسم فایل رو به `whisper-medium-Q8_0.gguf` تغییر بده
+3. توی پوشه `models/whisper/` بذارش
 
-### ۲.۲ — مدل Vision (اختیاری)
+### ۲.۲ — مدل تبدیل صدا به متن (Piper TTS) — اجباری برای صدا
 
-اگه می‌خوای پت بتونه عکس ببینه و توضیح بده:
+| فایل | حجم | لینک دانلود مستقیم | محل قرارگیری |
+|---|---|---|---|
+| **Piper Persian Voice** | ~63 MB | **[⬇️ fa_IR-mana-medium.onnx](https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.3/fa/ir/mana/medium/fa_IR-mana-medium.onnx)** | `models/piper/fa_IR-mana-medium.onnx` |
+| **Piper Voice Config** | ~1 KB | **[⬇️ fa_IR-mana-medium.onnx.json](https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.3/fa/ir/mana/medium/fa_IR-mana-medium.onnx.json)** | `models/piper/fa_IR-mana-medium.onnx.json` |
 
-1. برو به https://huggingface.co/lmms-lab/llava-onevision-qwen2-7b-gguf
-2. فایل مدل رو دانلود کن و تو پوشه `models/` بذار
-3. تو `appsettings.json`:
-   ```json
-   "EnableVision": true
-   ```
+**دستورالعمل:**
+1. هر دو فایل رو از لینک‌های بالا دانلود کن
+2. توی پوشه `models/piper/` بذار
 
-> **هشدار:** مدل Vision حداقل ۸ گیگابایت RAM نیاز داره.
+### ۲.۳ — مدل LLM (مغز پت) — از طریق Ollama
 
-### ۲.۳ — مدل Embedding (برای حافظه بهتر)
+این مدل رو Ollama مدیریت می‌کنه. تو مرحله ۰.۱ با `ollama pull qwen2.5:3b` دانلودش کردی.
 
-1. برو به https://huggingface.co/BAAI/bge-small-en-v1.5
-2. فایل `model.gguf` رو دانلود کن
-3. تو پوشه `models/` بذار
+> **اگه RAM قوی داری (۸+ گیگابایت):** می‌تونی مدل بهتر بکشی:
+> ```powershell
+> ollama pull qwen2.5:7b
+> ```
+> و تو `appsettings.json` مدل رو به `qwen2.5:7b` تغییر بده.
+
+### ۲.۴ — مدل Embedding (اختیاری — برای حافظه بهتر)
+
+| فایل | حجم | لینک دانلود مستقیم | محل قرارگیری |
+|---|---|---|---|
+| **BGE Small EN** | ~130 MB | **[⬇️ model.gguf](https://huggingface.co/BAAI/bge-small-en-v1.5/resolve/main/model.gguf)** | `models/bge-small.onnx` |
 
 > **اختیاری:** بدون این مدل هم حافظه کار می‌کنه، ولی با embedding بهتر جستجو می‌کنه.
 
-### ۲.۴ — GPU Acceleration (اختیاری)
-
-اگه کارت گرافیک NVIDIA داری:
-
-1. پکیج CUDA backend رو نصب کن:
-   ```powershell
-   dotnet add VPet.Cognition.Inference package LLamaSharp.Backend.Cuda12
-   ```
-2. تو `appsettings.json`:
-   ```json
-   "GpuLayerCount": 25
-   ```
-   (عدد ۲۵ یعنی ۲۵ لایه مدل روی GPU اجرا میشه — بسته به VRAM تنظیم کن)
-
-> بدون GPU هم روی CPU کار می‌کنه، فقط کندتر.
-
 ---
 
-## مرحله ۳: تنظیم فایل config
+## مرحله ۳: بررسی appsettings.json
 
-1. برو به پوشه VPet-Ultra (جایی که `VPet-Simulator.Windows.exe` هست)
-2. فایل `appsettings.json` رو با Notepad باز کن
-3. تنظیمات پیش‌فرض برای اجرای محلی (LLamaSharp) اینه:
+فایل `appsettings.json` رو با Notepad باز کن. باید این‌طور باشه:
 
-   ```json
-   {
-     "Cognition": {
-       "Enabled": true,
-       "Llm": {
-         "Provider": "local",
-         "Model": "qwen2.5-3b-instruct-q4_k_m",
-         "ModelsDirectory": "models",
-         "GpuLayerCount": 0,
-         "ContextSize": 4096,
-         "EnableVision": false,
-         "MaxTokens": 1024,
-         "Temperature": 0.7
-       }
-     }
-   }
-   ```
-
-4. اگه مدل 7B خواستی:
-   ```json
-   "Model": "qwen2.5-7b-instruct-q4_k_m"
-   ```
-
-5. فایل رو ذخیره کن.
-
-### حالت آنلاین (Ollama) — اختیاری
-
-اگه Ollama نصبه و می‌خوای ازش استفاده کنی:
 ```json
 {
   "Cognition": {
+    "Enabled": true,
     "Llm": {
       "Provider": "ollama",
       "Endpoint": "http://localhost:11434",
-      "Model": "qwen2.5:3b"
+      "Model": "qwen2.5:3b",
+      "MaxTokens": 1024,
+      "Temperature": 0.7
+    },
+    "Voice": {
+      "Enabled": true,
+      "Stt": {
+        "Provider": "handy",
+        "ExecutablePath": "transcribe/vpet-transcribe.exe",
+        "ModelPath": "models/whisper/whisper-medium-Q8_0.gguf",
+        "Language": "fa"
+      },
+      "Tts": {
+        "Provider": "piper",
+        "ExecutablePath": "piper/piper/piper.exe",
+        "ModelPath": "models/piper/fa_IR-mana-medium.onnx"
+      }
     }
   }
 }
 ```
 
----
-
-## مرحله ۴: (اختیاری) نصب صدا
-
-اگه می‌خوای پت صدا داشته باشه (تشخیص صدا + صحبت کردن)، برو به `docs/MODELS.md` و مدل‌های Whisper و Piper رو دانلود کن.
-
-اگه صدا نمی‌خوای، این مرحله رو رد کن. پت فقط با متن کار می‌کنه.
+> **نکته:** اگه مدل 7B خواستی، `"Model": "qwen2.5:7b"` کن.
 
 ---
 
-## مرحله ۵: اجرای پت
+## مرحله ۴: اجرای پت
 
 1. `VPet-Simulator.Windows.exe` رو اجرا کن
 2. پت روی صفحه ظاهر میشه
 3. روی پت راست‌کلیک کن → منو باز میشه
-4. دکمه **Chat** رو تو toolbar پیدا کن (یا تو منوی راست‌کلیک)
+4. دکمه **Chat** رو تو toolbar پیدا کن
 5. کلیک کن → پنجره گفتگو باز میشه
-6. بنویس: `سلام` و Enter بزن
-7. پت باید جواب بده! 🎉
 
-> **نکته:** اولین جواب ممکنه چند ثانیه طول بکشه چون مدل داره تو حافظه بارگذاری میشه.
+### چت متنی
+- بنویس: `سلام` و Enter بزن
+- پت جواب میده
+
+### چت صوتی (Push-to-Talk)
+- کلید **Alt+Q** رو نگه دار (یك بيب ميشه — شروع ضبط)
+- صحبت کن (فارسی یا انگلیسی)
+- کلید رو رها کن (یك بيب ميشه — ارسال)
+- پت جواب میده و صحبت می‌كنه
+
+> **نکته:** اولین جواب ممکنه چند ثانیه طول بکشه چون مدل داره لود میشه.
 
 ---
 
-## مرحله ۶: تست عملکرد
-
-بعد از اجرا، این‌ها رو تست کن:
+## مرحله ۵: تست عملکرد
 
 | تست | چطور | نتیجه مورد انتظار |
 |---|---|---|
 | گفتگو | بنویس `سلام` | پت جواب میده |
-| حافظه | بگو `اسم من علیه`، بعد بپرس `اسم من چیه؟` | پت یادش میاد |
+| حافظه | بگو `اسم من امیر است`، بعد بپرس `اسم من چیه؟` | پت یادش میاد |
 | شخصیت | چند بار حرف بزن | سبک جواب عوض میشه |
+| صدا | Alt+Q رو نگه دار و حرف بزن | پت میشنوه و جواب میده |
 | احساس | بگو `خوشحالم` | پت خوشحال میشه (انیمیشن عوض میشه) |
-| تنظیمات | راست‌کلیک → Settings → Cognition | پنجره تنظیمات باز میشه |
-
-اگه چیزی کار نکرد، برو به **مرحله ۷**.
 
 ---
 
-## مرحله ۷: حل مشکل (Troubleshooting)
+## مرحله ۶: حل مشکل (Troubleshooting)
 
 ### پت جواب نمیده
 
-1. **مدل دانلود شده؟** پوشه `models/` رو چک کن. فایل `.gguf` باید باشه.
-2. **اسم مدل درسته؟** تو `appsettings.json` فیلد `Model` رو با اسم فایل چک کن.
-3. **RAM کافی هست؟** مدل 3B حداقل ۴ گیگابایت RAM آزاد نیاز داره.
-4. **لاگ‌ها رو چک کن:** پوشه `logs/` رو باز کن. فایل `cognition-*.log` رو بخون.
-
-### پت اصلاً باز نمیشه
-
-1. **.NET 8 نصبه؟** `dotnet --version` بزن.
-2. **DLL‌ها هستن؟** پوشه `mod/0000_cognition/` رو چک کن. باید چندتا `.dll` باشه.
-3. **appsettings.json درسته؟** JSON رو با https://jsonlint.com اعتبارسنجی کن.
-
-### جواب‌ها خیلی کندن
-
-1. **GPU فعال کن:** `GpuLayerCount` رو از 0 به 25 (یا بیشتر) تغییر بده.
-2. **مدل کوچک‌تر استفاده کن:** `qwen2.5-1.5b-instruct-q4_k_m.gguf` (~۱ گیگابایت)
-3. **ContextSize کم کن:** از 4096 به 2048 تغییر بده.
+1. **Ollama در حال اجراست؟** Task Manager رو چک کن. `ollama.exe` باید تو پروسه‌ها باشه.
+2. **مدل Ollama نصبه؟** `ollama list` بزن. باید `qwen2.5:3b` رو نشون بده.
+3. **لاگ‌ها رو چک کن:** پوشه `logs/` رو باز کن. فایل `cognition-*.log` رو بخون.
 
 ### صدا کار نمیکنه
 
-1. **whisper-cli.exe هست؟** تو پوشه اصلی VPet چک کن.
-2. **مدل Whisper هست؟** تو پوشه `models/` چک کن.
-3. **piper.exe هست؟** تو پوشه اصلی VPet چک کن.
-4. **مدل Piper هست؟** تو پوشه `models/` چک کن.
-5. **تو appsettings.json مسیرها درستن؟**
+1. **مدل Whisper هست؟** فایل `models/whisper/whisper-medium-Q8_0.gguf` رو چک کن (حدود 793 مگابایت باید باشه).
+2. **مدل Piper هست؟** فایل `models/piper/fa_IR-mana-medium.onnx` رو چک کن (حدود 63 مگابایت باید باشه).
+3. **فایل config Piper هست؟** فایل `models/piper/fa_IR-mana-medium.onnx.json` رو چک کن.
+4. **transcribe/vpet-transcribe.exe هست؟** چک کن که فایل اجرایی وجود داره.
+5. **میکروفون وصل هست؟** ویندوز → Settings → Privacy → Microphone → دسترسی رو چک کن.
+
+### پت اصلاً باز نمیشه
+
+1. **.NET 8 نصبه؟** `dotnet --version` بزن. اگه خطا داد، از [dotnet.microsoft.com](https://dotnet.microsoft.com/download/dotnet/8.0) نصب کن.
+2. **DLL‌ها هستن؟** پوشه `mod/0000_cognition/` رو چک کن. باید چندتا `.dll` باشه.
+3. **appsettings.json درسته؟** JSON رو با [jsonlint.com](https://jsonlint.com) اعتبارسنجی کن.
+
+### جواب‌ها خیلی کندن
+
+1. **مدل کوچک‌تر:** `ollama pull qwen2.5:1.5b` و تو appsettings.json `"Model": "qwen2.5:1.5b"` کن.
+2. **MaxTokens کم کن:** از 1024 به 512 تغییر بده.
+3. **ContextSize کم کن:** از 4096 به 2048 تغییر بده.
 
 ### حافظه کار نمیکنه
 
@@ -240,7 +211,7 @@ VPet-Ultra به صورت پیش‌فرض مدل‌های AI رو **داخل خو
 
 ---
 
-## مرحله ۸: شخصی‌سازی
+## مرحله ۷: شخصی‌سازی
 
 ### عوض کردن اسم پت
 
@@ -254,31 +225,41 @@ VPet-Ultra به صورت پیش‌فرض مدل‌های AI رو **داخل خو
 }
 ```
 
-### عوض کردن زبان
+### عوض کردن زبان تشخیص صدا
 
 تو `appsettings.json`، تو بخش STT:
 ```json
-"Language": "fa"
+"Language": "fa"    // فارسی
+"Language": "en"    // انگلیسی
+"Language": "auto"  // خودکار
 ```
 
 ### عوض کردن سرعت جواب
 
 ```json
 "Llm": {
-  "Temperature": 0.5
+  "Temperature": 0.5   // دقیق‌تر
+  "Temperature": 0.9   // خلاقانه‌تر
 }
 ```
-(عدد کمتر = جواب‌های دقیق‌تر، عدد بیشتر = جواب‌های خلاقانه‌تر)
 
 ---
 
-## خلاصه سریع (۴ مرحله)
+## خلاصه سریع (۵ مرحله)
 
 ```
-1. مدل GGUF دانلود کن → models/qwen2.5-3b-instruct-q4_k_m.gguf
-2. VPet-Ultra-Cognition.zip رو دانلود و کنار VPet اکسترکت کن
-3. appsettings.json رو چک کن (پیش‌فرض درسته)
-4. VPet-Simulator.Windows.exe رو اجرا کن → دکمه Chat → حرف بزن!
+1. Ollama نصب کن → ollama.com/download
+2. مدل LLM بکش → ollama pull qwen2.5:3b
+3. VPet-Ultra-Full.zip رو دانلود و از حالت فشرده خارج کن
+4. مدل‌های صدا دانلود کن:
+   - models/whisper/whisper-medium-Q8_0.gguf (از HuggingFace)
+   - models/piper/fa_IR-mana-medium.onnx (از HuggingFace)
+5. VPet-Simulator.Windows.exe رو اجرا کن → Chat → Alt+Q → حرف بزن!
 ```
 
-**نیازی به Ollama یا سرور نیست — مدل داخل خود برنامه اجرا میشه!** 🎉
+**لینک‌های دانلود مستقیم:**
+- [Ollama](https://ollama.com/download)
+- [Whisper Medium Q8](https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium-q8_0.bin)
+- [Piper Persian Voice](https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.3/fa/ir/mana/medium/fa_IR-mana-medium.onnx)
+- [Piper Voice Config](https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.3/fa/ir/mana/medium/fa_IR-mana-medium.onnx.json)
+- [.NET 8 Runtime](https://dotnet.microsoft.com/download/dotnet/8.0)
