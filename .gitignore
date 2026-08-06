@@ -11,7 +11,7 @@ publish/
 *.zip
 memory-bank
 doc
-
+build-local.ps1
 # Runtime data
 models/
 data/
@@ -46,3 +46,6 @@ Thumbs.db
 appsettings.local.json
 *.pfx
 *.key.playwright-mcp/
+
+# Rust build output
+tools/vpet-transcribe/target/
