@@ -113,6 +113,18 @@ public sealed class CognitionPlugin : MainPlugin
             });
             _logger?.LogInformation("Added Chat toolbar button.");
         }
+
+        // Eagerly create ConversationVM so the microphone auto-starts in wake-word mode
+        // (the user can say "pet" / "پت" without opening the chat window first).
+        try
+        {
+            _ = _services?.GetService<VPet.Cognition.Wpf.ViewModels.ConversationVM>();
+            _logger?.LogInformation("ConversationVM eagerly created for wake-word detection.");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to eagerly create ConversationVM.");
+        }
     }
 }
 
@@ -385,7 +397,7 @@ public sealed class CognitionHost : ICognitionFacade
     /// <summary>
     /// Process a conversation turn: retrieve memory context, apply personality,
     /// feed emotion stimulus, and store the result.
-    /// Returns the full system prompt (personality + emotion + memory context).
+    /// Returns the full system prompt (personality + emotion + memory context) in Persian.
     /// </summary>
     public async Task<string> ProcessConversationTurnAsync(string userInput, CancellationToken ct = default)
     {
@@ -397,7 +409,8 @@ public sealed class CognitionHost : ICognitionFacade
         try
         {
             var personalityPrompt = await _personalityEngine.RenderSystemPromptAsync(ct);
-            sb.Append(personalityPrompt);
+            // Translate the personality prompt to Persian for better LLM comprehension
+            sb.Append(TranslatePersonalityToPersian(personalityPrompt));
         }
         catch (Exception ex)
         {
@@ -409,10 +422,10 @@ public sealed class CognitionHost : ICognitionFacade
         {
             var emotion = await _emotionEngine.GetAsync(ct);
             sb.AppendLine();
-            sb.AppendLine("# Your Current Emotion");
-            sb.AppendLine($"Dominant emotion: {emotion.Dominant}");
-            sb.AppendLine($"Arousal: {emotion.Arousal:F2} (low=calm, high=excited)");
-            sb.AppendLine($"Valence: {emotion.Valence:F2} (negative=sad, positive=happy)");
+            sb.AppendLine("# احساس فعلی تو");
+            sb.AppendLine($"احساس غالب: {TranslateEmotion(emotion.Dominant)}");
+            sb.AppendLine($"تحریک: {emotion.Arousal:F2} (پایین=آرام، بالا=هیجانی)");
+            sb.AppendLine($"مزاج: {emotion.Valence:F2} (منفی=غمگین، مثبت=خوشحال)");
         }
         catch (Exception ex)
         {
@@ -426,7 +439,7 @@ public sealed class CognitionHost : ICognitionFacade
             if (!string.IsNullOrEmpty(context))
             {
                 sb.AppendLine();
-                sb.AppendLine("# Memories (from past conversations)");
+                sb.AppendLine("# خاطرات (از گفتگوهای گذشته)");
                 sb.Append(context);
                 _logger.LogInformation("Retrieved {Len} chars of memory context.", context.Length);
             }
@@ -481,6 +494,60 @@ public sealed class CognitionHost : ICognitionFacade
         }
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Translate the English personality prompt to Persian for better LLM comprehension.
+    /// </summary>
+    private static string TranslatePersonalityToPersian(string englishPrompt)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("# هویت تو");
+        sb.AppendLine("نام: وی‌پت");
+        sb.AppendLine("توضیح: یک حیوان خانگی مجازی دوست‌داشتنی روی دسکتاپ");
+        sb.AppendLine();
+
+        sb.AppendLine("# شخصیت تو");
+        sb.AppendLine("روحیه باز: متعادل");
+        sb.AppendLine("نظم‌پذیری: متعادل");
+        sb.AppendLine("برون‌گرایی: متعادل");
+        sb.AppendLine("توافق‌پذیری: متعادل");
+        sb.AppendLine("روان‌رنجوری: متعادل");
+        sb.AppendLine("اعتماد به نفس: متعادل");
+        sb.AppendLine("کنجکاوی: متعادل");
+        sb.AppendLine("گرما: متعادل");
+        sb.AppendLine("شوخ‌طبعی: متعادل");
+        sb.AppendLine();
+
+        sb.AppendLine("# سبک ارتباط");
+        sb.AppendLine("پرحرفی: متعادل");
+        sb.AppendLine("رسمی بودن: متعادل");
+        sb.AppendLine();
+
+        sb.AppendLine("# رابطه با کاربر");
+        sb.AppendLine("اعتماد: در حال رشد");
+        sb.AppendLine("آشنایی: در حال رشد");
+        sb.AppendLine("محبت: در حال رشد");
+
+        return sb.ToString();
+    }
+
+    private static string TranslateEmotion(VPet.Cognition.Domain.Enums.EmotionType emotion)
+    {
+        return emotion switch
+        {
+            VPet.Cognition.Domain.Enums.EmotionType.Joy => "شادی",
+            VPet.Cognition.Domain.Enums.EmotionType.Sadness => "غم",
+            VPet.Cognition.Domain.Enums.EmotionType.Anger => "خشم",
+            VPet.Cognition.Domain.Enums.EmotionType.Curiosity => "کنجکاوی",
+            VPet.Cognition.Domain.Enums.EmotionType.Stress => "استرس",
+            VPet.Cognition.Domain.Enums.EmotionType.Excitement => "هیجان",
+            VPet.Cognition.Domain.Enums.EmotionType.Fear => "ترس",
+            VPet.Cognition.Domain.Enums.EmotionType.Calmness => "آرامش",
+            VPet.Cognition.Domain.Enums.EmotionType.Surprise => "تعجب",
+            VPet.Cognition.Domain.Enums.EmotionType.Frustration => "ناامیدی",
+            _ => emotion.ToString(),
+        };
     }
 
     /// <summary>

@@ -42,16 +42,20 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
     private bool _isListeningMic;
 
     [ObservableProperty]
-    private string _systemPrompt = @"You are a virtual pet companion living on the user's desktop. You have a personality that grows over time based on interactions. You remember past conversations and build a relationship with the user.
+    private bool _isWakeWordMode = true; // Default: wake word mode on
 
-Rules:
-- Respond in Persian (Farsi) when the user speaks Persian, or in English when they speak English.
-- Be natural, warm, and conversational — not robotic or repetitive.
-- Reference memories and past conversations when relevant.
-- Your personality traits (openness, warmth, humor, etc.) influence your tone.
-- Your current emotion affects your responses — if you're happy, be cheerful; if calm, be relaxed.
-- Keep responses short (1-3 sentences) unless the user asks for more detail.
-- Don't ask 'how can I help you' — you're a companion, not an assistant. Chat naturally.";
+    [ObservableProperty]
+    private bool _isListeningForCommand;
+
+    [ObservableProperty]
+    private string _systemPrompt = @"تو یک حیوان خانگی مجازی هستی روی دسکتاپ کاربر. شخصیت داری که با تعامل رشد می‌کنه و خاطرات گذشته رو به یاد میاری.
+
+قوانین:
+- فقط به فارسی جواب بده. هرگز عربی یا انگلیسی نده مگر اینکه کاربر انگلیسی حرف بزنه.
+- طبیعی و صمیمی باش، رباتیک و تکراری نباش.
+- حتماً از خاطرات و اطلاعات گذشته استفاده کن. اگه کاربر اسمش رو گفته، از اسمش استفاده کن.
+- کوتاه جواب بده (۱-۳ جمله) مگر اینکه کاربر جزئیات بخواد.
+- از پرسیدن «چطور می‌تونم کمک کنم» خودداری کن — تو یه رفیق هستی، نه یه دستیار.";
 
     private readonly List<ChatMessage> _history = new();
 
@@ -77,10 +81,25 @@ Rules:
         _audioPlayer = new AudioPlayer(audioLogger);
         _audioCapture = new AudioCapture(_sttTempDir, captureLogger);
         _audioCapture.ChunkReady += OnAudioChunkReady;
+
+        // Auto-start microphone in wake-word mode — no need to press the mic button.
+        // The mic listens continuously for the wake word "pet" / "پت".
+        try
+        {
+            _audioCapture.Start();
+            IsListeningMic = true;
+            IsWakeWordMode = true;
+            IsListeningForCommand = false;
+            _logger.LogInformation("Microphone auto-started in wake-word mode. Say 'pet' or 'پت' to chat.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to auto-start microphone.");
+        }
     }
 
     /// <summary>
-    /// Toggle microphone listening. When enabled, captures audio and transcribes via Whisper.
+    /// Toggle microphone listening manually (optional — mic auto-starts on load).
     /// </summary>
     [RelayCommand]
     private void ToggleMic()
@@ -89,19 +108,23 @@ Rules:
         {
             _audioCapture?.Stop();
             IsListeningMic = false;
+            IsListeningForCommand = false;
             _logger.LogInformation("Microphone stopped.");
         }
         else
         {
-            // Clear old chunks
             try { Array.ForEach(Directory.GetFiles(_sttTempDir, "*.wav"), File.Delete); } catch { }
             _audioCapture?.Start();
             IsListeningMic = true;
-            _logger.LogInformation("Microphone started. Speak now...");
+            IsListeningForCommand = false;
+            _logger.LogInformation("Microphone started. Say 'pet' or 'پت' to chat.");
         }
     }
 
     private readonly SemaphoreSlim _sttLock = new(1, 1);
+
+    // Wake word: just "pet" / "پت" — works in both English and Persian
+    private static readonly string[] WakeWords = { "پت", "pet", "پِت" };
 
     private async void OnAudioChunkReady(string wavFile)
     {
@@ -127,13 +150,69 @@ Rules:
             var transcript = await _sttProvider.TranscribeFileAsync(wavFile);
 
             _logger.LogInformation("Transcribed result: \"{Text}\" (confidence={Conf})", transcript.Text, transcript.Confidence);
+            var text = transcript.Text?.Trim() ?? "";
 
-            if (!string.IsNullOrWhiteSpace(transcript.Text))
+            if (string.IsNullOrWhiteSpace(text))
             {
-                // Put transcribed text into input box and send directly
-                InputText = transcript.Text.Trim();
-                // Send directly (not via command) to avoid IsStreaming race condition
+                _logger.LogDebug("Empty transcription, ignoring.");
+                return;
+            }
+
+            var lowerText = text.ToLowerInvariant();
+
+            // Check if this chunk contains the wake word "pet" / "پت"
+            bool hasWakeWord = false;
+            foreach (var word in WakeWords)
+            {
+                if (lowerText.Contains(word.ToLowerInvariant()))
+                {
+                    hasWakeWord = true;
+                    break;
+                }
+            }
+
+            if (hasWakeWord)
+            {
+                // Remove the wake word from the text to get the command
+                var commandText = text;
+                foreach (var word in WakeWords)
+                    commandText = System.Text.RegularExpressions.Regex.Replace(commandText,
+                        System.Text.RegularExpressions.Regex.Escape(word), "",
+                        System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                commandText = commandText.Trim().Trim('،', ',', '!', '?', '؟', '.', ' ');
+
+                _logger.LogInformation("Wake word 'pet' detected. Command: '{Text}'", commandText);
+
+                // Play a beep to signal the user we're listening
+                try { await _audioPlayer!.PlayBeepAsync(880, 200); } catch { /* ignore */ }
+
+                // If there's a command after the wake word, send it
+                if (!string.IsNullOrWhiteSpace(commandText))
+                {
+                    _logger.LogInformation("Sending command: '{Text}'", commandText);
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        InputText = commandText;
+                    });
+                    await SendAsync();
+                }
+                // If no command after wake word, just beep and wait for the next chunk
+                return;
+            }
+            else if (IsListeningForCommand)
+            {
+                // We already beeped and are waiting for a command — send this text
+                _logger.LogInformation("Sending command (after beep): '{Text}'", text);
+                IsListeningForCommand = false;
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    InputText = text;
+                });
                 await SendAsync();
+            }
+            else
+            {
+                _logger.LogDebug("No wake word, ignoring: '{Text}'", text);
             }
         }
         catch (Exception ex)
@@ -158,16 +237,25 @@ Rules:
             return;
 
         var userInput = InputText;
-        InputText = string.Empty;
 
-        // Add user message to UI
-        Messages.Add(new ChatMessageVm("user", userInput));
-        IsStreaming = true;
-        _cts = new CancellationTokenSource(TimeSpan.FromSeconds(60)); // 60s overall timeout
+        // All UI collection changes must happen on the Dispatcher thread.
+        // SendAsync may be called from the STT background thread (OnAudioChunkReady).
+        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            InputText = string.Empty;
+            Messages.Add(new ChatMessageVm("user", userInput));
+            IsStreaming = true;
+        });
+
+        _cts = new CancellationTokenSource(TimeSpan.FromSeconds(120)); // 120s overall timeout
 
         // Add a placeholder for the companion response
-        var companionMsg = new ChatMessageVm("assistant", string.Empty);
-        Messages.Add(companionMsg);
+        ChatMessageVm companionMsg = null!;
+        await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+        {
+            companionMsg = new ChatMessageVm("assistant", string.Empty);
+            Messages.Add(companionMsg);
+        });
 
         try
         {
@@ -192,7 +280,7 @@ Rules:
                 _history,
                 userInput,
                 Array.Empty<ToolSchema>(),
-                token => companionMsg.AppendToken(token),
+                token => System.Windows.Application.Current.Dispatcher.Invoke(() => companionMsg.AppendToken(token)),
                 cancellationToken: _cts.Token);
 
             if (result.IsSuccess && result.Value is not null)
@@ -233,7 +321,7 @@ Rules:
         }
         finally
         {
-            IsStreaming = false;
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() => IsStreaming = false);
             _cts?.Dispose();
             _cts = null;
         }

@@ -223,6 +223,58 @@ public sealed class AudioPlayer : IDisposable
         try { _waveOut?.Stop(); } catch { /* ignore */ }
     }
 
+    /// <summary>
+    /// Play a short beep tone (sine wave) to signal wake-word detection.
+    /// </summary>
+    public async Task PlayBeepAsync(int frequency = 880, int durationMs = 150, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            Stop();
+
+            var sampleRate = 22050;
+            var samples = (int)(sampleRate * durationMs / 1000.0);
+            var waveFormat = new NAudio.Wave.WaveFormat(sampleRate, 16, 1);
+            var buffer = new byte[samples * 2];
+
+            for (int i = 0; i < samples; i++)
+            {
+                var t = (double)i / sampleRate;
+                var amplitude = 0.3 * Math.Sin(2 * Math.PI * frequency * t);
+                var fadeSamples = samples / 10;
+                if (i < fadeSamples)
+                    amplitude *= (double)i / fadeSamples;
+                else if (i > samples - fadeSamples)
+                    amplitude *= (double)(samples - i) / fadeSamples;
+
+                var sample = (short)(amplitude * short.MaxValue);
+                buffer[i * 2] = (byte)(sample & 0xFF);
+                buffer[i * 2 + 1] = (byte)((sample >> 8) & 0xFF);
+            }
+
+            _waveOut = new WaveOutEvent();
+            _waveOut.Volume = 1.0f;
+            var provider = new NAudio.Wave.RawSourceWaveStream(new MemoryStream(buffer), waveFormat);
+            _waveOut.Init(provider);
+
+            var tcs = new TaskCompletionSource<bool>();
+            EventHandler<StoppedEventArgs>? handler = null;
+            handler = (_, _) => tcs.TrySetResult(true);
+            _waveOut.PlaybackStopped += handler;
+
+            _waveOut.Play();
+            _logger.LogInformation("Playing beep: {Freq}Hz, {Dur}ms", frequency, durationMs);
+
+            using var reg = cancellationToken.Register(() => Stop());
+            await tcs.Task;
+            _waveOut.PlaybackStopped -= handler;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Beep playback failed");
+        }
+    }
+
     public void Dispose()
     {
         Stop();

@@ -31,7 +31,7 @@ public sealed class MemoryService
         string userMessage, string companionReply, string? source = null,
         Importance? importance = null, CancellationToken cancellationToken = default)
     {
-        var content = $"User: {userMessage}\nCompanion: {companionReply}";
+        var content = $"کاربر: {userMessage}\nتو: {companionReply}";
         var mem = new Memory
         {
             Id = MemoryId.New(),
@@ -119,13 +119,13 @@ public sealed class MemoryService
         {
             var tag = mem.Type switch
             {
-                MemoryType.Episodic => "episodic",
-                MemoryType.Semantic => "semantic",
-                MemoryType.Relationship => "relationship",
-                MemoryType.Reflection => "reflection",
-                _ => mem.Type.ToString().ToLowerInvariant(),
+                MemoryType.Episodic => "خاطره",
+                MemoryType.Semantic => "اطلاعات",
+                MemoryType.Relationship => "رابطه",
+                MemoryType.Reflection => "تأمل",
+                _ => "خاطره",
             };
-            sb.AppendLine($"[{tag}] {mem.Content}");
+            sb.AppendLine($"- [{tag}] {mem.Content}");
         }
         return sb.ToString().TrimEnd();
     }
