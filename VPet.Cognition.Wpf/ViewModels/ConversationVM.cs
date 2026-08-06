@@ -51,6 +51,7 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
         ICognitionFacade cognitionFacade,
         ISttProvider sttProvider,
         ITtsProvider ttsProvider,
+        ILoggerFactory loggerFactory,
         ILogger<ConversationVM> logger)
     {
         _conversationService = conversationService;
@@ -62,8 +63,8 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
         _sttTempDir = Path.Combine(Path.GetTempPath(), "vpet_stt");
         Directory.CreateDirectory(_sttTempDir);
 
-        var audioLogger = Microsoft.Extensions.Logging.Abstractions.NullLogger<AudioPlayer>.Instance;
-        var captureLogger = Microsoft.Extensions.Logging.Abstractions.NullLogger<AudioCapture>.Instance;
+        var audioLogger = loggerFactory.CreateLogger<AudioPlayer>();
+        var captureLogger = loggerFactory.CreateLogger<AudioCapture>();
         _audioPlayer = new AudioPlayer(audioLogger);
         _audioCapture = new AudioCapture(_sttTempDir, captureLogger);
         _audioCapture.ChunkReady += OnAudioChunkReady;
@@ -91,8 +92,19 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
         }
     }
 
+    private readonly SemaphoreSlim _sttLock = new(1, 1);
+
     private async void OnAudioChunkReady(string wavFile)
     {
+        // Wait for any previous turn to finish — but with a 120s timeout so we don't
+        // block forever if Ollama hangs. If the lock can't be acquired, skip this chunk.
+        if (!await _sttLock.WaitAsync(TimeSpan.FromSeconds(120)))
+        {
+            _logger.LogWarning("STT lock timeout, skipping chunk: {File}", Path.GetFileName(wavFile));
+            try { File.Delete(wavFile); } catch { /* ignore */ }
+            return;
+        }
+
         try
         {
             // Save a copy to voice-history so the user can verify recording
@@ -109,17 +121,20 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
 
             if (!string.IsNullOrWhiteSpace(transcript.Text))
             {
-                // Put transcribed text into input box and auto-send
+                // Put transcribed text into input box and send directly
                 InputText = transcript.Text.Trim();
-                if (CanSend && SendCommand.CanExecute(null))
-                {
-                    await SendAsync();
-                }
+                // Send directly (not via command) to avoid IsStreaming race condition
+                await SendAsync();
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "STT transcription failed: {Type}", _sttProvider.GetType().Name);
+        }
+        finally
+        {
+            _sttLock.Release();
+            try { File.Delete(wavFile); } catch { /* ignore */ }
         }
     }
 
@@ -129,13 +144,17 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
         if (string.IsNullOrWhiteSpace(InputText))
             return;
 
+        // If already streaming, ignore (shouldn't happen with _sttLock, but safety check)
+        if (IsStreaming)
+            return;
+
         var userInput = InputText;
         InputText = string.Empty;
 
         // Add user message to UI
         Messages.Add(new ChatMessageVm("user", userInput));
         IsStreaming = true;
-        _cts = new CancellationTokenSource();
+        _cts = new CancellationTokenSource(TimeSpan.FromSeconds(60)); // 60s overall timeout
 
         // Add a placeholder for the companion response
         var companionMsg = new ChatMessageVm("assistant", string.Empty);
@@ -181,6 +200,7 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
                 }
 
                 // 4. Speak the response via TTS
+                _logger.LogInformation("TTS input text ({Len} chars): [{Text}]", result.Value.Text.Length, result.Value.Text);
                 await SpeakAsync(result.Value.Text, _cts.Token);
             }
             else
@@ -219,7 +239,7 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
 
             _logger.LogInformation("Speaking via TTS: {Text}...", text.Substring(0, Math.Min(50, text.Length)));
 
-            // Synthesize to a temp WAV file
+            // Synthesize to a temp WAV file (PiperTtsProvider returns full WAV with header)
             var tempWav = Path.Combine(Path.GetTempPath(), $"vpet_tts_{Guid.NewGuid():N}.wav");
             await using (var fs = File.Create(tempWav))
             {
@@ -229,11 +249,19 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
                 }
             }
 
-            // Play the audio
-            if (File.Exists(tempWav))
+            var fileSize = File.Exists(tempWav) ? new FileInfo(tempWav).Length : 0;
+            _logger.LogInformation("TTS synthesized to {Path}, size={Size} bytes", tempWav, fileSize);
+
+            if (fileSize > 44)
             {
+                _logger.LogInformation("Playing TTS audio...");
                 await _audioPlayer!.PlayAsync(tempWav, cancellationToken);
+                _logger.LogInformation("TTS playback finished.");
                 try { File.Delete(tempWav); } catch { }
+            }
+            else
+            {
+                _logger.LogWarning("TTS output file missing or too small: {Path} ({Size} bytes)", tempWav, fileSize);
             }
         }
         catch (Exception ex)
@@ -254,6 +282,7 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
     {
         _audioCapture?.Dispose();
         _audioPlayer?.Dispose();
+        _sttLock?.Dispose();
     }
 }
 

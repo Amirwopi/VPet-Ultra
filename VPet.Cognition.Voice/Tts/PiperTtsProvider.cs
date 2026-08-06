@@ -53,6 +53,14 @@ public sealed class PiperTtsProvider : ITtsProvider
             yield break;
         }
 
+        // Clean text for TTS: remove markdown, emojis, and excessive whitespace.
+        text = CleanTextForTts(text);
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            _logger.LogWarning("TTS text empty after cleaning");
+            yield break;
+        }
+
         var outputPath = Path.Combine(Path.GetTempPath(), $"vpet_piper_{Guid.NewGuid():N}.wav");
         List<AudioChunk> chunks = new();
 
@@ -78,46 +86,64 @@ public sealed class PiperTtsProvider : ITtsProvider
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
-                StandardInputEncoding = Encoding.UTF8,
+                // Don't set StandardInputEncoding — we write raw UTF-8 bytes to BaseStream.
             };
 
-            using var process = new Process { StartInfo = psi };
-            process.Start();
+            // Write text to a temp file as UTF-8 (without BOM), then pipe it to piper via stdin.
+            // This avoids Windows console encoding issues with Persian/Arabic text.
+            var inputFilePath = Path.Combine(Path.GetTempPath(), $"vpet_piper_input_{Guid.NewGuid():N}.txt");
+            var textBytes = Encoding.UTF8.GetBytes(text);
+            await File.WriteAllBytesAsync(inputFilePath, textBytes, cancellationToken);
 
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cts.CancelAfter(_timeout);
-
-            await process.StandardInput.WriteLineAsync(text.AsMemory(), cts.Token);
-            process.StandardInput.Close();
-            await process.WaitForExitAsync(cts.Token);
-
-            if (process.ExitCode != 0)
+            try
             {
-                var stderr = await process.StandardError.ReadToEndAsync(cts.Token);
-                _logger.LogError("piper exited {Code}: {Stderr}", process.ExitCode, stderr);
-                yield break;
-            }
+                // Read the file and pipe to piper's stdin as raw bytes
+                var fileBytes = await File.ReadAllBytesAsync(inputFilePath, cancellationToken);
+                using var process = new Process { StartInfo = psi };
+                process.Start();
 
-            if (!File.Exists(outputPath))
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(_timeout);
+
+                // Write raw UTF-8 bytes directly to stdin stream
+                await process.StandardInput.BaseStream.WriteAsync(fileBytes, cts.Token);
+                await process.StandardInput.BaseStream.FlushAsync(cts.Token);
+                process.StandardInput.Close();
+                await process.WaitForExitAsync(cts.Token);
+
+                if (process.ExitCode != 0)
+                {
+                    var stderr = await process.StandardError.ReadToEndAsync(cts.Token);
+                    _logger.LogError("piper exited {Code}: {Stderr}", process.ExitCode, stderr);
+                    yield break;
+                }
+
+                if (!File.Exists(outputPath))
+                {
+                    _logger.LogError("Piper output file not created: {Path}", outputPath);
+                    yield break;
+                }
+
+                // Read the entire WAV file (including header) so the caller can play it directly.
+                await using var fs = File.OpenRead(outputPath);
+                _logger.LogInformation("Piper output: {Path}, size={Size} bytes", outputPath, new FileInfo(outputPath).Length);
+
+                const int ChunkSize = 4096;
+                var buffer = new byte[ChunkSize];
+                int read;
+                while ((read = await fs.ReadAsync(buffer, cancellationToken)) > 0)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    chunks.Add(new AudioChunk(buffer[..read], 22050, 1, TimeSpan.Zero));
+                }
+
+                _logger.LogInformation("Piper synthesized {Len} chars, {Chunks} chunks, total {Bytes} bytes",
+                    text.Length, chunks.Count, chunks.Sum(c => c.PcmData.Length));
+            }
+            finally
             {
-                _logger.LogError("Piper output file not created: {Path}", outputPath);
-                yield break;
+                try { if (File.Exists(inputFilePath)) File.Delete(inputFilePath); } catch { /* ignore */ }
             }
-
-            await using var fs = File.OpenRead(outputPath);
-            var header = new byte[44];
-            await fs.ReadExactlyAsync(header, cancellationToken);
-
-            const int ChunkSize = 4096;
-            var buffer = new byte[ChunkSize];
-            int read;
-            while ((read = await fs.ReadAsync(buffer, cancellationToken)) > 0)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                chunks.Add(new AudioChunk(buffer[..read], 22050, 1, TimeSpan.Zero));
-            }
-
-            _logger.LogDebug("Synthesized {Len} chars via piper", text.Length);
         }
         catch (OperationCanceledException)
         {
@@ -167,9 +193,42 @@ public sealed class PiperTtsProvider : ITtsProvider
         return Task.FromResult<IReadOnlyList<VisemeHint>>(visemes);
     }
 
-    public async Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
+    public Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
     {
-        return await Task.FromResult(File.Exists(_executablePath) && File.Exists(_modelPath));
+        return Task.FromResult(File.Exists(_executablePath) && File.Exists(_modelPath));
+    }
+
+    /// <summary>
+    /// Remove markdown, emojis, and formatting that Piper can't phonemize.
+    /// </summary>
+    private static string CleanTextForTts(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return string.Empty;
+
+        // Remove markdown bold/italic/code markers
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"\*{1,3}", "");
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"`{1,3}", "");
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"_{1,3}", "");
+
+        // Remove markdown links [text](url) -> text
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"\[([^\]]+)\]\([^\)]+\)", "$1");
+
+        // Remove markdown headers
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"^#{1,6}\s+", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+
+        // Remove emojis (basic range)
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"[\uD800-\uDBFF\uDC00-\uDFFF]", "");
+        text = System.Text.RegularExpressions.Regex.Replace(text, "[\u2600-\u27BF]", "");
+
+        // Remove code blocks
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"```[\s\S]*?```", "");
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"~~~[\s\S]*?~~~", "");
+
+        // Collapse whitespace
+        text = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
+
+        return text;
     }
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;

@@ -99,45 +99,55 @@ public sealed class OllamaLlmProvider : ILLMProvider
 
     public async IAsyncEnumerable<ChatChunk> StreamChatAsync(ChatRequest request, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var body = BuildRequestBody(request, stream: true);
+        // Use stream: false for reliability — Ollama streaming connections get dropped
+        // by the remote server (SocketException 10054/995). Non-streaming works fine
+        // (confirmed via curl: 3 consecutive requests all succeeded in ~2.7s each).
+        var body = BuildRequestBody(request, stream: false);
         var jsonStr = JsonSerializer.Serialize(body, _json);
-        using var content = new StringContent(jsonStr, Encoding.UTF8, "application/json");
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        cts.CancelAfter(_timeout);
 
-        using var response = await _httpClient.PostAsync("api/chat", content, cts.Token);
-        if (!response.IsSuccessStatusCode)
+        // Retry up to 3 times — each attempt gets its own CTS.
+        string? responseText = null;
+        for (int attempt = 0; attempt < 3; attempt++)
         {
-            var errBody = await response.Content.ReadAsStringAsync(cts.Token);
-            _logger.LogWarning("Ollama stream returned {Status}: {Body}", (int)response.StatusCode, errBody);
+            if (cancellationToken.IsCancellationRequested)
+                yield break;
+
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(_timeout);
+                using var response = await _httpClient.PostAsync("api/chat",
+                    new StringContent(jsonStr, Encoding.UTF8, "application/json"), cts.Token);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                    _logger.LogWarning("Ollama returned {Status}: {Body}", (int)response.StatusCode, errBody);
+                    yield break;
+                }
+
+                var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+                var dto = JsonSerializer.Deserialize<OllamaChatResponse>(responseJson, _json);
+                responseText = dto?.Message?.Content ?? "";
+                break;
+            }
+            catch (Exception ex) when (attempt < 2 && !cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning("Ollama attempt {Attempt} failed: {Error}. Retrying in {Delay}ms...",
+                    attempt + 1, ex.Message, 1000 * (attempt + 1));
+                await Task.Delay(1000 * (attempt + 1), cancellationToken);
+            }
+        }
+
+        if (responseText is null)
+        {
+            _logger.LogError("Ollama failed after 3 attempts.");
             yield break;
         }
 
-        using var stream = await response.Content.ReadAsStreamAsync(cts.Token);
-        using var reader = new StreamReader(stream);
-
-        // Ollama streams newline-delimited JSON objects (not SSE)
-        while (!reader.EndOfStream)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var line = await reader.ReadLineAsync(cts.Token);
-            if (line is null || string.IsNullOrWhiteSpace(line))
-                continue;
-
-            ChatChunk? chunk = null;
-            try
-            {
-                var dto = JsonSerializer.Deserialize<OllamaChatResponse>(line, _json);
-                chunk = MapChunk(dto);
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogDebug("Skipping malformed Ollama stream chunk: {Error}", ex.Message);
-            }
-
-            if (chunk is { } c)
-                yield return c;
-        }
+        // Yield the complete text as a single chunk
+        if (!string.IsNullOrEmpty(responseText))
+            yield return new ChatChunk(new ChatDelta(responseText));
     }
 
     public Task<int> CountTokensAsync(string text, CancellationToken cancellationToken = default)

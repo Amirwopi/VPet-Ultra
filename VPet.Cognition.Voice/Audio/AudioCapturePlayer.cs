@@ -173,6 +173,7 @@ public sealed class AudioPlayer : IDisposable
         {
             _waveReader = new WaveFileReader(wavPath);
             _waveOut = new WaveOutEvent();
+            _waveOut.Volume = 1.0f; // Max volume
             _waveOut.Init(_waveReader);
 
             var tcs = new TaskCompletionSource<bool>();
@@ -191,7 +192,8 @@ public sealed class AudioPlayer : IDisposable
             PlaybackStarted?.Invoke();
             _waveOut.Play();
 
-            _logger.LogDebug("Playing audio: {Path} ({Duration:F1}s)", wavPath, _waveReader.TotalTime.TotalSeconds);
+            _logger.LogInformation("Playing audio: {Path} ({Duration:F1}s, {Rate}Hz, {Ch}ch)",
+                wavPath, _waveReader.TotalTime.TotalSeconds, _waveReader.WaveFormat.SampleRate, _waveReader.WaveFormat.Channels);
 
             // Wait for playback to finish or cancellation
             using var reg = cancellationToken.Register(() =>

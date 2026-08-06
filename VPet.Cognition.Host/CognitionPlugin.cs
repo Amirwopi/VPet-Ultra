@@ -676,9 +676,18 @@ public static class CognitionHostBuilder
         });
 
         // ── HttpClient factory (avoids socket exhaustion) ──
+        // Configure SocketsHttpHandler to handle Ollama dropping connections.
         services.AddHttpClient("cognition", client =>
         {
             client.Timeout = options.Llm.Timeout;
+        })
+        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+        {
+            // Don't keep connections alive — Ollama server may drop them.
+            PooledConnectionLifetime = TimeSpan.FromSeconds(30),
+            MaxConnectionsPerServer = 2,
+            KeepAlivePingDelay = TimeSpan.FromSeconds(10),
+            KeepAlivePingTimeout = TimeSpan.FromSeconds(5),
         });
 
         // ── Config loader ──
@@ -882,15 +891,18 @@ public static class CognitionHostBuilder
             var opts = sp.GetRequiredService<IOptions<CognitionOptions>>().Value;
             var tts = opts.Voice.Tts;
             var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+            var baseDir = ExtensionValue.BaseDirectory ?? ".";
+            var exePath = Path.IsPathRooted(tts.ExecutablePath) ? tts.ExecutablePath : Path.Combine(baseDir, tts.ExecutablePath);
+            var modelPath = Path.IsPathRooted(tts.ModelPath) ? tts.ModelPath : Path.Combine(baseDir, tts.ModelPath);
 
             return tts.Provider.ToLowerInvariant() switch
             {
                 "kokoro" => new KokoroTtsProvider(
-                    tts.ExecutablePath, tts.ModelPath, tts.KokoroVoice, tts.KokoroSpeed,
+                    exePath, modelPath, tts.KokoroVoice, tts.KokoroSpeed,
                     TimeSpan.FromSeconds(15), loggerFactory.CreateLogger<KokoroTtsProvider>()),
 
                 _ => new PiperTtsProvider(
-                    tts.ExecutablePath, tts.ModelPath, tts.SpeakerId,
+                    exePath, modelPath, tts.SpeakerId,
                     tts.LengthScale, tts.NoiseScale, tts.NoiseW,
                     TimeSpan.FromSeconds(15), loggerFactory.CreateLogger<PiperTtsProvider>()),
             };
