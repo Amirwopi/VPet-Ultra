@@ -57,6 +57,16 @@ public sealed class FakeSttProvider : ISttProvider
         return Task.CompletedTask;
     }
 
+    public Task<TranscriptChunk> TranscribeFileAsync(string audioFilePath, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(new TranscriptChunk("fake transcript", 0.95, TimeSpan.Zero, TimeSpan.FromSeconds(2)));
+    }
+
+    public Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(true);
+    }
+
     public void SimulatePartial(string text, double confidence = 0.8) =>
         PartialTranscript?.Invoke(new TranscriptChunk(text, confidence, TimeSpan.Zero, TimeSpan.Zero));
 
