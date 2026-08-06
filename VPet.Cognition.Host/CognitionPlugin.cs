@@ -114,16 +114,16 @@ public sealed class CognitionPlugin : MainPlugin
             _logger?.LogInformation("Added Chat toolbar button.");
         }
 
-        // Eagerly create ConversationVM so the microphone auto-starts in wake-word mode
-        // (the user can say "pet" / "پت" without opening the chat window first).
+        // Eagerly create ConversationVM so the Alt+Q push-to-talk hotkey is registered
+        // even before the user opens the chat window.
         try
         {
             _ = _services?.GetService<VPet.Cognition.Wpf.ViewModels.ConversationVM>();
-            _logger?.LogInformation("ConversationVM eagerly created for wake-word detection.");
+            _logger?.LogInformation("ConversationVM created — Alt+Q push-to-talk hotkey registered.");
         }
         catch (Exception ex)
         {
-            _logger?.LogWarning(ex, "Failed to eagerly create ConversationVM.");
+            _logger?.LogWarning(ex, "Failed to create ConversationVM for hotkey registration.");
         }
     }
 }

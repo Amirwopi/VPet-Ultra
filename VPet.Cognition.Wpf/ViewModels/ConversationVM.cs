@@ -9,6 +9,7 @@ using VPet.Cognition.LLM;
 using VPet.Cognition.Voice.Audio;
 using VPet.Cognition.Voice.Stt;
 using VPet.Cognition.Voice.Tts;
+using VPet.Cognition.Wpf.Helpers;
 
 namespace VPet.Cognition.Wpf.ViewModels;
 
@@ -40,12 +41,6 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool _isListeningMic;
-
-    [ObservableProperty]
-    private bool _isWakeWordMode = true; // Default: wake word mode on
-
-    [ObservableProperty]
-    private bool _isListeningForCommand;
 
     [ObservableProperty]
     private string _systemPrompt = @"تو یک حیوان خانگی مجازی هستی روی دسکتاپ کاربر. شخصیت داری که با تعامل رشد می‌کنه و خاطرات گذشته رو به یاد میاری.
@@ -82,49 +77,103 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
         _audioCapture = new AudioCapture(_sttTempDir, captureLogger);
         _audioCapture.ChunkReady += OnAudioChunkReady;
 
-        // Auto-start microphone in wake-word mode — no need to press the mic button.
-        // The mic listens continuously for the wake word "pet" / "پت".
+        // Register global hotkey Alt+Q for push-to-talk
+        RegisterPushToTalkHotkey();
+    }
+
+    /// <summary>
+    /// Register Alt+Q as a global hotkey for push-to-talk.
+    /// Press = start recording, Release = stop and send.
+    /// </summary>
+    private void RegisterPushToTalkHotkey()
+    {
         try
         {
-            _audioCapture.Start();
-            IsListeningMic = true;
-            IsWakeWordMode = true;
-            IsListeningForCommand = false;
-            _logger.LogInformation("Microphone auto-started in wake-word mode. Say 'pet' or 'پت' to chat.");
+            // Use a low-level keyboard hook to detect Alt+Q press/release
+            _keyboardHook = new LowLevelKeyboardHook();
+            _keyboardHook.AltQPressed += () =>
+            {
+                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    if (!IsListeningMic && !IsStreaming)
+                    {
+                        StartRecording();
+                    }
+                });
+            };
+            _keyboardHook.AltQReleased += () =>
+            {
+                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    if (IsListeningMic)
+                    {
+                        StopRecordingAndSend();
+                    }
+                });
+            };
+            _keyboardHook.Subscribe();
+            _logger.LogInformation("Push-to-talk hotkey Alt+Q registered.");
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to auto-start microphone.");
+            _logger.LogWarning(ex, "Failed to register Alt+Q hotkey.");
+        }
+    }
+
+    private LowLevelKeyboardHook? _keyboardHook;
+
+    /// <summary>
+    /// Start recording audio for push-to-talk. Plays a beep to signal recording started.
+    /// </summary>
+    private void StartRecording()
+    {
+        if (IsListeningMic) return; // Already recording, ignore
+        try
+        {
+            Array.ForEach(Directory.GetFiles(_sttTempDir, "*.wav"), File.Delete);
+            _audioCapture?.Start();
+            IsListeningMic = true;
+            _logger.LogInformation("Push-to-talk: recording started (Alt+Q). Speak now...");
+            // Play a short beep to signal the user that recording started
+            try { _ = _audioPlayer?.PlayBeepAsync(660, 150); } catch { /* ignore */ }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to start recording.");
         }
     }
 
     /// <summary>
-    /// Toggle microphone listening manually (optional — mic auto-starts on load).
+    /// Stop recording and send the transcribed text. Plays a beep to signal recording stopped.
+    /// </summary>
+    private void StopRecordingAndSend()
+    {
+        if (!IsListeningMic) return; // Not recording, ignore
+        _audioCapture?.Stop();
+        IsListeningMic = false;
+        _logger.LogInformation("Push-to-talk: recording stopped. Transcribing...");
+        // Play a short beep to signal the user that recording stopped
+        try { _ = _audioPlayer?.PlayBeepAsync(440, 100); } catch { /* ignore */ }
+        // OnAudioChunkReady will handle transcription and sending
+    }
+
+    /// <summary>
+    /// Toggle microphone listening manually (mic button).
     /// </summary>
     [RelayCommand]
     private void ToggleMic()
     {
         if (IsListeningMic)
         {
-            _audioCapture?.Stop();
-            IsListeningMic = false;
-            IsListeningForCommand = false;
-            _logger.LogInformation("Microphone stopped.");
+            StopRecordingAndSend();
         }
         else
         {
-            try { Array.ForEach(Directory.GetFiles(_sttTempDir, "*.wav"), File.Delete); } catch { }
-            _audioCapture?.Start();
-            IsListeningMic = true;
-            IsListeningForCommand = false;
-            _logger.LogInformation("Microphone started. Say 'pet' or 'پت' to chat.");
+            StartRecording();
         }
     }
 
     private readonly SemaphoreSlim _sttLock = new(1, 1);
-
-    // Wake word: just "pet" / "پت" — works in both English and Persian
-    private static readonly string[] WakeWords = { "پت", "pet", "پِت" };
 
     private async void OnAudioChunkReady(string wavFile)
     {
@@ -158,62 +207,13 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
                 return;
             }
 
-            var lowerText = text.ToLowerInvariant();
-
-            // Check if this chunk contains the wake word "pet" / "پت"
-            bool hasWakeWord = false;
-            foreach (var word in WakeWords)
+            // Push-to-talk: just send the transcribed text directly
+            _logger.LogInformation("Sending transcribed text: '{Text}'", text);
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                if (lowerText.Contains(word.ToLowerInvariant()))
-                {
-                    hasWakeWord = true;
-                    break;
-                }
-            }
-
-            if (hasWakeWord)
-            {
-                // Remove the wake word from the text to get the command
-                var commandText = text;
-                foreach (var word in WakeWords)
-                    commandText = System.Text.RegularExpressions.Regex.Replace(commandText,
-                        System.Text.RegularExpressions.Regex.Escape(word), "",
-                        System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                commandText = commandText.Trim().Trim('،', ',', '!', '?', '؟', '.', ' ');
-
-                _logger.LogInformation("Wake word 'pet' detected. Command: '{Text}'", commandText);
-
-                // Play a beep to signal the user we're listening
-                try { await _audioPlayer!.PlayBeepAsync(880, 200); } catch { /* ignore */ }
-
-                // If there's a command after the wake word, send it
-                if (!string.IsNullOrWhiteSpace(commandText))
-                {
-                    _logger.LogInformation("Sending command: '{Text}'", commandText);
-                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                    {
-                        InputText = commandText;
-                    });
-                    await SendAsync();
-                }
-                // If no command after wake word, just beep and wait for the next chunk
-                return;
-            }
-            else if (IsListeningForCommand)
-            {
-                // We already beeped and are waiting for a command — send this text
-                _logger.LogInformation("Sending command (after beep): '{Text}'", text);
-                IsListeningForCommand = false;
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    InputText = text;
-                });
-                await SendAsync();
-            }
-            else
-            {
-                _logger.LogDebug("No wake word, ignoring: '{Text}'", text);
-            }
+                InputText = text;
+            });
+            await SendAsync();
         }
         catch (Exception ex)
         {
@@ -380,6 +380,7 @@ public sealed partial class ConversationVM : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        _keyboardHook?.Dispose();
         _audioCapture?.Dispose();
         _audioPlayer?.Dispose();
         _sttLock?.Dispose();
