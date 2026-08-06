@@ -25,8 +25,21 @@ namespace VPet_Simulator.Core
 
         public ToolBar(Main m)
         {
+            string logFile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".", "logs", "toolbar.log");
+            void LogToolBar(string msg)
+            {
+#if DEBUG
+                try { System.IO.File.AppendAllText(logFile, $"{DateTime.Now:HH:mm:ss.fff} {msg}\n"); } catch { }
+#endif
+            }
+            LogToolBar("ctor: before InitializeComponent");
             InitializeComponent();
+            LogToolBar("ctor: after InitializeComponent");
             this.m = m;
+            // Set Tag as Int32 for the UniformGrid Columns binding in XAML.
+            // Was previously <system:Int32>5</system:Int32> in XAML, but
+            // mscorlib doesn't exist in .NET 8, so we set it here instead.
+            ToolBarMenu.Tag = 5;
             CloseTimer = new Timer()
             {
                 Interval = 4000,
@@ -39,6 +52,7 @@ namespace VPet_Simulator.Core
             m.TimeUIHandle += M_TimeUIHandle;
             //LoadWork();
             LoadDIY();
+            LogToolBar("ctor: done");
         }
         public void LoadClean()
         {

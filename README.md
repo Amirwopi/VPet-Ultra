@@ -178,7 +178,7 @@ dotnet test VPet.Cognition.Tests/VPet.Cognition.Tests.csproj -c Release
 
 پلاگین Live2D از قبل در `mod/1102_Live2DAnimation` نصب شده. فقط نیاز به `Live2DCubismCore.dll`:
 
-1. به [Live2D SDK](https://www.live2d.com/sdk/download/native/) بروید
+1. به [Live2D SDK](https://cubism.live2d.com/sdk-native/bin/CubismSdkForNative-5-r.5.zip) بروید
 2. Cubism Native SDK را دانلود کنید
 3. `Live2DCubismCore.dll` را کنار `VPet.exe` یا در `mod/1102_Live2DAnimation/plugin/` قرار دهید
 

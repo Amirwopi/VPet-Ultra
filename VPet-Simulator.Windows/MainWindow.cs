@@ -461,9 +461,19 @@ namespace VPet_Simulator.Windows
 
         public void ShowSetting(int page = -1)
         {
-            if (page >= 0 && page <= 6)
-                winSetting.MainTab.SelectedIndex = page;
-            winSetting.Show();
+            try
+            {
+                if (winSetting == null || winSetting.IsClosed)
+                    winSetting = new winGameSetting(this);
+                if (page >= 0 && page <= 6)
+                    winSetting.MainTab.SelectedIndex = page;
+                winSetting.Show();
+            }
+            catch (Exception ex)
+            {
+                try { System.IO.File.AppendAllText("logs/debug-load.log", $"[ShowSetting] EXCEPTION: {ex}\n"); } catch { }
+                MessageBox.Show($"Settings window failed to open:\n{ex}", "Error");
+            }
         }
         public void ShowWorkMenu(Work.WorkType type)
         {
@@ -481,6 +491,8 @@ namespace VPet_Simulator.Windows
         }
         public void ShowBetterBuy(Food.FoodType type)
         {
+            if (winBetterBuy == null || winBetterBuy.IsClosed)
+                winBetterBuy = new winBetterBuy(this);
             winBetterBuy.Show(type);
         }
         public void ShowGallery()
@@ -1574,38 +1586,89 @@ namespace VPet_Simulator.Windows
             int totalGraphs = petloader.GraphCount;
 #if DEBUG
             System.Diagnostics.Debug.WriteLine($"[GameLoad] Starting LoadALL, totalGraphs={totalGraphs} at {DateTime.Now:HH:mm:ss.fff}");
+            try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] Starting LoadALL, totalGraphs={totalGraphs} at {DateTime.Now:HH:mm:ss.fff}\n"); } catch { }
 #endif
 
-            // Periodic progress timer: updates the UI every 500ms even if no
-            // graph just became ready. This prevents the loading screen from
-            // appearing frozen at 0% while graphs are still being generated.
-            var progressTimer = new System.Windows.Threading.DispatcherTimer();
-            progressTimer.Interval = TimeSpan.FromMilliseconds(500);
-            int lastReportedCount = 0;
-            progressTimer.Tick += (s, e) =>
-            {
-                int currentCount = 0;
-                // Count how many graphs are ready by checking the Main's loaded count
-                // We use the callback count as a proxy
-                currentCount = lastReportedCount;
-                int percent = totalGraphs > 0 ? (int)(currentCount * 100.0 / totalGraphs) : 0;
-                if (percent > 100) percent = 100;
-                LoadingText.Content = "Attempting to load animations and generate cache\\nThis step may take a while\\nPlease be patient".Translate()
-                    + $"\n  {currentCount} / {totalGraphs} ({percent}%)";
-                if (LoadingProgressBar != null)
-                    LoadingProgressBar.Value = percent;
-                if (LoadingPercent != null)
-                    LoadingPercent.Content = $"{percent}%";
-            };
-            progressTimer.Start();
+            // Track cache file count as secondary progress indicator.
+            string cacheDir = System.IO.Path.Combine(ExtensionValue.BaseDirectory, "cache");
+            int initialCacheCount = 0;
+            if (System.IO.Directory.Exists(cacheDir))
+                initialCacheCount = System.IO.Directory.GetFiles(cacheDir).Length;
 
-            Main.LoadALL((c) =>
+            // Use a background thread to poll cache file count and update the
+            // progress bar. LoadALL blocks the UI thread, so we can't update
+            // the UI from here. The background thread uses Dispatcher.Invoke
+            // to update the UI.
+            int loadedCount = 0;
+            var progressThread = new System.Threading.Thread(() =>
             {
-                // Use BeginInvoke (not Invoke) to avoid deadlock: LoadALL blocks
-                // the UI thread via .Wait(), so Dispatcher.Invoke would deadlock.
-                lastReportedCount = c;
-                Dispatcher.BeginInvoke(new Action(() =>
+                while (true)
                 {
+                    System.Threading.Thread.Sleep(500);
+                    int c = loadedCount;
+                    int percent = totalGraphs > 0 ? (int)(c * 100.0 / totalGraphs) : 0;
+                    if (percent > 100) percent = 100;
+                    int cacheCount = 0;
+                    if (System.IO.Directory.Exists(cacheDir))
+                        cacheCount = System.IO.Directory.GetFiles(cacheDir).Length - initialCacheCount;
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        LoadingText.Content = "Attempting to load animations and generate cache\\nThis step may take a while\\nPlease be patient".Translate()
+                            + $"\n  {c} / {totalGraphs} ({percent}%)  |  cache: {cacheCount} files";
+                        if (LoadingProgressBar != null)
+                            LoadingProgressBar.Value = percent;
+                        if (LoadingPercent != null)
+                            LoadingPercent.Content = $"{percent}%";
+                    }));
+                }
+            });
+            progressThread.IsBackground = true;
+            progressThread.Start();
+
+            // LoadALL must run on the UI thread because Load_0_BaseConsole uses
+            // Dispatcher.Invoke to create ToolBar/MsgBar/WorkTimer.
+            // We use LoadALLAsync (await instead of .Wait()) so the UI
+            // thread stays responsive and the progress bar updates.
+            // GameLoad runs on a background thread (Task.Run). We dispatch
+            // LoadALLAsync to the UI thread and use a nested Dispatcher frame
+            // to pump messages while waiting for it to complete.
+            var loadTask = Main.LoadALLAsync((c) =>
+            {
+                Interlocked.Exchange(ref loadedCount, c);
+            });
+            // loadTask was started on the background thread, but LoadALLAsync
+            // uses Dispatcher.Invoke internally which switches to the UI thread.
+            // We need to pump the Dispatcher so those Invoke calls complete.
+            // Since GameLoad is on a background thread, we just await the task.
+            try
+            {
+                await loadTask;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[GameLoad] LoadALLAsync exception: {ex}");
+                try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] LoadALLAsync exception: {ex}\n"); } catch { }
+            }
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"[GameLoad] After await loadTask, loadedCount={loadedCount}");
+            try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] After await loadTask, loadedCount={loadedCount}\n"); } catch { }
+            try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] STEP1: before progressThread.Abort\n"); } catch { }
+#endif
+
+            try { progressThread.Abort(); } catch (Exception ex) { try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] progressThread.Abort exception: {ex.Message}\n"); } catch { } }
+#if DEBUG
+            try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] STEP2: after progressThread.Abort\n"); } catch { }
+#endif
+
+            // Final update — must use Dispatcher because we're on a background thread
+            try
+            {
+#if DEBUG
+                try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] STEP3: before Dispatcher.Invoke final update\n"); } catch { }
+#endif
+                Dispatcher.Invoke(() =>
+                {
+                    int c = loadedCount;
                     int percent = totalGraphs > 0 ? (int)(c * 100.0 / totalGraphs) : 0;
                     if (percent > 100) percent = 100;
                     LoadingText.Content = "Attempting to load animations and generate cache\\nThis step may take a while\\nPlease be patient".Translate()
@@ -1614,18 +1677,24 @@ namespace VPet_Simulator.Windows
                         LoadingProgressBar.Value = percent;
                     if (LoadingPercent != null)
                         LoadingPercent.Content = $"{percent}%";
-                }));
+                });
+#if DEBUG
+                try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] STEP4: after Dispatcher.Invoke final update\n"); } catch { }
+#endif
             }
-            //#if NewYear
-            //            , Core.Graph.FindGraph("newyear", AnimatType.Single, Core.Save.Mode)
-            //#endif
-            );
-
-            progressTimer.Stop();
+            catch (Exception ex)
+            {
+                try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] Final update exception: {ex}\n"); } catch { }
+            }
+#if DEBUG
+            System.Diagnostics.Debug.WriteLine($"[GameLoad] LoadALL complete, loadedCount={loadedCount}, totalGraphs={totalGraphs}");
+            try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] LoadALL complete, loadedCount={loadedCount}, totalGraphs={totalGraphs}\n"); } catch { }
+#endif
 
             // Debug: show any loading errors in a popup window
             // Wrapped in #if DEBUG so it can be removed easily for release builds.
 #if DEBUG
+            try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] ErrorMessage count={Main.ErrorMessage.Count}\n"); } catch { }
             if (Main.ErrorMessage.Count > 0)
             {
                 Dispatcher.Invoke(() =>
@@ -1652,17 +1721,27 @@ namespace VPet_Simulator.Windows
                 });
             }
 #endif
+            try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] Before NoFunctionMOD at {DateTime.Now:HH:mm:ss.fff}\n"); } catch { }
             Main.NoFunctionMOD = Set.CalFunState;
+            try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] Before Dispatcher.InvokeAsync (toolbar setup) at {DateTime.Now:HH:mm:ss.fff}\n"); } catch { }
             await Dispatcher.InvokeAsync(() =>
               {
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] Inside Dispatcher.InvokeAsync at {DateTime.Now:HH:mm:ss.fff}\n"); } catch { };
+                  try {
                   Main.Resources = Application.Current.Resources;
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad]   Main.Resources set\n"); } catch { }
                   Main.MsgBar.This.Resources = Application.Current.Resources;
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad]   MsgBar.Resources set\n"); } catch { }
                   Main.ToolBar.Resources = Application.Current.Resources;
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad]   ToolBar.Resources set\n"); } catch { }
                   Main.ToolBar.LoadClean();
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad]   ToolBar.LoadClean done\n"); } catch { }
                   Main.WorkList(out List<Work> ws, out List<Work> ss, out List<Work> ps);
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad]   WorkList done ws={ws.Count} ss={ss.Count} ps={ps.Count}\n"); } catch { }
 
                   // ScheduleLoad
                   ScheduleTask = new ScheduleTask(this);
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad]   ScheduleTask created\n"); } catch { }
 
                   if (ws.Count == 0)
                   {
@@ -1761,8 +1840,7 @@ namespace VPet_Simulator.Windows
                   m.Click += (x, y) =>
                   {
                       Main.ToolBar.Visibility = Visibility.Collapsed;
-                      winSetting.MainTab.SelectedIndex = 5;
-                      winSetting.Show();
+                      ShowSetting(5);
                   };
                   Main.FunctionSpendHandle += lowStrength;
                   Main.WorkTimer.E_FinishWork += WorkTimer_E_FinishWork;
@@ -1875,6 +1953,7 @@ namespace VPet_Simulator.Windows
                   Main.ToolBar.gdPanel.Children.Add(sp);
                   Main.TimeUIHandle += MWUIHandle;
                   Main.ToolBar.EventMenuPanelShow += () => MWUIHandle(Main);
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad]   Before CGPT switch type={Set["CGPT"][(gstr)"type"]}\n"); } catch { }
 
 
                   switch (Set["CGPT"][(gstr)"type"])
@@ -1897,9 +1976,15 @@ namespace VPet_Simulator.Windows
                           Main.ToolBar.MainGrid.Children.Add(TalkBox);
                           break;
                   }
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad]   After CGPT switch, TalkBox={TalkBox?.GetType().Name ?? "null"}\n"); } catch { }
 
-                  winSetting = new winGameSetting(this);
-                  winBetterBuy = new winBetterBuy(this);
+                  // winGameSetting and winBetterBuy are created lazily when first
+                  // opened, not during startup. winGameSetting.InitializeComponent()
+                  // throws NullReferenceException during startup due to Panuon
+                  // StyleDictionary initialization order issues in .NET 8.
+                  // winSetting = new winGameSetting(this);
+                  // winBetterBuy = new winBetterBuy(this);
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad]   Skipped winGameSetting/winBetterBuy creation (lazy)\n"); } catch { }
 
                   Main.DefaultClickAction = () =>
                   {
@@ -1952,12 +2037,17 @@ namespace VPet_Simulator.Windows
                           while (LoadingText.Visibility != Visibility.Collapsed)
                           {
                               LoadingText.Visibility = Visibility.Collapsed;
+                              if (LoadingProgressBar != null)
+                                  LoadingProgressBar.Visibility = Visibility.Collapsed;
+                              if (LoadingPercent != null)
+                                  LoadingPercent.Visibility = Visibility.Collapsed;
                               await Task.Delay(1000);
                           }
                       });
                   });
 
                   Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "Exit".Translate(), () => { Main.ToolBar.Visibility = Visibility.Collapsed; Close(); });
+                  try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] After AddMenuButton Exit at {DateTime.Now:HH:mm:ss.fff}\n"); } catch { }
                   if (Set.DeBug)
                       Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "Console".Translate(), () => { Main.ToolBar.Visibility = Visibility.Collapsed; new winConsole(this).Show(); });
                   Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "Photo Gallery ".Translate(), ShowGallery);
@@ -1974,38 +2064,37 @@ namespace VPet_Simulator.Windows
                   Main.ToolBar.AddMenuButton(ToolBar.MenuType.Setting, "Settings".Translate(), () =>
                   {
                       Main.ToolBar.Visibility = Visibility.Collapsed;
-                      winSetting.Show();
-                      winSetting.Activate();
+                      ShowSetting();
                   });
 
                   //this.Background = new ImageBrush(new BitmapImage(new Uri("pack://application:,,,/Res/TopLogo2019.PNG")));
 
                   //    {
-                  //        Main.ToolBar.Visibility = Visibility.Collapsed;
-                  //        IRunImage eat = (IRunImage)Core.Graph.FindGraph(GraphType.Eat, GameSave.ModeType.Nomal);
-                  //        var b = Main.FindDisplayBorder(eat);
+                  //    Main.ToolBar.Visibility = Visibility.Collapsed;
+                  //    IRunImage eat = (IRunImage)Core.Graph.FindGraph(GraphType.Eat, GameSave.ModeType.Nomal);
+                  //    var b = Main.FindDisplayBorder(eat);
                   // eat.Run(b, new BitmapImage(new Uri("pack://application:,,,/Res/Hamburger.png")), Main.DisplayToNomal);
                   //    }
                   //);
                   Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Food".Translate(), () =>
                   {
-                      winBetterBuy.Show(Food.FoodType.Meal);
+                      ShowBetterBuy(Food.FoodType.Meal);
                   });
                   Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Drinks".Translate(), () =>
                   {
-                      winBetterBuy.Show(Food.FoodType.Drink);
+                      ShowBetterBuy(Food.FoodType.Drink);
                   });
                   Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Favorites".Translate(), () =>
                   {
-                      winBetterBuy.Show(Food.FoodType.Star);
+                      ShowBetterBuy(Food.FoodType.Star);
                   });
                   Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Medicine".Translate(), () =>
                   {
-                      winBetterBuy.Show(Food.FoodType.Drug);
+                      ShowBetterBuy(Food.FoodType.Drug);
                   });
                   Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Gift".Translate(), () =>
                   {
-                      winBetterBuy.Show(Food.FoodType.Gift);
+                      ShowBetterBuy(Food.FoodType.Gift);
                   });
                   Main.ToolBar.AddMenuButton(ToolBar.MenuType.Feed, "Backpack".Translate(), () =>
                   {
@@ -2073,6 +2162,8 @@ namespace VPet_Simulator.Windows
 
                   m_menu.Items.Add(new MenuItem("Settings".Translate(), null, (x, y) =>
                   {
+                      if (winSetting == null || winSetting.IsClosed)
+                          winSetting = new winGameSetting(this);
                       winSetting.Show();
                   }));
                   m_menu.Items.Add(new MenuItem("Restart VPet".Translate(), null, (x, y) => Restart()));
@@ -2087,12 +2178,14 @@ namespace VPet_Simulator.Windows
                   notifyIcon.Visible = true;
                   notifyIcon.BalloonTipClicked += (a, b) =>
                   {
-                      winSetting.Show();
+                      ShowSetting();
                   };
                   if (Set.StartUPBoot == true && !Set["v"][(gbol)"newverstartup"])
                   {
                       try
                       {
+                          if (winSetting == null || winSetting.IsClosed)
+                              winSetting = new winGameSetting(this);
                           winSetting.GenStartUP();
                           Set["v"][(gbol)"newverstartup"] = true;
                       }
@@ -2375,7 +2468,11 @@ namespace VPet_Simulator.Windows
                   }
                   if (Set.DeBug)
                       ActivityLogs.CollectionChanged += ActivityLogs_WriteFile;
+                  } catch (Exception ex) { try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] Dispatcher.InvokeAsync EXCEPTION: {ex}\n"); } catch { } }
               });
+#if DEBUG
+            try { System.IO.File.AppendAllText("logs/debug-load.log", $"[GameLoad] After Dispatcher.InvokeAsync (toolbar setup) at {DateTime.Now:HH:mm:ss.fff}\n"); } catch { }
+#endif
 
 
             //if (Set["SingleTips"][(gint)"open"] == 0 && Set.StartUPBoot == true && Set.StartUPBootSteam == true)

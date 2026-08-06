@@ -45,18 +45,57 @@ namespace VPet_Simulator.Core
 
         public void Load_0_BaseConsole()
         {
-            Dispatcher.Invoke(() =>
+#if DEBUG
+            string logFile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".", "logs", "loadall.log");
+            void LogBC(string msg) { try { System.IO.File.AppendAllText(logFile, $"{DateTime.Now:HH:mm:ss.fff} Load_0_BaseConsole: {msg}\n"); } catch { }
+                System.Diagnostics.Debug.WriteLine($"Load_0_BaseConsole: {msg}"); }
+            LogBC("ENTER, checking thread...");
+            LogBC($"  IsDispatcherThread={Dispatcher.CheckAccess()}");
+#else
+            void LogBC(string msg) { }
+#endif
+            // When called from a background thread, Dispatcher.Invoke can deadlock
+            // if the callback (e.g., ToolBar.InitializeComponent) internally uses
+            // Dispatcher.BeginInvoke and waits for it. To avoid this, we run the
+            // entire LoadALL on the UI thread via Dispatcher.Invoke, so the
+            // callback executes inline and nested Dispatcher calls work correctly.
+            if (Dispatcher.CheckAccess())
             {
-                WorkTimer = new WorkTimer(this);
-                WorkTimer.Visibility = Visibility.Collapsed;
-                UIGrid.Children.Add(WorkTimer);
-                ToolBar = new ToolBar(this);
-                ToolBar.Visibility = Visibility.Collapsed;
-                UIGrid.Children.Add(ToolBar);
-                MsgBar = new MessageBar(this);
-                MsgBar.Visibility = Visibility.Collapsed;
-                UIGrid.Children.Add(MsgBar.This);
-            });
+                LogBC("  on UI thread, creating controls directly...");
+                CreateBaseControls(LogBC);
+            }
+            else
+            {
+                LogBC("  on background thread, using Dispatcher.Invoke (nested-safe)...");
+                Dispatcher.Invoke(() => CreateBaseControls(LogBC));
+            }
+            LogBC("EXIT");
+        }
+
+        private void CreateBaseControls(Action<string> LogBC)
+        {
+            LogBC("  creating MsgBar...");
+            MsgBar = new MessageBar(this);
+            LogBC("  MsgBar created, setting visibility...");
+            MsgBar.Visibility = Visibility.Collapsed;
+            LogBC("  adding MsgBar to UIGrid...");
+            UIGrid.Children.Add(MsgBar.This);
+            LogBC("  creating ToolBar...");
+            LogBC($"  LocalizeCore.CurrentCulture={LocalizeCore.CurrentCulture}");
+            LogBC($"  LocalizeCore.CurrentLPS={(LocalizeCore.CurrentLPS == null ? "NULL" : "set")}");
+            LogBC($"  LocalizeCore.StoreTranslation={LocalizeCore.StoreTranslation}");
+            ToolBar = new ToolBar(this);
+            LogBC("  ToolBar created, setting visibility...");
+            ToolBar.Visibility = Visibility.Collapsed;
+            LogBC("  adding ToolBar to UIGrid...");
+            UIGrid.Children.Add(ToolBar);
+            LogBC("  creating WorkTimer...");
+            WorkTimer = new WorkTimer(this);
+            LogBC("  WorkTimer created, setting visibility...");
+            WorkTimer.Visibility = Visibility.Collapsed;
+            LogBC("  adding WorkTimer to UIGrid...");
+            UIGrid.Children.Add(WorkTimer);
+            LogBC("  controls created");
         }
         public void Load_3_BindingTimer()
         {
@@ -107,29 +146,25 @@ namespace VPet_Simulator.Core
                 return;
             }
             int count = 0;
-            DateTime start = DateTime.Now.AddSeconds(1);
+            DateTime start = DateTime.Now.AddSeconds(2);
             var tasks = new List<Task>();
 
-            // Periodic progress reporter: fires every 500ms even if no graph
-            // just became ready, so the UI doesn't appear frozen at 0%.
-            var progressTimer = new System.Timers.Timer(500);
-            progressTimer.AutoReset = true;
-            progressTimer.Elapsed += (s, e) =>
+            string logFile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".", "logs", "waitgraph.log");
+            void LogWait(string msg)
             {
-                if (start < DateTime.Now)
-                {
-                    start = DateTime.Now.AddSeconds(1);
-                    WaitCountAction?.Invoke(count);
-                }
-            };
-            progressTimer.Start();
+#if DEBUG
+                try { System.IO.File.AppendAllText(logFile, $"{DateTime.Now:HH:mm:ss.fff} {msg}\n"); } catch { }
+#endif
+            }
 
+            int totalGraphs = 0;
             foreach (var igs in Core.Graph.GraphsList.Values)
             {
                 foreach (var ig2 in igs.Values)
                 {
                     for (int i = 0; i < ig2.Count; i++)
                     {
+                        totalGraphs++;
                         IGraph ig3 = ig2[i];
                         tasks.Add(Task.Run(async () =>
                         {
@@ -143,6 +178,7 @@ namespace VPet_Simulator.Core
                                         ErrorMessage.Add(ig3.FailMessage);
                                         ig2.Remove(ig3);
                                     }
+                                    LogWait($"FAIL  {ig3}  msg={ig3.FailMessage}");
                                     break;
                                 }
                                 if (timeoutCts.IsCancellationRequested)
@@ -152,6 +188,7 @@ namespace VPet_Simulator.Core
                                         ErrorMessage.Add($"Timeout waiting for graph: {ig3}");
                                         ig2.Remove(ig3);
                                     }
+                                    LogWait($"TIMEOUT  {ig3}");
                                     break;
                                 }
                                 else
@@ -159,11 +196,13 @@ namespace VPet_Simulator.Core
                                     await Task.Delay(100);
                                 }
                             }
-                            Interlocked.Increment(ref count);
+                            int c = Interlocked.Increment(ref count);
+                            if (ig3.IsReady)
+                                LogWait($"READY  {c}/{totalGraphs}  {ig3}");
                             if (start < DateTime.Now)
                             {
-                                start = DateTime.Now.AddSeconds(1);
-                                WaitCountAction.Invoke(count);
+                                start = DateTime.Now.AddSeconds(2);
+                                WaitCountAction.Invoke(c);
                             }
                         }));
                     }
@@ -171,11 +210,9 @@ namespace VPet_Simulator.Core
                 }
             }
 
+            LogWait($"Load_2_WaitGraph START totalGraphs={totalGraphs}");
             await Task.WhenAll(tasks);
-            progressTimer.Stop();
-            progressTimer.Dispose();
-            // Final progress report
-            WaitCountAction?.Invoke(count);
+            LogWait($"Load_2_WaitGraph DONE count={count} totalGraphs={totalGraphs}");
         }
         /// <summary>
         /// </summary>
@@ -237,11 +274,65 @@ namespace VPet_Simulator.Core
         /// </summary>
         public void LoadALL(Action<int> WaitCountAction = null, IGraph startUPGraph = null)
         {
+#if DEBUG
+            string logFile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".", "logs", "loadall.log");
+            void LogAll(string msg) { try { System.IO.File.AppendAllText(logFile, $"{DateTime.Now:HH:mm:ss.fff} {msg}\n"); } catch { } }
+            LogAll("LoadALL START");
+            LogAll($"  GraphsList keys: {string.Join(", ", Core.Graph.GraphsList.Keys)}");
+            int totalG = 0;
+            foreach (var igs in Core.Graph.GraphsList.Values)
+                foreach (var ig2 in igs.Values)
+                    totalG += ig2.Count;
+            LogAll($"  total graphs in GraphsList: {totalG}");
+#else
+            void LogAll(string msg) { }
+#endif
+            LogAll("  calling Load_0_BaseConsole...");
             Load_0_BaseConsole();
+            LogAll("  Load_0_BaseConsole done");
+            LogAll("  calling Load_2_TouchEvent...");
             Load_2_TouchEvent();
+            LogAll("  Load_2_TouchEvent done");
+            LogAll("  calling Load_2_WaitGraph...");
             Load_2_WaitGraph(WaitCountAction).Wait();
+            LogAll("  Load_2_WaitGraph done");
             Load_3_BindingTimer();
+            LogAll("  Load_3_BindingTimer done");
             Load_4_Start(startUPGraph);
+            LogAll("  Load_4_Start done");
+            LogAll("LoadALL DONE");
+        }
+
+        /// <summary>
+        /// Async version of LoadALL that doesn't block the UI thread.
+        /// Use this instead of LoadALL when you need the UI to stay responsive
+        /// (e.g. to update a progress bar during loading).
+        /// </summary>
+        public async Task LoadALLAsync(Action<int> WaitCountAction = null, IGraph startUPGraph = null)
+        {
+#if DEBUG
+            string logFile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? ".", "logs", "loadall.log");
+            void LogAsync(string msg) { try { System.IO.File.AppendAllText(logFile, $"{DateTime.Now:HH:mm:ss.fff} {msg}\n"); } catch { } }
+            LogAsync("LoadALLAsync START");
+#else
+            void LogAsync(string msg) { }
+#endif
+            LogAsync("  calling Load_0_BaseConsole...");
+            Load_0_BaseConsole();
+            LogAsync("  Load_0_BaseConsole done");
+            LogAsync("  calling Load_2_TouchEvent...");
+            Load_2_TouchEvent();
+            LogAsync("  Load_2_TouchEvent done");
+            LogAsync("  calling Load_2_WaitGraph...");
+            await Load_2_WaitGraph(WaitCountAction);
+            LogAsync("  Load_2_WaitGraph done");
+            LogAsync("  calling Load_3_BindingTimer...");
+            Load_3_BindingTimer();
+            LogAsync("  Load_3_BindingTimer done");
+            LogAsync("  calling Load_4_Start...");
+            Load_4_Start(startUPGraph);
+            LogAsync("  Load_4_Start done");
+            LogAsync("LoadALLAsync DONE");
         }
 
         private void Labledisplaytimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)

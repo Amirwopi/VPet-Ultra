@@ -107,23 +107,39 @@ namespace VPet_Simulator.Core
 
         private async void startup(string path, FileInfo[] paths)
         {
+            string logFile = System.IO.Path.Combine(GraphCore.CachePath, "..", "logs", "png-startup.log");
+            int logId = System.Threading.Interlocked.Increment(ref _startupLogCounter);
+            string logTag = $"[PNG#{logId}] {GraphInfo} path={path} frames={paths.Length}";
+            void Log(string msg)
+            {
+#if DEBUG
+                try { System.IO.File.AppendAllText(logFile, $"{DateTime.Now:HH:mm:ss.fff} {logTag} {msg}\n"); } catch { }
+#endif
+            }
+            Log("START");
+
             // Timeout: if memory is too high for too long, give up waiting
             var memTimeoutCts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
             while (Function.MemoryUsage() > MaxLoadMemory)
             {
                 if (memTimeoutCts.IsCancellationRequested)
                 {
+                    Log("FAIL: memory timeout");
                     IsFail = true;
                     FailMessage = $"--PNGAnimation--{GraphInfo}--\nPath: {path}\nTimeout waiting for memory to drop below {MaxLoadMemory}MB";
                     return;
                 }
                 await Task.Delay(100);
             }
+            Log("memory OK, entering try");
             try
             {
                 Path = System.IO.Path.Combine(GraphCore.CachePath, $"{GraphCore.Resolution}_{Math.Abs(Sub.GetHashCode(path))}_{paths.Length}.png");
+                Log($"cachePath={Path}");
                 var sem = GraphCore.SpriteSheetBuildLocks.GetOrAdd(Path, _ => new SemaphoreSlim(1, 1));
+                Log("waiting for semaphore...");
                 await sem.WaitAsync();
+                Log("semaphore acquired");
                 try
                 {
                     if (!File.Exists(Path) && !((List<string>)GraphCore.CommConfig["Cache"]).Contains(path))
@@ -131,11 +147,18 @@ namespace VPet_Simulator.Core
                         ((List<string>)GraphCore.CommConfig["Cache"]).Add(path);
                         int w = 0;
                         int h = 0;
+                        Log("decoding first image for dimensions...");
                         // Load the first image
                         using (var firstImage = SKBitmap.Decode(paths[0].FullName))
                         {
+                            if (firstImage == null)
+                            {
+                                Log("FAIL: SKBitmap.Decode returned null for first image");
+                                throw new Exception("SKBitmap.Decode returned null for: " + paths[0].FullName);
+                            }
                             w = firstImage.Width;
                             h = firstImage.Height;
+                            Log($"first image dims: {w}x{h}");
 
                             // Adjust width and height based on resolution
                             if (w > GraphCore.Resolution)
@@ -150,11 +173,13 @@ namespace VPet_Simulator.Core
                                 h = (int)(firstImage.Height * (w / (double)firstImage.Width));
                             }
                         }
+                        Log($"adjusted dims: {w}x{h}, total width={w * paths.Length}");
 
                         FrameWidth = w;
                         FrameHeight = h;
 
                         // Create a new bitmap to draw on
+                        Log("creating combined bitmap...");
                         using (var combinedBitmap = new SKBitmap(w * paths.Length, h))
                         using (var canvas = new SKCanvas(combinedBitmap))
                         {
@@ -167,6 +192,7 @@ namespace VPet_Simulator.Core
                             // Create an array to hold bitmaps for the remaining images
                             SKBitmap[] bitmaps = new SKBitmap[paths.Length - 1];
 
+                            Log("loading remaining images in parallel...");
                             // Load and draw remaining images in parallel
                             Parallel.For(1, paths.Length, i =>
                             {
@@ -181,6 +207,7 @@ namespace VPet_Simulator.Core
                                 bitmaps[i]?.Dispose();
                             }
 
+                            Log("encoding and saving cache PNG...");
                             // Save the combined image to the cache path
                             using (var image = SKImage.FromBitmap(combinedBitmap))
                             using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
@@ -188,16 +215,23 @@ namespace VPet_Simulator.Core
                             {
                                 data.SaveTo(stream);
                             }
+                            Log("cache PNG saved");
                         }
+                    }
+                    else
+                    {
+                        Log("cache file already exists, skipping generation");
                     }
                 }
                 finally
                 {
                     sem.Release();
+                    Log("semaphore released");
                 }
 
                 if (FrameWidth == 0 || FrameHeight == 0)
                 {
+                    Log("FrameWidth/Height is 0, decoding first image again...");
                     using (var firstImage = SKBitmap.Decode(paths[0].FullName))
                     {
                         FrameWidth = firstImage.Width;
@@ -213,8 +247,10 @@ namespace VPet_Simulator.Core
                             FrameHeight = (int)(firstImage.Height * (FrameWidth / (double)firstImage.Width));
                         }
                     }
+                    Log($"FrameWidth={FrameWidth}, FrameHeight={FrameHeight}");
                 }
 
+                Log("creating FrameRects and Animations...");
                 FrameRects = new Int32Rect[paths.Length];
 
                 for (int i = 0; i < paths.Length; i++)
@@ -224,11 +260,14 @@ namespace VPet_Simulator.Core
                     int time = int.Parse(noExtFileName.Substring(noExtFileName.LastIndexOf('_') + 1));
                     Animations.Add(new Animation(this, time, i));
                 }
+                Log($"Animations created: {Animations.Count} frames");
                 //stream = new MemoryStream(File.ReadAllBytes(cp));
                 IsReady = true;
+                Log("IsReady = true");
             }
             catch (Exception e)
             {
+                Log($"EXCEPTION: {e.GetType().Name}: {e.Message}\n{e.StackTrace}");
                 IsFail = true;
                 FailMessage = $"--PNGAnimation--{GraphInfo}--\nPath: {path}\n{e.Message}";
             }
@@ -238,11 +277,15 @@ namespace VPet_Simulator.Core
                 // Load_2_WaitGraph doesn't loop forever.
                 if (!IsReady && !IsFail)
                 {
+                    Log("FINALLY: neither ready nor failed, marking as fail");
                     IsFail = true;
                     FailMessage = $"--PNGAnimation--{GraphInfo}--\nPath: {path}\nUnknown failure (neither ready nor failed)";
                 }
+                Log(IsReady ? "DONE: ready" : "DONE: failed");
             }
         }
+
+        private static int _startupLogCounter = 0;
 
         /// <summary>
         /// </summary>

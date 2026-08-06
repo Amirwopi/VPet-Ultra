@@ -1450,6 +1450,12 @@ namespace VPet_Simulator.Windows
             ButtonRestartGraph.Visibility = Visibility.Visible;
         }
 
+        // Steam stubs (Steamworks support removed)
+        private void Steam_Click(object sender, RoutedEventArgs e) { }
+        private void ButtonSteam_MouseDown(object sender, MouseButtonEventArgs e) { }
+        private void ButtonPublish_MouseDown(object sender, MouseButtonEventArgs e) { }
+        private void StartUpSteamBox_Checked(object sender, RoutedEventArgs e) { }
+
 
     }
 }

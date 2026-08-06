@@ -10,7 +10,8 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Theme.xaml" />
-                <ResourceDictionary Source="basestyle.xaml" />
+                <!-- basestyle.xaml is loaded globally via App.xaml -> ResourceStyle.xaml.
+                     Merging it here again causes InitializeComponent to hang in .NET 8. -->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </UserControl.Resources>
@@ -49,10 +50,10 @@
                     </Button.ContentTemplate>
                 </Button>
                 <TextBlock x:Name="till" Grid.Row="1" Grid.ColumnSpan="5" Foreground="#FF4C4C"
-                        Text="{ll:Str Pet is sick, take medicine to restore}" ToolTip="{ll:Str Pet is sick, take medicine to restore}" TextWrapping="Wrap"
+                        Text="{ll:Str Pet is sick\, take medicine to restore}" ToolTip="{ll:Str Pet is sick\, take medicine to restore}" TextWrapping="Wrap"
                         x:FieldModifier="public" />
                 <TextBlock x:Name="tfun" Grid.Row="1" Grid.ColumnSpan="5" Foreground="#4caf50"
-                        Text="{ll:Str 'CloseData Calculation\, '}" ToolTip="{ll:Str 'CloseData Calculation\, '}" TextWrapping="Wrap"
+                        Text="{ll:Str CloseData Calculation\, safe to idle}" ToolTip="{ll:Str CloseData Calculation\, safe to idle}" TextWrapping="Wrap"
                         x:FieldModifier="public" />
                 <TextBlock Grid.Row="2" VerticalAlignment="Center" Text="{ll:Str Money}" />
                 <TextBlock x:Name="tMoney" Grid.Row="2" Grid.Column="2" Foreground="{DynamicResource DARKPrimary}"
@@ -91,7 +92,6 @@
                         pu:ProgressBarHelper.GeneratingPercentText="PgbHunger_GeneratingPercentText"
                         pu:ProgressBarHelper.IsPercentVisible="True" Background="{x:Null}" FontSize="20"
                         Foreground="{DynamicResource ProgressBarForeground}" Maximum="100" Value="80" />
-
                 <TextBlock x:Name="tStrengthFood" Grid.Row="6" Grid.Column="4" HorizontalAlignment="Right"
                         Foreground="{DynamicResource DARKPrimary}" Text="+1/t" />
                 <TextBlock Grid.Row="7" VerticalAlignment="Center" Text="{ll:Str Thirst}" />
@@ -121,18 +121,17 @@
                     <UniformGrid Columns="{Binding Tag, ElementName=ToolBarMenu}" />
                 </ItemsPanelTemplate>
             </Menu.ItemsPanel>
-            <MenuItem x:Name="MenuFeed" Padding="0" x:FieldModifier="public" Header="{ll:Str Shop}" />
-            <MenuItem x:Name="MenuPanel" Padding="0" Header="{ll:Str Status}" MouseEnter="MenuPanel_MouseEnter"
+            <MenuItem x:Name="MenuFeed" Padding="0" x:FieldModifier="public" Header="{ll:Str Feed}" />
+            <MenuItem x:Name="MenuPanel" Padding="0" Header="{ll:Str Panel}" MouseEnter="MenuPanel_MouseEnter"
                     MouseLeave="MenuPanel_MouseLeave" />
             <MenuItem x:Name="MenuInteract" Padding="0" Header="{ll:Str Interact}" x:FieldModifier="public">
                 <MenuItem Click="Sleep_Click" Header="{ll:Str Sleep}" />
-                <MenuItem x:Name="MenuStudy" Header="{ll:Str Learning}" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                <MenuItem x:Name="MenuStudy" Header="{ll:Str Study}" ScrollViewer.VerticalScrollBarVisibility="Auto"
                         pu:DropDownHelper.MaxHeight="100" x:FieldModifier="public" />
                 <MenuItem x:Name="MenuPlay" Header="{ll:Str Play}" ScrollViewer.VerticalScrollBarVisibility="Auto"
                         pu:DropDownHelper.MaxHeight="100" x:FieldModifier="public" />
                 <MenuItem x:Name="MenuWork" Header="{ll:Str Work}" ScrollViewer.VerticalScrollBarVisibility="Auto"
                         pu:DropDownHelper.MaxHeight="100" x:FieldModifier="public" />
-                <!--<MenuItem Header="Speak"  IsEnabled="False" />-->
             </MenuItem>
             <MenuItem x:Name="MenuDIY" Padding="0" x:FieldModifier="public" Header="{ll:Str DIY}" />
             <MenuItem x:Name="MenuSetting" Padding="0" x:FieldModifier="public" Header="{ll:Str System}">
