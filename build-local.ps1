@@ -157,20 +157,23 @@ foreach ($dll in $depDlls) {
 
 # Copy LLamaSharp native libraries and other native DLLs to main app folder
 # Native DLLs must be in the app root so the runtime can find them via P/Invoke
+# Use the win-x64 runtime version (not the ARM version that NuGet puts first)
 $nativeLibNames = @("llama.dll", "ggml.dll", "ggml-base.dll", "llava_shared.dll", "e_sqlite3.dll", "onnxruntime.dll", "espeak-ng.dll", "piper_phonemize.dll", "onnxruntime_providers_shared.dll")
-$nativeLibs = Get-ChildItem -Path $hostBin -Filter "*.dll" -Recurse -ErrorAction SilentlyContinue |
-    Where-Object { $nativeLibNames -contains $_.Name }
-foreach ($lib in $nativeLibs) {
-    $dest = Join-Path $OutputDir $lib.Name
-    if (-not (Test-Path $dest)) {
-        Copy-Item $lib.FullName -Destination $OutputDir -Force
-        Write-Host "  Copied native to app root: $($lib.Name)"
+foreach ($name in $nativeLibNames) {
+    # First try win-x64 runtime folder
+    $src = Get-ChildItem -Path $hostBin -Recurse -Filter $name -ErrorAction SilentlyContinue | Where-Object { $_.FullName -like "*win-x64*" } | Select-Object -First 1
+    # Fallback to any copy
+    if (-not $src) { $src = Get-ChildItem -Path $hostBin -Recurse -Filter $name -ErrorAction SilentlyContinue | Select-Object -First 1 }
+    if ($src) {
+        $dest = Join-Path $OutputDir $name
+        Copy-Item $src.FullName -Destination $dest -Force
+        Write-Host "  Copied native to app root: $name"
     }
-    # Also remove from plugin folder to avoid BadImageFormatException in loader
-    $pluginCopy = Join-Path $pluginPath $lib.Name
+    # Remove from plugin folder to avoid BadImageFormatException in loader
+    $pluginCopy = Join-Path $pluginPath $name
     if (Test-Path $pluginCopy) {
         Remove-Item $pluginCopy -Force
-        Write-Host "  Removed native from plugin: $($lib.Name)"
+        Write-Host "  Removed native from plugin: $name"
     }
 }
 Write-Host "  OK" -ForegroundColor Green
