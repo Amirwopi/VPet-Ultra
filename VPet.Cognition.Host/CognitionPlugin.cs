@@ -37,7 +37,7 @@ namespace VPet.Cognition.Host;
 /// </summary>
 public sealed class CognitionPlugin : MainPlugin
 {
-    public override string PluginName => "VPetCognition";
+    public override string PluginName => "Cognition";
 
     private ServiceProvider? _services;
     private CognitionHost? _host;
